@@ -1,0 +1,12 @@
+{
+    "network" : {
+        "multicast_ip": "224.0.0.1",
+        "host_ip": "localhost",
+        "vision_port": 10002,
+        "command_port": 20011
+    },
+    "match" : {
+        "team_side": "left",
+        "team_color": "blue"
+    }
+}
