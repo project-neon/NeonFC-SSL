@@ -7,4 +7,4 @@ poetry run python3 game.py
 
 docker run --net=host -eVNC_PASSWORD=vnc -eVNC_GEOMETRY=1920x1080 robocupssl/grsim vnc
 
-# e depois acessar via VNC pelo Remmina
+# e depois acessar via VNC pelo Remmina atraves de 127.0.0.1:5900

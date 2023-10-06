@@ -12,14 +12,14 @@ class Game():
     
     def start(self):
         self.vision.start()
+        self.match.start()
 
 
     def update(self, detection):
         self.match.update(detection)
-
         self.match.decide()
 
-        self.comm.send()
+        # self.comm.send()
 
 
 game = Game()

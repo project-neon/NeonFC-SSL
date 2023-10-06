@@ -1,6 +1,5 @@
-
-
-from html import entities
+from entities.robot import OmniRobot
+from entities.ball import Ball
 
 
 class SSLMatch():
@@ -9,20 +8,22 @@ class SSLMatch():
         self.game = game
         self.vision = game.vision
 
-        self.team_color =   'BLUE'
-        self.team_side  =   'LEFT'
+        self.goalkeeper_id  = 0
+        self.team_color     =   'BLUE'
+        self.team_side      =   'LEFT'
 
     
     def start(self):
         print("Starting match module starting ...")
-        self.ball = entities.Ball(self.game)
+        self.ball = Ball(self.game)
 
-        self.goalkeeper = entities.Robot(self.game, self.team_color, 0)
+        self.goalkeeper = OmniRobot(self.game, self.team_color, self.goalkeeper_id)
 
         self.opposites = [
             # 0, 1, 2, 3, 4, 5 opposite robots
-            entities.Robot(self.game, self.team_color, i) for i in range(0, 6)
+            OmniRobot(self.game, self.team_color, i) for i in range(0, 6)
         ]
+        print("Finish match module")
     
     def update(self, frame):
         self.ball.update(frame)

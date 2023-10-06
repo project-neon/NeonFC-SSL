@@ -14,6 +14,8 @@ class GrSimVision(threading.Thread):
 
         self.game = game
 
+        self._fps = 60
+
         self.raw_detection = {
             'ball': {
                 'x': 0,
@@ -53,18 +55,16 @@ class GrSimVision(threading.Thread):
         while True:
             env = ssl_vision_wrapper_pb2.SSL_WrapperPacket()
             data = self.vision_sock.recv(2048)
-            try:
-                env.ParseFromString(data)
-                last_frame = json.loads(MessageToJson(env))
-                self.update_detection(last_frame)
 
-                self.game.update(self.raw_detection)
-            except:
-                continue
+            env.ParseFromString(data)
+            last_frame = json.loads(MessageToJson(env))
+            self.update_detection(last_frame)
+
+            self.update_game()
+    
 
     def update_detection(self, last_frame):
         frame = last_frame.get('detection')
-        # print(frame)
         if not frame:
             # pacote de deteccao sem frame
             return
@@ -72,14 +72,13 @@ class GrSimVision(threading.Thread):
         t_capture = frame.get('tCapture')
         camera_id = frame.get('cameraId')
         robots_blue = frame.get('robotsBlue')
-
         self.update_camera_capture_number(camera_id, t_capture)
 
-        for robot in robots_blue:
-            self.update_robot_detection(robot, t_capture)
+        if robots_blue:
+            for robot in robots_blue:
+                self.update_robot_detection(robot, t_capture)
 
     def update_camera_capture_number(self, camera_id, t_capture):
-        # print(camera_id, t_capture)
         last_camera_data = self.raw_detection['meta']['cameras'][camera_id]
 
         if last_camera_data['last_capture'] > t_capture:
@@ -89,7 +88,6 @@ class GrSimVision(threading.Thread):
             'last_capture': t_capture
         }
 
-        
 
     def update_robot_detection(self, robot, _timestamp, color='Blue'):
         robot_id = robot.get('robotId')
@@ -98,7 +96,6 @@ class GrSimVision(threading.Thread):
             'robots' + color
          ][robot_id]
         
-        # print(last_robot_data)
 
         if last_robot_data.get('tCapture') > _timestamp:
             return
@@ -110,9 +107,10 @@ class GrSimVision(threading.Thread):
             'y': robot['y'],
             'theta': robot['orientation'],
             'tCapture': _timestamp
-        } 
-        # print(self.raw_detection)
+        }
 
+    def update_game(self):
+        self.game.update(self.raw_detection)
 
     def _wait_to_connect(self):
         self.vision_sock.recv(1024)
