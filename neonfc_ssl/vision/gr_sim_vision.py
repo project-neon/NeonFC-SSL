@@ -20,7 +20,8 @@ class GrSimVision(threading.Thread):
             'ball': {
                 'x': 0,
                 'y': 0,
-                'last_update': -1
+                'tCapture': -1,
+                'cCapture': -1
             },
             'robotsBlue': {
                 i: {'x': None, 'y': None, 'theta': None, 'tCapture': -1} for i in range(0, 6)
@@ -71,12 +72,15 @@ class GrSimVision(threading.Thread):
 
         t_capture = frame.get('tCapture')
         camera_id = frame.get('cameraId')
-        robots_blue = frame.get('robotsBlue')
         self.update_camera_capture_number(camera_id, t_capture)
 
+        balls = frame.get('balls', [])
+        self.update_ball_detection(balls, camera_id)
+
+        robots_blue = frame.get('robotsBlue')
         if robots_blue:
             for robot in robots_blue:
-                self.update_robot_detection(robot, t_capture)
+                self.update_robot_detection(robot, t_capture, camera_id)
 
     def update_camera_capture_number(self, camera_id, t_capture):
         last_camera_data = self.raw_detection['meta']['cameras'][camera_id]
@@ -88,8 +92,18 @@ class GrSimVision(threading.Thread):
             'last_capture': t_capture
         }
 
+    def update_ball_detection(self, balls, camera_id):
+        if len(balls) > 0:
+            ball = balls[0]
+            self.raw_detection['ball'] = {
+                'x': ball.get('x'),
+                'y': ball.get('y'),
+                'tCapture': ball.get('tCapture'),
+                'cCapture': camera_id
+            }
 
-    def update_robot_detection(self, robot, _timestamp, color='Blue'):
+
+    def update_robot_detection(self, robot, _timestamp, camera_id, color='Blue'):
         robot_id = robot.get('robotId')
 
         last_robot_data = self.raw_detection[ 
@@ -106,7 +120,8 @@ class GrSimVision(threading.Thread):
             'x': robot['x'],
             'y': robot['y'],
             'theta': robot['orientation'],
-            'tCapture': _timestamp
+            'tCapture': _timestamp,
+            'cCapture': camera_id
         }
 
     def update_game(self):

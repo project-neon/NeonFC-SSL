@@ -1,6 +1,8 @@
 from entities.robot import OmniRobot
 from entities.ball import Ball
 
+from strategies.goalkeeper import Goalkeeper
+
 
 class SSLMatch():
     def __init__(self, game) -> None:
@@ -18,6 +20,8 @@ class SSLMatch():
         self.ball = Ball(self.game)
 
         self.goalkeeper = OmniRobot(self.game, self.team_color, self.goalkeeper_id)
+
+        # self.goalkeeper.set_strategy(Goalkeeper)
 
         self.opposites = [
             # 0, 1, 2, 3, 4, 5 opposite robots
