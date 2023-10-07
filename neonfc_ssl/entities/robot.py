@@ -33,7 +33,7 @@ class OmniRobot():
         self.current_data = None
 
     def get_name(self):
-        return 'SSL_OMNI_ROBOT_{}_{}'.format(self.robot_id, self.team_color)
+        return 'SSLROBOT_{}_{}'.format(self.robot_id, self.team_color)
 
     def get_robot_in_frame(self, frame):
         team_color_key = 'robotsBlue' if self.team_color == 'BLUE' else 'robotsYellow'
@@ -69,11 +69,11 @@ class OmniRobot():
 
     def decide(self):
         # desired = self.strategy.decide()
-        desired = (0, 0)
+        desired = (1, 0) # vx, vy
         # self.strategy.set_desired(desired)
 
         # self.motor_powers = self.strategy.update()
-        self.motor_powers = self.global_speed_to_wheel_speed(1, 0)
+        self.motor_powers = self.global_speed_to_wheel_speed(*desired)
         return self.motor_powers
 
     def global_speed_to_wheel_speed(self, vx, vy):
