@@ -39,6 +39,8 @@ class OmniRobot():
     def set_strategy(self, strategy_ref):
         self.strategy = strategy_ref(self)
 
+        self.strategy.start()
+
     def get_robot_in_frame(self, frame):
         team_color_key = 'robotsBlue' if self.team_color == 'BLUE' else 'robotsYellow'
 

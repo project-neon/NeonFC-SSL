@@ -110,7 +110,7 @@ class GrSimVision(threading.Thread):
 
     def update_robot_detection(self, robot, _timestamp, camera_id, color='Blue'):
         robot_id = robot.get('robotId')
-
+        print(color)
         last_robot_data = self.raw_detection[ 
             'robots' + color
          ][robot_id]
