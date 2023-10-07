@@ -13,8 +13,8 @@ class Game():
 
     
     def start(self):
-        self.vision.start()
         self.match.start()
+        self.vision.start()
         self.comm.start()
 
 

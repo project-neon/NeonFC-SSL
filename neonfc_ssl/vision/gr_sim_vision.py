@@ -80,7 +80,12 @@ class GrSimVision(threading.Thread):
         robots_blue = frame.get('robotsBlue')
         if robots_blue:
             for robot in robots_blue:
-                self.update_robot_detection(robot, t_capture, camera_id)
+                self.update_robot_detection(robot, t_capture, camera_id, color='Blue')
+
+        robots_yellow = frame.get('yellowBlue')
+        if robots_yellow:
+            for robot in robots_yellow:
+                self.update_robot_detection(robot, t_capture, camera_id, color='Yellow')
 
     def update_camera_capture_number(self, camera_id, t_capture):
         last_camera_data = self.raw_detection['meta']['cameras'][camera_id]
