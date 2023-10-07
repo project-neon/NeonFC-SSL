@@ -1,7 +1,7 @@
 from entities.robot import OmniRobot
 from entities.ball import Ball
 
-from neonfc_ssl.strategies.follow_ball import FollowBall
+from strategies.follow_ball import FollowBall
 
 
 class SSLMatch():
@@ -12,6 +12,7 @@ class SSLMatch():
 
         self.goalkeeper_id  = 0
         self.team_color     =   'BLUE'
+        self.opponent_color =   'YELLOW'
         self.team_side      =   'LEFT'
 
     
@@ -25,7 +26,7 @@ class SSLMatch():
 
         self.opposites = [
             # 0, 1, 2, 3, 4, 5 opposite robots
-            OmniRobot(self.game, self.team_color, i) for i in range(0, 6)
+            OmniRobot(self.game, self.opponent_color, i) for i in range(0, 6)
         ]
         print("Finish match module")
     

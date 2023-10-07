@@ -6,7 +6,7 @@ def unit_vector(vector):
         return np.array([0, 0])
     return vector / np.linalg.norm(vector)
 
-def to_point(target, robot, decay=lambda x: 1, max_radius=1, speed=1):
+def to_point(target, robot, decay=lambda x: 1, max_radius=1, speed=2):
     to_target = np.subtract(target, robot)
 
     to_taget_scalar = np.linalg.norm(to_target)
@@ -21,8 +21,6 @@ def to_point(target, robot, decay=lambda x: 1, max_radius=1, speed=1):
             to_target_norm[0] * force * speed,
             to_target_norm[1] * force * speed
         ]
-
-
 
 
 class FollowBall():
