@@ -77,7 +77,7 @@ class OmniRobot():
         desired = self.strategy.decide()
 
         self.motor_powers = self.global_speed_to_wheel_speed(*desired)
-        return self.motor_powers
+        return self.motor_powers, desired
 
     def global_speed_to_wheel_speed(self, vx, vy):
         R = self.dimensions['L']

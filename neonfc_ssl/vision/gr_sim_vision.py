@@ -4,7 +4,7 @@ import struct
 import logging
 import threading
 
-from protocols import ssl_vision_wrapper_pb2
+from protocols.grSim import ssl_vision_wrapper_pb2
 from google.protobuf.json_format import MessageToJson
 
 
@@ -110,7 +110,6 @@ class GrSimVision(threading.Thread):
 
     def update_robot_detection(self, robot, _timestamp, camera_id, color='Blue'):
         robot_id = robot.get('robotId')
-        print(color)
         last_robot_data = self.raw_detection[ 
             'robots' + color
          ][robot_id]

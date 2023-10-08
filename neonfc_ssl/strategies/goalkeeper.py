@@ -36,7 +36,7 @@ class GoalKeeper():
 
     def start(self):
         def proj(m):
-            projection_rate = (m.ball.x-.15)/(1-.15)
+            projection_rate = -(m.ball.x-.15)/(1-.15)
             projection_point = m.ball.y + projection_rate * m.ball.vy
 
             y = min(

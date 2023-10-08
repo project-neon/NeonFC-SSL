@@ -42,7 +42,9 @@ class SSLMatch():
 
     def decide(self):
 
-        command = self.goalkeeper.decide()
+        results = self.goalkeeper.decide()
+        command = results[0]
+        desired = results[1]
 
         return [{
             'robot_id': self.goalkeeper.robot_id,
@@ -50,5 +52,7 @@ class SSLMatch():
             'wheel_1': command[0],
             'wheel_2': command[1],
             'wheel_3': command[2],
-            'wheel_4': command[3]
+            'wheel_4': command[3],
+            'vx': desired[0],
+            'vy': desired[1]
         }]

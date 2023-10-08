@@ -12,16 +12,16 @@ from google.protobuf import symbol_database as _symbol_database
 _sym_db = _symbol_database.Default()
 
 
-import protocols.ssl_vision_detection_pb2 as ssl__vision__detection__pb2
-import protocols.ssl_vision_geometry_pb2 as ssl__vision__geometry__pb2
+import ssl_vision_detection_pb2 as ssl__vision__detection__pb2
+import ssl_vision_geometry_pb2 as ssl__vision__geometry__pb2
 
 
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='ssl_vision_wrapper.proto',
   package='',
   syntax='proto2',
-  serialized_options=None,
-  serialized_pb=_b('\n\x18ssl_vision_wrapper.proto\x1a\x1assl_vision_detection.proto\x1a\x19ssl_vision_geometry.proto\"`\n\x11SSL_WrapperPacket\x12&\n\tdetection\x18\x01 \x01(\x0b\x32\x13.SSL_DetectionFrame\x12#\n\x08geometry\x18\x02 \x01(\x0b\x32\x11.SSL_GeometryData')
+  serialized_options=_b('Z>github.com/RoboCup-SSL/ssl-game-controller/internal/app/vision'),
+  serialized_pb=_b('\n\x18ssl_vision_wrapper.proto\x1a\x1assl_vision_detection.proto\x1a\x19ssl_vision_geometry.proto\"`\n\x11SSL_WrapperPacket\x12&\n\tdetection\x18\x01 \x01(\x0b\x32\x13.SSL_DetectionFrame\x12#\n\x08geometry\x18\x02 \x01(\x0b\x32\x11.SSL_GeometryDataB@Z>github.com/RoboCup-SSL/ssl-game-controller/internal/app/vision')
   ,
   dependencies=[ssl__vision__detection__pb2.DESCRIPTOR,ssl__vision__geometry__pb2.DESCRIPTOR,])
 
@@ -78,4 +78,5 @@ SSL_WrapperPacket = _reflection.GeneratedProtocolMessageType('SSL_WrapperPacket'
 _sym_db.RegisterMessage(SSL_WrapperPacket)
 
 
+DESCRIPTOR._options = None
 # @@protoc_insertion_point(module_scope)
