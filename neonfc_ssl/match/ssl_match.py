@@ -54,5 +54,7 @@ class SSLMatch():
             'wheel_3': command[2],
             'wheel_4': command[3],
             'vx': desired[0],
-            'vy': desired[1]
+            'vy': desired[1],
+            'actual_theta': self.goalkeeper.theta,
+            'can_kick': 0
         }]

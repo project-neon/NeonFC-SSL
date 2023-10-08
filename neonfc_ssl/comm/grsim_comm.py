@@ -1,7 +1,7 @@
 import socket
 
-from protocols.grSim_Commands_pb2 import grSim_Commands
-from protocols.grSim_Packet_pb2 import grSim_Packet
+from protocols.grSim.grSim_Commands_pb2 import grSim_Commands
+from protocols.grSim.grSim_Packet_pb2 import grSim_Packet
 
 class GrComm(object):
     def __init__(self):

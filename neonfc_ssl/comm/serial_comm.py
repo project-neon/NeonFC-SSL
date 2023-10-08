@@ -26,6 +26,9 @@ class SerialComm(object):
                 color: 'yellow|blue',
                 vx: float,
                 vy: float,
+                can_kick: bool,
+                actual_theta: float
+                
             }
         ]
         '''

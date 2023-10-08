@@ -3,6 +3,7 @@ import time
 from vision.gr_sim_vision import GrSimVision
 from match.ssl_match import SSLMatch
 from comm.serial_comm import SerialComm
+from comm.grsim_comm import GrComm
 from referee.ssl_game_controller import SSLGameControllerReferee
 
 class Game():
@@ -10,7 +11,7 @@ class Game():
         
         self.vision = GrSimVision(self)
         self.match = SSLMatch(self)
-        self.comm = SerialComm()
+        self.comm = GrComm()
         self.referee = SSLGameControllerReferee()
 
     
