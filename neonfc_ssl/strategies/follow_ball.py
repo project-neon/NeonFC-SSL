@@ -23,7 +23,7 @@ def to_point(target, robot, decay=lambda x: 1, max_radius=1, speed=2):
         ]
 
 
-class FollowBall():
+class FollowPoint():
     def __init__(self, robot):
         self.name = 'FOLLOW-BALL'
         self.match = robot.game.match

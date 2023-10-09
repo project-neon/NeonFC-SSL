@@ -36,7 +36,7 @@ class GrSimVision(threading.Thread):
             }
         }
 
-        self.vision_port = 10020
+        self.vision_port = 10006
 
         self.host = "224.5.23.2"
 

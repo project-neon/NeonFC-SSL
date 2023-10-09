@@ -11,6 +11,34 @@ class GrComm(object):
 
         self.command_port = 20011
         self.host = 'localhost'
+
+    def freeze(self, robot_commands = []):
+        commands = grSim_Commands()
+        commands.isteamyellow = False
+        commands.timestamp = 0
+
+        command = commands.robot_commands.add()
+        command.wheel1 = 0
+        command.wheel2 = 0
+        command.wheel3 = 0
+        command.wheel4 = 0
+        command.kickspeedx = 0
+        command.kickspeedz = 0
+        command.veltangent = 0
+        command.velnormal = 0
+        command.velangular = 0
+        command.spinner = False
+        command.wheelsspeed = True
+        command.id = 0
+        
+        packet = grSim_Packet()
+        packet.commands.CopyFrom(commands)
+
+        self.command_sock.sendto(
+            packet.SerializeToString(), 
+            (self.host, self.command_port)
+        )
+           
     
     def start(self):
         print("Starting communication...")

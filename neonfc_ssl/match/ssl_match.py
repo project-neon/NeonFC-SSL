@@ -1,7 +1,7 @@
 from entities.robot import OmniRobot
 from entities.ball import Ball
 
-from strategies.follow_ball import FollowBall
+# from strategies.follow_ball import FollowBall
 from strategies.goalkeeper import GoalKeeper
 
 

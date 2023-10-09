@@ -11,7 +11,7 @@ class Game():
         
         self.vision = GrSimVision(self)
         self.match = SSLMatch(self)
-        self.comm = GrComm()
+        self.comm = SerialComm()
         self.referee = SSLGameControllerReferee()
 
     
@@ -25,7 +25,13 @@ class Game():
     def update(self, detection):
         self.match.update(detection)
         commands = self.match.decide()
-        self.comm.send(commands)
+
+        if self.referee._referee_message:
+            print(self.referee._referee_message.get('command'))
+        if self.referee.can_play():  
+            self.comm.send(commands)
+        else:
+            self.comm.freeze(commands)
 
 
 game = Game()

@@ -1,5 +1,6 @@
 import numpy as np
 
+from math import log
 from algorithms.potential_fields.fields import PointField
 
 def unit_vector(vector):
@@ -31,11 +32,12 @@ class GoalKeeper():
         self.match = robot.game.match
         self.robot = robot
         
-        self.goal_right = -500
-        self.goal_left = 500
+        self.goal_right = -480
+        self.goal_left = 480
 
     def start(self):
         def proj(m):
+            # talvez precisa mudar em função do lado do campo
             projection_rate = -(m.ball.x-.15)/(1-.15)
             projection_point = m.ball.y + projection_rate * m.ball.vy
 
@@ -43,15 +45,14 @@ class GoalKeeper():
                 max(projection_point, self.goal_right), 
                 self.goal_left
             )
-
             return -4450, y
 
         self.to_ball = PointField(
                 self.match,
                 target = proj,
-                radius = 0.45,
-                multiplier = 1,
-                decay = lambda x : 0 if x < 0.5 else x
+                radius = 5,
+                multiplier = 5,
+                decay = lambda x : log(x/2) + x
             )
 
     def decide(self):

@@ -15,6 +15,15 @@ class SerialComm(object):
         self.comm = serial.Serial(self.command_port, self.baud_rate)
         print(f"Communication port created on {self.command_port}!")
     
+    def freeze(self, robot_commands = []):
+        message = "<"
+        robot_commands = sorted(robot_commands, key = lambda i: i['robot_id'])
+        for rb in robot_commands:
+            message += f"{rb['robot_id']},{round(0, 4)},{round(0, 4)},{round(rb['actual_theta'], 4)}"
+
+        message = message[:-1] + '>'
+        self.comm.write(message.encode())
+
     def send(self, robot_commands = []):
         '''
         Send commands to ESP-32
@@ -35,9 +44,10 @@ class SerialComm(object):
         message = "<"
         robot_commands = sorted(robot_commands, key = lambda i: i['robot_id'])
         for rb in robot_commands:
-            message += f"{rb['robot_id']},{round(rb['vx'], 4)},{round(rb['vy'], 4)},"
+            message += f"{rb['robot_id']},{round(rb['vx'], 4)},{round(rb['vy'], 4)},{round(rb['actual_theta'], 4)}"
 
         message = message[:-1] + '>'
+
         self.comm.write(message.encode())
 
     def _get_robot_color(self, robot):
