@@ -90,7 +90,7 @@ class GrSimVision(threading.Thread):
             for robot in robots_blue:
                 self.update_robot_detection(robot, t_capture, camera_id, color='Blue')
 
-        robots_yellow = frame.get('yellowBlue')
+        robots_yellow = frame.get('robotsYellow')
         if robots_yellow:
             for robot in robots_yellow:
                 self.update_robot_detection(robot, t_capture, camera_id, color='Yellow')
