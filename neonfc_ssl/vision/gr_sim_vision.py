@@ -7,10 +7,19 @@ import threading
 from protocols.grSim import ssl_vision_wrapper_pb2
 from google.protobuf.json_format import MessageToJson
 
+def get_config(config_file=None):
+    if config_file:
+        config = json.loads(open(config_file, 'r').read())
+    else:
+        config = json.loads(open('config.json', 'r').read())
+
+    return config
+
 
 class GrSimVision(threading.Thread):
-    def __init__(self, game) -> None:
+    def __init__(self, game, config_file=None) -> None:
         super(GrSimVision, self).__init__()
+        self.config = get_config(config_file)
 
         self.game = game
 
@@ -36,9 +45,8 @@ class GrSimVision(threading.Thread):
             }
         }
 
-        self.vision_port = 10006
-
-        self.host = "224.5.23.2"
+        self.vision_port = self.config['network']['vision_port']
+        self.host = self.config['network']['multicast_ip']
 
         console_handler = logging.StreamHandler()
         log_formatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
@@ -82,7 +90,7 @@ class GrSimVision(threading.Thread):
             for robot in robots_blue:
                 self.update_robot_detection(robot, t_capture, camera_id, color='Blue')
 
-        robots_yellow = frame.get('yellowBlue')
+        robots_yellow = frame.get('robotsYellow')
         if robots_yellow:
             for robot in robots_yellow:
                 self.update_robot_detection(robot, t_capture, camera_id, color='Yellow')
@@ -101,8 +109,8 @@ class GrSimVision(threading.Thread):
         if len(balls) > 0:
             ball = balls[0]
             self.raw_detection['ball'] = {
-                'x': ball.get('x'),
-                'y': ball.get('y'),
+                'x': ball.get('x')/1000 + 9/2,
+                'y': ball.get('y')/1000 + 6/2,
                 'tCapture': ball.get('tCapture'),
                 'cCapture': camera_id
             }
@@ -121,8 +129,8 @@ class GrSimVision(threading.Thread):
         self.raw_detection[
             'robots' + color
          ][robot_id] = {
-            'x': robot['x'],
-            'y': robot['y'],
+            'x': robot['x']/1000 + 9 / 2,
+            'y': robot['y']/1000 + 6 / 2,
             'theta': robot['orientation'],
             'tCapture': _timestamp,
             'cCapture': camera_id
