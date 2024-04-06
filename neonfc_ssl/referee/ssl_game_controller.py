@@ -14,7 +14,7 @@ class SSLGameControllerReferee(threading.Thread):
         self.referee_port = 10003
         self.host = '224.5.23.1'
 
-        self._referee_message = None
+        self._referee_message = {"command": ""}
 
         # logging.basicConfig(filename="GAME_CONTROLLER.log",
         #             filemode='a',
