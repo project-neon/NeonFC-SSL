@@ -10,17 +10,22 @@ class GameState(State):
         self.name = name
         self.start_time = None
         self.ball_initial_position = None
+        self.color = None
+        self.position = None
 
-    def start(self, match):
+    def start(self, match, color, position):
         self.start_time = time()
         self.ball_initial_position = (match.ball.x, match.ball.y)
+        self.color = color
+        self.position = position
 
 
 class StateController:
-    def __init__(self, ref, match):
-        self.ref = ref
-        self.match = match
-        self.current_state: GameState = None
+    def __init__(self, game):
+        self.game = game
+        self.ref = None
+        self.match = None
+        self.current_state = None
 
         console_handler = logging.StreamHandler()
         log_formatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
@@ -29,6 +34,9 @@ class StateController:
         self.logger.addHandler(console_handler)
 
     def start(self):
+        self.ref = self.game.referee
+        self.match = self.game.match
+
         # Following appendix B found in: https://robocup-ssl.github.io/ssl-rules/sslrules.pdf
         self.states = {
             'Halt': GameState('Halt'),
@@ -120,11 +128,11 @@ class StateController:
         self.states['FreeKick'].add_transition(self.states['Run'], after_10)
 
         self.current_state = self.states['Halt']
-        self.current_state.start(self.match)
+        self.current_state.start(self.match, None, None)
 
     def update(self):
         next_state = self.current_state.update(self.current_state, self.ref, self.match)
         if next_state != self.current_state:
             self.logger.info(f"Changing state {self.current_state.name} -> {next_state.name}")
             self.current_state = next_state
-            self.current_state.start(self.match)
+            self.current_state.start(self.match, self.ref.get_color(), self.ref.get_designated_position())

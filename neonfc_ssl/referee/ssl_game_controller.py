@@ -51,6 +51,8 @@ class SSLGameControllerReferee(threading.Thread):
             self._referee_message['designatedPosition']['y']
         )
 
+    def get_color(self):
+        return 'BLUE' if "BLUE" in self._referee_message.get('command') else 'YELLOW'
 
 
     def _create_socket(self):
