@@ -1,5 +1,8 @@
+import time
 from collections import deque
 import copy
+import numpy as np
+from algorithms.kalman_filter import KalmanFilter
 
 def speed(_list, _fps):
     if len(_list) <= 1:
@@ -18,6 +21,11 @@ def speed(_list, _fps):
 
 class Ball(object):
     def __init__(self, game):
+        self.kf = KalmanFilter(4, 2, 2)
+        self.lt = time.time()
+        self.dt = 1/60
+        self._update_kalman(create=True)
+
         self.game = game
         self.current_data = []
 
@@ -29,6 +37,33 @@ class Ball(object):
         self.vx, self.vy = 0, 0
         self.x, self.y = 0, 0
 
+    def _update_kalman(self, create=False):
+        self.dt = self.lt - time.time()
+        self.lt = time.time()
+
+        A = np.array([
+            [1, 0, self.dt, 0],
+            [0, 1, 0, self.dt],
+            [0, 0, 1, 0],
+            [0, 0, 0, 1]
+        ])
+
+        B = np.array([
+            [.5*self.dt**2, 0],
+            [0, .5*self.dt**2],
+            [self.dt, 0],
+            [0, self.dt]
+        ])
+
+        if create:
+            C = np.array([
+                [1, 0, 0, 0],
+                [0, 1, 0, 0],
+            ])
+        else:
+            C = None
+
+        self.kf.change_matrices(A, B, C)
     def get_name(self):
         return 'BALL'
 
@@ -47,14 +82,22 @@ class Ball(object):
         return ball_next
 
     def _update_speeds(self):
-        self._frames['x'].append(self.current_data['x'])
-        self._frames['y'].append(self.current_data['y'])
+        self._update_kalman()
+        u = np.array([
+            [0],
+            [0]
+        ])
+        z = np.array([
+            [self.current_data['x']],
+            [self.current_data['y']]
+        ])
 
-        self.x = self.current_data['x']
-        self.y = self.current_data['y']
+        kf_output = self.kf(u, z)
 
-        self.vx = speed(self._frames['x'], self.game.vision._fps)
-        self.vy = speed(self._frames['y'], self.game.vision._fps)
+        self.x = kf_output[0, 0]
+        self.y = kf_output[1, 0]
+        self.vx = kf_output[2, 0]
+        self.vy = kf_output[3, 0]
 
     def __getitem__(self, item):
         if item == 0:
