@@ -84,10 +84,6 @@ class OmniRobot():
         r = self.dimensions['R']
         theta = self.theta
 
-        w1 = (-vx * sin(theta + pi/4) + vy * cos(theta + pi/4) + theta * R)/r
-        w2 = (-vx * sin(theta + 3/4 * pi) + vy * cos(theta + 3/4 * pi) + theta * R)/r
-        w3 = (-vx * sin(theta + 5/4 * pi) + vy * cos(theta + 5/4 * pi) + theta * R)/r
-        w4 = (-vx * sin(theta + 7/4 * pi) + vy * cos(theta + 7/4 * pi) + theta * R)/r
         a = 0.7071
         st = sin(theta)
         ct = cos(theta)
@@ -99,6 +95,17 @@ class OmniRobot():
 
         return w2, w3, w4, w1
 
-        return (w1, w2, w3, w4)
-        
+    def __repr__(self):
+        return f"{self.team_color} Robot {self.robot_id} ({self.x:.2f}, {self.y:.2f}, {self.theta:.2f})"
 
+    def __getitem__(self, item):
+        if item == 0:
+            return self.x
+
+        if item == 1:
+            return self.y
+
+        if item == 2:
+            return self.theta
+
+        raise IndexError("Robot only has 3 coordinates")
