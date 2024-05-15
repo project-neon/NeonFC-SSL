@@ -79,7 +79,7 @@ class OmniRobot():
         self.motor_powers = self.global_speed_to_wheel_speed(*desired)
         return self.motor_powers, desired
 
-    def global_speed_to_wheel_speed(self, vx, vy):
+    def global_speed_to_wheel_speed(self, vx, vy, w):
         R = self.dimensions['L']
         r = self.dimensions['R']
         theta = self.theta
@@ -88,6 +88,16 @@ class OmniRobot():
         w2 = (-vx * sin(theta + 3/4 * pi) + vy * cos(theta + 3/4 * pi) + theta * R)/r
         w3 = (-vx * sin(theta + 5/4 * pi) + vy * cos(theta + 5/4 * pi) + theta * R)/r
         w4 = (-vx * sin(theta + 7/4 * pi) + vy * cos(theta + 7/4 * pi) + theta * R)/r
+        a = 0.7071
+        st = sin(theta)
+        ct = cos(theta)
+
+        w1 = (-R * w + a * vx * (ct - st) + a * vy * (ct + st)) / r
+        w2 = (-R * w + a * vx * (-ct - st) + a * vy * (ct - st)) / r
+        w3 = (-R * w + a * vx * (-ct + st) + a * vy * (-ct - st)) / r
+        w4 = (-R * w + a * vx * (ct + st) + a * vy * (-ct + st)) / r
+
+        return w2, w3, w4, w1
 
         return (w1, w2, w3, w4)
         
