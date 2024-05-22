@@ -1,13 +1,16 @@
 import socket
 
-from protocols.grSim.grSim_Commands_pb2 import grSim_Commands
-from protocols.grSim.grSim_Packet_pb2 import grSim_Packet
+from neonfc_ssl.protocols.grSim.grSim_Commands_pb2 import grSim_Commands
+from neonfc_ssl.protocols.grSim.grSim_Packet_pb2 import grSim_Packet
+
 
 class GrComm(object):
-    def __init__(self):
+    def __init__(self, game):
         super(GrComm, self).__init__()
 
         self.commands = []
+        self._game = game
+        self._coach = None
 
         self.command_port = 20011
         self.host = 'localhost'
@@ -38,46 +41,34 @@ class GrComm(object):
             packet.SerializeToString(), 
             (self.host, self.command_port)
         )
-           
-    
+
     def start(self):
         print("Starting communication...")
+        self._coach = self._game.coach
         self.command_sock = self._create_socket()
         print("Communication socket created!")
     
-    def send(self, robot_commands = []):
-        '''
-        Send commands to GrSim
+    def send(self):
+        cmds = self._coach.commands
+        self._coach.new_data = False
 
-        robot_commands follows:
-        [
-            {
-                robot_id: NUM,
-                color: 'yellow|blue',
-                wheel_1: float,
-                wheel_2: float,
-                wheel_3: float,
-                wheel_4: float,
-            }
-        ]
-        '''
         commands = grSim_Commands()
-        commands.isteamyellow = self._get_robot_color(robot_commands[0])
+        commands.isteamyellow = self._get_robot_color(cmds['team'])
         commands.timestamp = 0
-        for robot in robot_commands:
+        for robot in cmds['robots']:
             command = commands.robot_commands.add()
-            command.wheel1 = robot['wheel_1']
-            command.wheel2 = robot['wheel_2']
-            command.wheel3 = robot['wheel_3']
-            command.wheel4 = robot['wheel_4']
-            command.kickspeedx = 0
-            command.kickspeedz = 0
+            command.wheel1 = robot.wheel_speed[0]
+            command.wheel2 = robot.wheel_speed[1]
+            command.wheel3 = robot.wheel_speed[2]
+            command.wheel4 = robot.wheel_speed[3]
+            command.kickspeedx = robot.kick_speed[0]
+            command.kickspeedz = robot.kick_speed[1]
             command.veltangent = 0
             command.velnormal = 0
             command.velangular = 0
-            command.spinner = False
+            command.spinner = robot.spinner
             command.wheelsspeed = True
-            command.id = robot['robot_id']
+            command.id = robot.robot_id
         
         packet = grSim_Packet()
         packet.commands.CopyFrom(commands)
@@ -87,8 +78,8 @@ class GrComm(object):
             (self.host, self.command_port)
         )
 
-    def _get_robot_color(self, robot):
-        return True if robot['color'] == 'YELLOW' else False
-    
+    def _get_robot_color(self, team):
+        return True if team['color'] == 'yellow' else False
+
     def _create_socket(self):
         return socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
