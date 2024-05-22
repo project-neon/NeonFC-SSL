@@ -2,9 +2,7 @@ import time
 from collections import deque
 from math import sin, cos, pi
 import numpy as np
-from algorithms.kalman_filter import KalmanFilter
-
-from commons.velocities import avg_angular_speed, avg_linear_speed
+from neonfc_ssl.algorithms.kalman_filter import KalmanFilter
 
 
 def reduce(ang):
@@ -12,13 +10,13 @@ def reduce(ang):
 
 
 class OmniRobot:
-    def __init__(self, game, team_color, robot_id) -> None:
+    def __init__(self, match, team_color, robot_id) -> None:
         self.kf = KalmanFilter(6, 3, 3)
         self.lt = time.time()
         self.dt = 1 / 60
         self._update_kalman(create=True)
 
-        self.game = game
+        self.match = match
         self.robot_id = robot_id
         self.team_color = team_color
 
@@ -28,7 +26,6 @@ class OmniRobot:
             'L': 0.075,
             'R': 0.035
         }
-
 
         self.last_poses = {
             'x': deque(maxlen=10),
@@ -50,12 +47,12 @@ class OmniRobot:
         return 'SSLROBOT_{}_{}'.format(self.robot_id, self.team_color)
 
     def set_strategy(self, strategy_ref):
-        self.strategy = strategy_ref(self)
-
-        self.strategy.start()
+        if strategy_ref != self.strategy:
+            self.strategy = strategy_ref()
+            self.strategy.start(self)
 
     def get_robot_in_frame(self, frame):
-        team_color_key = 'robotsBlue' if self.team_color == 'BLUE' else 'robotsYellow'
+        team_color_key = 'robotsBlue' if self.team_color == 'blue' else 'robotsYellow'
 
         if frame.get(team_color_key) is None:
             return None
@@ -127,9 +124,8 @@ class OmniRobot:
 
     def decide(self):
         desired = self.strategy.decide()
-
-        self.motor_powers = self.global_speed_to_wheel_speed(*desired)
-        return self.motor_powers, desired
+        desired.wheel_speed = self.global_speed_to_wheel_speed(*desired.move_speed)
+        return desired
 
     def global_speed_to_wheel_speed(self, vx, vy, w):
         R = self.dimensions['L']

@@ -1,60 +1,64 @@
-from entities.robot import OmniRobot
-from entities.ball import Ball
-
-# from strategies.follow_ball import FollowBall
-from strategies.goalkeeper import GoalKeeper
+from neonfc_ssl.entities import OmniRobot, Ball
+from neonfc_ssl.possession_tracker import PossessionTracker
+from neonfc_ssl.state_controller import StateController
 
 
-class SSLMatch():
+class SSLMatch:
     def __init__(self, game) -> None:
-        
-        self.game = game
-        self.vision = game.vision
+        self._game = game
 
-        self.goalkeeper_id  = 0
-        self.team_color     =   'BLUE'
-        self.opponent_color =   'YELLOW'
-        self.team_side      =   'LEFT'
+        # Input Layer classes
+        self._vision = None
+        self._referee = None
 
-    
+        # Tracking Objects
+        self.robots = None
+        self.ball = None
+        self.opposites = None
+        self.game_state = None
+        self.possession = None
+
+        # Other Tracking Info
+        self.goalkeeper_id = 0
+        self.team_color = 'blue'
+        self.opponent_color = 'yellow'
+        self.team_side = 'left'
+
     def start(self):
         print("Starting match module starting ...")
-        self.ball = Ball(self.game)
 
-        self.goalkeeper = OmniRobot(self.game, self.team_color, self.goalkeeper_id)
+        # Get Last Layer Classes
+        self._vision = self._game.vision
+        self._referee = self._game.referee
 
-        self.goalkeeper.set_strategy(GoalKeeper)
+        # Create Layer
+        self.ball = Ball()
 
+        self.robots = [OmniRobot(self, self.team_color, self.goalkeeper_id), OmniRobot(self, self.team_color, 1)]
 
         self.opposites = [
             # 0, 1, 2, 3, 4, 5 opposite robots
-            OmniRobot(self.game, self.opponent_color, i) for i in range(0, 6)
+            OmniRobot(self, self.opponent_color, i) for i in range(0, 6)
         ]
-        print("Finish match module")
-    
-    def update(self, frame):
+
+        self.game_state = StateController(self)
+
+        self.possession = PossessionTracker(self, self.game_state)
+
+        print("Match module started")
+
+    def update(self):
+        frame = self._vision.get_last_frame()
+        ref_command = self._referee.simplify()
+
         self.ball.update(frame)
 
-        self.goalkeeper.update(frame)
+        for robot in self.robots:
+            robot.update(frame)
 
         for opposite in self.opposites:
             opposite.update(frame)
 
-    def decide(self):
+        self.game_state.update(ref_command)
 
-        results = self.goalkeeper.decide()
-        command = results[0]
-        desired = results[1]
-
-        return [{
-            'robot_id': self.goalkeeper.robot_id,
-            'color': self.goalkeeper.team_color,
-            'wheel_1': command[0],
-            'wheel_2': command[1],
-            'wheel_3': command[2],
-            'wheel_4': command[3],
-            'vx': desired[0],
-            'vy': desired[1],
-            'actual_theta': self.goalkeeper.theta,
-            'can_kick': 0
-        }]
+        self.possession.update()
