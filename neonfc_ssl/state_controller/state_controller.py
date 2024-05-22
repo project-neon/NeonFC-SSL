@@ -21,10 +21,8 @@ class GameState(State):
 
 
 class StateController:
-    def __init__(self, game):
-        self.game = game
-        self.ref = None
-        self.match = None
+    def __init__(self, match):
+        self._match = match
         self.current_state = None
 
         console_handler = logging.StreamHandler()
@@ -32,10 +30,6 @@ class StateController:
         self.logger = logging.Logger("StateController")
         console_handler.setFormatter(log_formatter)
         self.logger.addHandler(console_handler)
-
-    def start(self):
-        self.ref = self.game.referee
-        self.match = self.game.match
 
         # Following appendix B found in: https://robocup-ssl.github.io/ssl-rules/sslrules.pdf
         self.states = {
@@ -52,19 +46,19 @@ class StateController:
         }
 
         def on_ref_message(msg):
-            def trig(origin, ref, match):
-                return ref._referee_message.get('command').startswith(msg)
+            def trig(cmd, **kwargs):
+                return cmd.startswith(msg)
             return trig
 
         def after_secs(delay):
-            def trig(origin, ref, match):
+            def trig(origin, **kwargs):
                 return time() - origin.start_time >= delay
             return trig
 
         after_10 = after_secs(10)
 
-        def ball_moved(origin, ref, match):
-            return distance_between_points(match.ball, origin.ball_initial_position) <= 0.05
+        def ball_moved(origin, ball, **kwargs):
+            return distance_between_points(ball, origin.ball_initial_position) <= 0.05
 
         # _ -> Halt
         halt = on_ref_message('HALT')
@@ -128,11 +122,15 @@ class StateController:
         self.states['FreeKick'].add_transition(self.states['Run'], after_10)
 
         self.current_state = self.states['Halt']
-        self.current_state.start(self.match, None, None)
+        self.current_state.start(self._match, None, None)
 
-    def update(self):
-        next_state = self.current_state.update(self.current_state, self.ref, self.match)
+    def update(self, ref):
+        next_state = self.current_state.update(origin=self.current_state, cmd=ref['command'], ball=self._match.ball)
         if next_state != self.current_state:
             self.logger.info(f"Changing state {self.current_state.name} -> {next_state.name}")
             self.current_state = next_state
-            self.current_state.start(self.match, self.ref.get_color(), self.ref.get_designated_position())
+            self.current_state.start(self._match, ref['color'], ref['pos'])
+
+    def __eq__(self, other):
+        return self.current_state.name == other
+
