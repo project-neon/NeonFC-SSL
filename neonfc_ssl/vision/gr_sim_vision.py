@@ -4,8 +4,9 @@ import struct
 import logging
 import threading
 
-from protocols.grSim import ssl_vision_wrapper_pb2
+from neonfc_ssl.protocols.grSim import ssl_vision_wrapper_pb2
 from google.protobuf.json_format import MessageToJson
+
 
 def get_config(config_file=None):
     if config_file:
@@ -24,6 +25,7 @@ class GrSimVision(threading.Thread):
         self.game = game
 
         self._fps = 60
+        self.new_data = False
 
         self.raw_detection = {
             'ball': {
@@ -54,8 +56,7 @@ class GrSimVision(threading.Thread):
         console_handler.setFormatter(log_formatter)
         self.logger.addHandler(console_handler)
 
-    
-    def run(self) -> None:
+    def run(self):
         self.logger.info(f"Creating socket with address: {self.host} and port: {self.vision_port}")
         self.vision_sock = self._create_socket()
         self._wait_to_connect()
@@ -67,16 +68,13 @@ class GrSimVision(threading.Thread):
 
             env.ParseFromString(data)
             last_frame = json.loads(MessageToJson(env))
-            self.update_detection(last_frame)
-
-            self.update_game()
-    
+            self.new_data = self.update_detection(last_frame)
 
     def update_detection(self, last_frame):
         frame = last_frame.get('detection')
         if not frame:
             # pacote de deteccao sem frame
-            return
+            return False
 
         t_capture = frame.get('tCapture')
         camera_id = frame.get('cameraId')
@@ -94,6 +92,8 @@ class GrSimVision(threading.Thread):
         if robots_yellow:
             for robot in robots_yellow:
                 self.update_robot_detection(robot, t_capture, camera_id, color='Yellow')
+
+        return True
 
     def update_camera_capture_number(self, camera_id, t_capture):
         last_camera_data = self.raw_detection['meta']['cameras'][camera_id]
@@ -115,7 +115,6 @@ class GrSimVision(threading.Thread):
                 'cCapture': camera_id
             }
 
-
     def update_robot_detection(self, robot, _timestamp, camera_id, color='Blue'):
         robot_id = robot.get('robotId')
         last_robot_data = self.raw_detection[ 
@@ -136,12 +135,12 @@ class GrSimVision(threading.Thread):
             'cCapture': camera_id
         }
 
-    def update_game(self):
-        self.game.update(self.raw_detection)
+    def get_last_frame(self):
+        self.new_data = False
+        return self.raw_detection
 
     def _wait_to_connect(self):
         self.vision_sock.recv(1024)
-
 
     def _create_socket(self):
         sock = socket.socket(
