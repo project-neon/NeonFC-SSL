@@ -1,1 +1,1 @@
-from algorithms.kalman_filter.kalman_filter import KalmanFilter
+from neonfc_ssl.algorithms.kalman_filter.kalman_filter import KalmanFilter
