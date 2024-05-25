@@ -37,8 +37,10 @@ class OmniRobot:
         self.x, self.y, self.theta = 0, 0, 0
 
         self.speed = 0
-        self.last_frame = 0
-        self.actual_frame = 0
+        self.last_appearance = -1
+        self.missed_frames = 0
+        self.missing = True
+        self.ALLOWED_MISSING_FRAMES = 20  # in seconds
 
         self.current_data = None
         self.strategy = None
@@ -119,8 +121,14 @@ class OmniRobot:
 
     def update(self, frame):
         self.current_data = self.get_robot_in_frame(frame)
-        if self.current_data.get('tCapture') > 0:
+        if self.current_data.get('tCapture') != self.last_appearance:
+            self.last_appearance = self.current_data.get('tCapture')
+            self.missing = False
+            self.missed_frames = 0
             self.update_pose()
+        else:
+            self.missed_frames += 1
+            self.missing = self.missed_frames >= self.ALLOWED_MISSING_FRAMES if not self.missing else True
 
     def decide(self):
         desired = self.strategy.decide()

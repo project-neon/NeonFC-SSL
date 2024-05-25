@@ -47,8 +47,7 @@ class BaseCoach(ABC):
         #     self.new_data = True
         #     return
 
-        self._active_robots = ...  # TODO: create active robots list
-        self._active_robots = self._robots
+        self._active_robots = [robot for robot in self._robots if not robot.missing]
         self._n_active_robots = len(self._active_robots)
 
         self.decide()

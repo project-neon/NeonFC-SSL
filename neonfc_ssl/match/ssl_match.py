@@ -34,7 +34,7 @@ class SSLMatch:
         # Create Layer
         self.ball = Ball()
 
-        self.robots = [OmniRobot(self, self.team_color, self.goalkeeper_id), OmniRobot(self, self.team_color, 1)]
+        self.robots = [OmniRobot(self, self.team_color, i) for i in range(0, 6)]
 
         self.opposites = [
             # 0, 1, 2, 3, 4, 5 opposite robots
