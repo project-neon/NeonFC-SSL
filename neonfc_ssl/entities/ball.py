@@ -36,6 +36,7 @@ class Ball(object):
 
         self.vx, self.vy = 0, 0
         self.x, self.y = 0, 0
+        self._np_array = None
 
     def _update_kalman(self, create=False):
         self.dt = self.lt - time.time()
@@ -89,6 +90,8 @@ class Ball(object):
 
         kf_output = self.kf(u, z)
 
+        self._np_array = kf_output
+
         self.x = kf_output[0, 0]
         self.y = kf_output[1, 0]
         self.vx = kf_output[2, 0]
@@ -102,3 +105,8 @@ class Ball(object):
             return self.y
 
         raise IndexError("Ball only has 2 coordinates")
+
+    def __array__(self, dtype=None, copy=None):
+        if copy is False:
+            raise ValueError("`copy=False` isn't supported")
+        return self._np_array[:2, 0].astype(dtype)

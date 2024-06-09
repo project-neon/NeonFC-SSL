@@ -3,10 +3,7 @@ from collections import deque
 from math import sin, cos, pi
 import numpy as np
 from neonfc_ssl.algorithms.kalman_filter import KalmanFilter
-
-
-def reduce(ang):
-    return (ang + pi) % (2 * pi) - pi
+from neonfc_ssl.commons.math import reduce_ang
 
 
 class OmniRobot:
@@ -44,13 +41,13 @@ class OmniRobot:
 
         self.current_data = None
         self.strategy = None
+        self._np_array = None
 
     def get_name(self):
         return 'SSLROBOT_{}_{}'.format(self.robot_id, self.team_color)
 
     def set_strategy(self, strategy_ref):
-        if strategy_ref != self.strategy:
-            self.strategy = strategy_ref()
+        if self.strategy != strategy_ref:
             self.strategy.start(self)
 
     def get_robot_in_frame(self, frame):
@@ -112,9 +109,11 @@ class OmniRobot:
 
         kf_output = self.kf(u, z)
 
+        self._np_array = kf_output
+
         self.x = kf_output[0, 0]
         self.y = kf_output[1, 0]
-        self.theta = reduce(kf_output[2, 0])
+        self.theta = reduce_ang(kf_output[2, 0])
         self.vx = kf_output[3, 0]
         self.vy = kf_output[4, 0]
         self.vtheta = kf_output[5, 0]
@@ -165,3 +164,8 @@ class OmniRobot:
             return self.theta
 
         raise IndexError("Robot only has 3 coordinates")
+
+    def __array__(self, dtype=None, copy=None):
+        if copy is False:
+            raise ValueError("`copy=False` isn't supported")
+        return self._np_array[:2, 0].astype(dtype)
