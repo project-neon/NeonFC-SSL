@@ -12,9 +12,9 @@ class SSLMatch:
         self._referee = None
 
         # Tracking Objects
-        self.robots = None
+        self.robots: list[OmniRobot] = None
         self.ball = None
-        self.opposites = None
+        self.opposites: list[OmniRobot] = None
         self.game_state = None
         self.possession = None
 

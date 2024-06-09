@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from concurrent import futures
-from neonfc_ssl.entities import RobotCommand
+from neonfc_ssl.strategies import Still
+from neonfc_ssl.match.ssl_match import SSLMatch
 
 
 class BaseCoach(ABC):
@@ -8,7 +9,7 @@ class BaseCoach(ABC):
         self._game = game
 
         # Tracking Layer Classes
-        self._match = None
+        self._match: SSLMatch = None
 
         # Other Useful Parameters
         self._active_robots = None
@@ -17,6 +18,8 @@ class BaseCoach(ABC):
 
         self.commands = None
         self.new_data = False
+
+        self.events = {}
 
     def start(self):
         print("Starting coach module starting ...")
@@ -29,7 +32,15 @@ class BaseCoach(ABC):
             'color': self._match.team_color
         }, 'robots': []}
 
+        for r in self._robots:
+            r.set_strategy(Still(self, self._match))
+
+        self._start()
+
         print("Coach module started")
+
+    def _start(self):
+        pass
 
     @abstractmethod
     def decide(self):
