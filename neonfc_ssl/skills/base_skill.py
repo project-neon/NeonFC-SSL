@@ -11,10 +11,11 @@ class BaseSkill(State):
         self._match = match
         self._robot = None
 
-    def start(self, robot):
+    def start(self, robot, **kwargs):
         self._robot = robot
+        self._start(**kwargs)
 
-    def _start(self):
+    def _start(self, **kwargs):
         pass
 
     @abstractmethod

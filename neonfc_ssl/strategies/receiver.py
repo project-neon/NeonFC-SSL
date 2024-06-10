@@ -8,7 +8,6 @@ import math
 class Receiver(BaseStrategy):
     def __init__(self, coach, match):
         super().__init__('SoloAttacker', coach, match)
-        self.robot = None
         self.field = None
 
     def _start(self):
@@ -24,7 +23,7 @@ class Receiver(BaseStrategy):
             return lambda m: math.pi - math.atan2(r.y-m.ball.y, r.x-m.ball.x)
 
         for r in self._match.robots:
-            if r == self.robot:
+            if r == self._robot:
                 continue
             self.field.add_field(PointField(
                 self._match,
@@ -56,6 +55,6 @@ class Receiver(BaseStrategy):
             ))
 
     def decide(self):
-        vx, vy = self.field.compute([self.robot.x, self.robot.y])
+        vx, vy = self.field.compute([self._robot.x, self._robot.y])
 
-        return RobotCommand(move_speed=(vx, vy, 0), robot_id=self.robot.robot_id)
+        return RobotCommand(move_speed=(vx, vy, 0), robot_id=self._robot.robot_id)

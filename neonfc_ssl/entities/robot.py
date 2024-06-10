@@ -48,6 +48,7 @@ class OmniRobot:
 
     def set_strategy(self, strategy_ref):
         if self.strategy != strategy_ref:
+            self.strategy = strategy_ref
             self.strategy.start(self)
 
     def get_robot_in_frame(self, frame):

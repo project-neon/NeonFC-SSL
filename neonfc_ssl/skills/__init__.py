@@ -5,4 +5,4 @@ from neonfc_ssl.skills.self_pass import SelfPass
 from neonfc_ssl.skills.shoot import Shoot
 from neonfc_ssl.skills.wait import Wait
 
-__all__ = [GoToBall, MoveToPose, SimplePass, ChipPass, SelfPass, Shoot, Wait]
+__all__ = ["GoToBall", "MoveToPose", "SimplePass", "ChipPass", "SelfPass", "Shoot", "Wait"]

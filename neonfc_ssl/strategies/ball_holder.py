@@ -12,7 +12,6 @@ def angle_between(p1, p2, p3):
 class BallHolder(BaseStrategy):
     def __init__(self, coach, match):
         super().__init__('Ball Holder', coach, match)
-        self.robot = None
         self.passable_robots = []
         self.intercepting_robots = []
 
@@ -29,7 +28,7 @@ class BallHolder(BaseStrategy):
         }
 
         def close_to_ball():
-            return (((self.robot.x - self._match.ball.x) ** 2 + (self.robot.y - self._match.ball.y) ** 2) ** .5) < 0.12
+            return (((self._robot.x - self._match.ball.x) ** 2 + (self._robot.y - self._match.ball.y) ** 2) ** .5) < 0.12
 
         def not_func(f):
             def wrapped():
@@ -49,10 +48,10 @@ class BallHolder(BaseStrategy):
 
     def _start(self):
         self.active = self.states['go_to_ball']
-        self.active.start(self.robot)
+        self.active.start(self._robot)
 
     def decide(self):
-        self.passable_robots = [r for r in self._match.robots if not r.missing and r is not self.robot]
+        self.passable_robots = [r for r in self._match.robots if not r.missing and r is not self._robot]
         self.intercepting_robots = [r for r in self._match.opposites if not r.missing]
 
         actions = self.pass_ex_value()
@@ -61,7 +60,7 @@ class BallHolder(BaseStrategy):
         self.max_idx = actions.index(self.max_value)
 
         self.goal_v = self.goal_probability()
-        self.current_v = 1 - (distance_between_points(self.robot, (9, 3)) / 9.5) - self.possession_change_probability()
+        self.current_v = 1 - (distance_between_points(self._robot, (9, 3)) / 9.5) - self.possession_change_probability()
         print('goal v', self.goal_v)
 
         next = self.active.update()
@@ -72,22 +71,22 @@ class BallHolder(BaseStrategy):
             self.active = next
             if self.active.name == "Pass":
                 self.passing_to = self.passable_robots[self.max_idx]
-                self.active.start(self.robot, self.passable_robots[self.max_idx])
+                self.active.start(self._robot, self.passable_robots[self.max_idx])
             else:
-                self.active.start(self.robot)
+                self.active.start(self._robot)
 
         return self.active.decide()
 
     def pass_transition(self):
         # if self.max_value > (
-        #         1 - (distance_between_points(self.robot, (9, 3)) / 9.5)) * 0.1 and self.max_value > self.goal_v:
+        #         1 - (distance_between_points(self._robot, (9, 3)) / 9.5)) * 0.1 and self.max_value > self.goal_v:
         if self.max_value > self.current_v and self.max_value > self.goal_v:
             return True
         return False
 
     def shoot_transition(self):
         # if self.goal_v > (
-        #         1 - (distance_between_points(self.robot, (9, 3)) / 9.5)) * 0.1 and self.goal_v > self.max_value:
+        #         1 - (distance_between_points(self._robot, (9, 3)) / 9.5)) * 0.1 and self.goal_v > self.max_value:
         if self.goal_v > self.current_v and self.goal_v > self.max_value:
             return True
         return False
@@ -109,18 +108,18 @@ class BallHolder(BaseStrategy):
         return [min(1, 4*i / math.pi) for i in out]
 
     def possession_change_probability(self):
-        closest = min(map(lambda x: distance_between_points(x, self.robot), self.intercepting_robots))
+        closest = min(map(lambda x: distance_between_points(x, self._robot), self.intercepting_robots))
         return 1 - min(1, closest/3)
 
     def goal_probability(self):
-        robot_lock = (self.robot.x, 0)
+        robot_lock = (self._robot.x, 0)
 
         goal_posts = ((9, 2.5), (9, 3.5))
         goal_posts = (
-            angle_between(self.robot, robot_lock, goal_posts[0]), angle_between(self.robot, robot_lock, goal_posts[1]))
+            angle_between(self._robot, robot_lock, goal_posts[0]), angle_between(self._robot, robot_lock, goal_posts[1]))
 
-        robot_angles = [angle_between(self.robot, robot_lock, robot)
-                        for robot in self._match.opposites if robot.x > self.robot.x and not robot.missing]
+        robot_angles = [angle_between(self._robot, robot_lock, robot)
+                        for robot in self._match.opposites if robot.x > self._robot.x and not robot.missing]
         robot_angles.append(goal_posts[0])
         robot_angles.append(goal_posts[1])
 
