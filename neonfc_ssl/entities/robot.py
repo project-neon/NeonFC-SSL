@@ -1,10 +1,23 @@
+import time
 from collections import deque
 from math import sin, cos, pi
+import numpy as np
+from algorithms.kalman_filter import KalmanFilter
 
 from commons.velocities import avg_angular_speed, avg_linear_speed
 
-class OmniRobot():
+
+def reduce(ang):
+    return (ang + pi) % (2 * pi) - pi
+
+
+class OmniRobot:
     def __init__(self, game, team_color, robot_id) -> None:
+        self.kf = KalmanFilter(6, 3, 3)
+        self.lt = time.time()
+        self.dt = 1 / 60
+        self._update_kalman(create=True)
+
         self.game = game
         self.robot_id = robot_id
         self.team_color = team_color
@@ -49,24 +62,63 @@ class OmniRobot():
         robot_data = frame[team_color_key].get(self.robot_id)
         return robot_data
 
+    def _update_kalman(self, create=False):
+        self.dt = self.lt - time.time()
+        self.lt = time.time()
+
+        A = np.array([
+            [1, 0, 0, self.dt, 0, 0],
+            [0, 1, 0, 0, self.dt, 0],
+            [0, 0, 1, 0, 0, self.dt],
+            [0, 0, 0, 1, 0, 0],
+            [0, 0, 0, 0, 1, 0],
+            [0, 0, 0, 0, 0, 1]
+        ])
+
+        B = np.array([
+            [.5 * self.dt ** 2, 0, 0],
+            [0, .5 * self.dt ** 2, 0],
+            [0, 0, .5 * self.dt ** 2],
+            [self.dt, 0, 0],
+            [0, self.dt, 0],
+            [0, 0, self.dt]
+        ])
+
+        if create:
+            C = np.array([
+                [1, 0, 0, 0, 0, 0],
+                [0, 1, 0, 0, 0, 0],
+                [0, 0, 1, 0, 0, 0]
+            ])
+        else:
+            C = None
+
+        self.kf.change_matrices(A, B, C)
 
     def get_speed(self):
         return (self.vx ** 2 + self.vy ** 2) ** .5
 
     def update_pose(self):
-        self.last_poses['x'].append(self.current_data['x'])
-        self.last_poses['y'].append(self.current_data['y'])
-        self.last_poses['theta'].append(self.current_data['theta'])
+        self._update_kalman()
+        u = np.array([
+            [0],
+            [0],
+            [0]
+        ])
+        z = np.array([
+            [self.current_data['x']],
+            [self.current_data['y']],
+            [self.current_data['theta']]
+        ])
 
-        self.theta = self.current_data['theta']
-        self.x = self.current_data['x']
-        self.y = self.current_data['y']
+        kf_output = self.kf(u, z)
 
-        self.vx = avg_linear_speed(self.last_poses['x'], self.game.vision._fps)
-        self.vy = avg_linear_speed(self.last_poses['y'], self.game.vision._fps)
-        self.vtheta = avg_angular_speed(self.last_poses['theta'], self.game.vision._fps)
-
-        self.speed = self.get_speed()
+        self.x = kf_output[0, 0]
+        self.y = kf_output[1, 0]
+        self.theta = reduce(kf_output[2, 0])
+        self.vx = kf_output[3, 0]
+        self.vy = kf_output[4, 0]
+        self.vtheta = kf_output[5, 0]
 
     def update(self, frame):
         self.current_data = self.get_robot_in_frame(frame)
@@ -79,16 +131,33 @@ class OmniRobot():
         self.motor_powers = self.global_speed_to_wheel_speed(*desired)
         return self.motor_powers, desired
 
-    def global_speed_to_wheel_speed(self, vx, vy):
+    def global_speed_to_wheel_speed(self, vx, vy, w):
         R = self.dimensions['L']
         r = self.dimensions['R']
         theta = self.theta
 
-        w1 = (-vx * sin(theta + pi/4) + vy * cos(theta + pi/4) + theta * R)/r
-        w2 = (-vx * sin(theta + 3/4 * pi) + vy * cos(theta + 3/4 * pi) + theta * R)/r
-        w3 = (-vx * sin(theta + 5/4 * pi) + vy * cos(theta + 5/4 * pi) + theta * R)/r
-        w4 = (-vx * sin(theta + 7/4 * pi) + vy * cos(theta + 7/4 * pi) + theta * R)/r
+        a = 0.7071
+        st = sin(theta)
+        ct = cos(theta)
 
-        return (w1, w2, w3, w4)
-        
+        w1 = (-R * w + a * vx * (ct - st) + a * vy * (ct + st)) / r
+        w2 = (-R * w + a * vx * (-ct - st) + a * vy * (ct - st)) / r
+        w3 = (-R * w + a * vx * (-ct + st) + a * vy * (-ct - st)) / r
+        w4 = (-R * w + a * vx * (ct + st) + a * vy * (-ct + st)) / r
 
+        return w2, w3, w4, w1
+
+    def __repr__(self):
+        return f"{self.team_color} Robot {self.robot_id} ({self.x:.2f}, {self.y:.2f}, {self.theta:.2f})"
+
+    def __getitem__(self, item):
+        if item == 0:
+            return self.x
+
+        if item == 1:
+            return self.y
+
+        if item == 2:
+            return self.theta
+
+        raise IndexError("Robot only has 3 coordinates")
