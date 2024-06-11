@@ -1,11 +1,10 @@
 import json
-import logging
 import socket
 import struct
 import threading
 
 from google.protobuf.json_format import MessageToJson
-from protocols.gc.ssl_gc_referee_message_pb2 import Referee
+from neonfc_ssl.protocols.gc.ssl_gc_referee_message_pb2 import Referee
 
 
 class SSLGameControllerReferee(threading.Thread):
@@ -14,7 +13,7 @@ class SSLGameControllerReferee(threading.Thread):
         self.referee_port = 10003
         self.host = '224.5.23.1'
 
-        self._referee_message = {"command": ""}
+        self._referee_message = {}
 
         # logging.basicConfig(filename="GAME_CONTROLLER.log",
         #             filemode='a',
@@ -39,32 +38,39 @@ class SSLGameControllerReferee(threading.Thread):
 
         _is_halted = self._referee_message.get('command') == 'HALT'
         _is_stopped = self._referee_message.get('command') == 'STOP'
-        
+
         return not (_is_halted or _is_stopped)
 
+    def simplify(self):
+        return {"command": self.get_command(), "team": self.get_team(), "pos": self.get_designated_position()}
+
+    def get_command(self):
+        return self._referee_message.get('command', "")
+
+    def get_team(self):
+        return "blue" if self._referee_message.get('command', "").endswith('BLUE') else "yellow"
 
     def get_designated_position(self):
-        if not self._referee_message:
-            return None
-        return (
-            self._referee_message['designatedPosition']['x'],
-            self._referee_message['designatedPosition']['y']
-        )
+        if pos := self._referee_message.get('designatedPosition', None):
+            return (
+                pos['x'],
+                pos['y']
+            )
+        return None
 
     def get_color(self):
         return 'BLUE' if "BLUE" in self._referee_message.get('command') else 'YELLOW'
 
-
     def _create_socket(self):
         """Returns a new socket binded to the Referee."""
         sock = socket.socket(
-            socket.AF_INET, 
-            socket.SOCK_DGRAM, 
+            socket.AF_INET,
+            socket.SOCK_DGRAM,
             socket.IPPROTO_UDP
         )
 
         sock.setsockopt(
-            socket.SOL_SOCKET, 
+            socket.SOL_SOCKET,
             socket.SO_REUSEADDR, 1
         )
 
@@ -77,8 +83,8 @@ class SSLGameControllerReferee(threading.Thread):
         )
 
         sock.setsockopt(
-            socket.IPPROTO_IP, 
-            socket.IP_ADD_MEMBERSHIP, 
+            socket.IPPROTO_IP,
+            socket.IP_ADD_MEMBERSHIP,
             mreq
         )
 

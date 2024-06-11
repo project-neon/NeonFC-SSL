@@ -1,7 +1,7 @@
 import numpy as np
 
 from math import log
-from algorithms.potential_fields.fields import PointField
+from neonfc_ssl.algorithms.potential_fields.fields import PointField
 
 def unit_vector(vector):
     """ Returns the unit vector of the vector."""
@@ -37,7 +37,7 @@ class GoalKeeper():
 
     def start(self):
         def proj(m):
-            # talvez precisa mudar em função do lado do campo
+            # talvez precd cisa mudar em função do lado do campo
             projection_rate = -(m.ball.x-.15)/(1-.15)
             projection_point = m.ball.y + projection_rate * m.ball.vy
 
@@ -56,4 +56,4 @@ class GoalKeeper():
             )
 
     def decide(self):
-        return self.to_ball.compute([self.robot.x, self.robot.y])
+        return *self.to_ball.compute([self.robot.x, self.robot.y]), 0

@@ -1,40 +1,35 @@
-import time
-
 from vision.gr_sim_vision import GrSimVision
 from match.ssl_match import SSLMatch
+from coach import COACHES, BaseCoach
 from comm.serial_comm import SerialComm
 from comm.grsim_comm import GrComm
 from referee.ssl_game_controller import SSLGameControllerReferee
 
-class Game():
+
+class Game:
     def __init__(self) -> None:
-        
         self.vision = GrSimVision(self)
-        self.match = SSLMatch(self)
-        self.comm = SerialComm()
         self.referee = SSLGameControllerReferee()
+        self.match = SSLMatch(self)
+        self.coach = COACHES["TestCoach"](self)
+        self.comm = GrComm(self)
 
-    
     def start(self):
-        self.match.start()
         self.vision.start()
-        self.comm.start()
         self.referee.start()
+        self.match.start()
+        self.coach.start()
+        self.comm.start()
 
+        self.update()
 
-    def update(self, detection):
-        self.match.update(detection)
-        commands = self.match.decide()
-
-        if self.referee._referee_message:
-            print(self.referee._referee_message.get('command'))
-        if self.referee.can_play():  
-            self.comm.send(commands)
-        else:
-            self.comm.freeze(commands)
+    def update(self):
+        while True:
+            if self.vision.new_data:
+                self.match.update()
+                self.coach.update()
+                self.comm.send()
 
 
 game = Game()
-
 game.start()
-

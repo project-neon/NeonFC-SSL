@@ -12,6 +12,7 @@ scipy = "^1.11.3"
 numpy = "^1.26.0"
 serial = "^0.0.97"
 pyserial = "^3.5"
+neonpathplanning = "^1.0.1"
 
 
 [build-system]

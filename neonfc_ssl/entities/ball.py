@@ -2,7 +2,8 @@ import time
 from collections import deque
 import copy
 import numpy as np
-from algorithms.kalman_filter import KalmanFilter
+from neonfc_ssl.algorithms.kalman_filter import KalmanFilter
+
 
 def speed(_list, _fps):
     if len(_list) <= 1:
@@ -20,13 +21,12 @@ def speed(_list, _fps):
 
 
 class Ball(object):
-    def __init__(self, game):
+    def __init__(self):
         self.kf = KalmanFilter(4, 2, 2)
         self.lt = time.time()
         self.dt = 1/60
         self._update_kalman(create=True)
 
-        self.game = game
         self.current_data = []
 
         self._frames = {
@@ -36,6 +36,7 @@ class Ball(object):
 
         self.vx, self.vy = 0, 0
         self.x, self.y = 0, 0
+        self._np_array = None
 
     def _update_kalman(self, create=False):
         self.dt = self.lt - time.time()
@@ -64,6 +65,7 @@ class Ball(object):
             C = None
 
         self.kf.change_matrices(A, B, C)
+
     def get_name(self):
         return 'BALL'
 
@@ -74,12 +76,6 @@ class Ball(object):
         self.current_data = frame.get('ball')
         if self.current_data is not None:
             self._update_speeds()
-
-    def pos_next(self, fps=10):
-        ball_next = copy.copy(self)
-        ball_next.x += ball_next.vx * 10 * self.game.vision._fps
-        ball_next.y += ball_next.vy * 10 * self.game.vision._fps
-        return ball_next
 
     def _update_speeds(self):
         self._update_kalman()
@@ -94,6 +90,8 @@ class Ball(object):
 
         kf_output = self.kf(u, z)
 
+        self._np_array = kf_output
+
         self.x = kf_output[0, 0]
         self.y = kf_output[1, 0]
         self.vx = kf_output[2, 0]
@@ -107,3 +105,8 @@ class Ball(object):
             return self.y
 
         raise IndexError("Ball only has 2 coordinates")
+
+    def __array__(self, dtype=None, copy=None):
+        if copy is False:
+            raise ValueError("`copy=False` isn't supported")
+        return self._np_array[:2, 0].astype(dtype)
