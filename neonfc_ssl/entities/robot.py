@@ -3,7 +3,7 @@ from collections import deque
 from math import sin, cos, pi
 import numpy as np
 from neonfc_ssl.algorithms.kalman_filter import KalmanFilter
-from neonfc_ssl.commons.math import reduce_ang
+from neonfc_ssl.commons.math import reduce_ang, distance_between_points
 
 
 class OmniRobot:
@@ -150,6 +150,20 @@ class OmniRobot:
         w4 = (-R * w + a * vx * (ct + st) + a * vy * (-ct + st)) / r
 
         return w2, w3, w4, w1
+
+    def time_to_ball(self, ball):
+        avg_speed = 5
+        pos = np.array(ball)
+        last_t = 0
+        for _ in range(20):
+            t = distance_between_points(pos, self)/avg_speed
+            pos = ball.pos_after(t)
+
+            if abs(t - last_t) < 0.1:
+                return t
+
+            last_t = t
+        return last_t
 
     def __repr__(self):
         return f"{self.team_color} Robot {self.robot_id} ({self.x:.2f}, {self.y:.2f}, {self.theta:.2f})"
