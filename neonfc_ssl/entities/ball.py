@@ -3,6 +3,7 @@ from collections import deque
 import copy
 import numpy as np
 from neonfc_ssl.algorithms.kalman_filter import KalmanFilter
+import math
 
 
 def speed(_list, _fps):
@@ -76,6 +77,16 @@ class Ball(object):
         self.current_data = frame.get('ball')
         if self.current_data is not None:
             self._update_speeds()
+
+    def pos_after(self, dt):
+        # t_max = a/v
+        # pos = initial_pos + initial_v * t_target + 0.5 * a * t_target ^ 2
+        a = 0.05 * math.pi * 9.81
+
+        t_max = a/self.get_speed()
+        dt = min(dt, t_max)
+
+        return self.x + self.vx * dt + 0.5 * a * dt ** 2, self.y + self.vy * dt + 0.5 * a * dt ** 2
 
     def _update_speeds(self):
         self._update_kalman()
