@@ -83,6 +83,9 @@ class Ball(object):
         # pos = initial_pos + initial_v * t_target + 0.5 * a * t_target ^ 2
         a = 0.05 * math.pi * 9.81
 
+        if self.get_speed() == 0:
+            return self.x, self.y
+
         t_max = a/self.get_speed()
         dt = min(dt, t_max)
 

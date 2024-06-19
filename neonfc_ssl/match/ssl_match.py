@@ -64,5 +64,3 @@ class SSLMatch:
         self.game_state.update(ref_command)
 
         self.possession.update()
-        print(self.possession.get_possession())
-
