@@ -61,7 +61,6 @@ class BallHolder(BaseStrategy):
 
         self.goal_v = self.goal_probability()
         self.current_v = 1 - (distance_between_points(self._robot, (9, 3)) / 9.5) - self.possession_change_probability()
-        print('goal v', self.goal_v)
 
         next = self.active.update()
 
@@ -140,6 +139,4 @@ class BallHolder(BaseStrategy):
         for v, p in zip(self.pass_value(), self.pass_probability()):
             # action.append(v * p - (1-p))  # consider loosing ball
             action.append(v * p)  # simple
-            print(v, p)
-        print('a', action)
         return action

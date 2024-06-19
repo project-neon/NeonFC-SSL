@@ -9,7 +9,7 @@ class TeamPossession(State):
         self.color = color
 
 
-class PossessionTracker:
+class BoolPossessionTracker:
     def __init__(self, match, state_controller):
         self.states = {'yellow': TeamPossession('yellow'), 'blue': TeamPossession('blue')}
         self.match = match

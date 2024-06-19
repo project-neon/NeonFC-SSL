@@ -1,5 +1,5 @@
 from neonfc_ssl.entities import OmniRobot, Ball
-from neonfc_ssl.possession_tracker import PossessionTracker
+from neonfc_ssl.possession_tracker import FloatPossessionTracker as PossessionTracker
 from neonfc_ssl.state_controller import StateController
 
 
@@ -13,10 +13,10 @@ class SSLMatch:
 
         # Tracking Objects
         self.robots: list[OmniRobot] = None
-        self.ball = None
+        self.ball: Ball = None
         self.opposites: list[OmniRobot] = None
-        self.game_state = None
-        self.possession = None
+        self.game_state: StateController = None
+        self.possession: PossessionTracker = None
 
         # Other Tracking Info
         self.goalkeeper_id = 0
@@ -34,7 +34,9 @@ class SSLMatch:
         # Create Layer
         self.ball = Ball()
 
-        self.robots = [OmniRobot(self, self.team_color, i) for i in range(0, 6)]
+        self.robots = [
+            OmniRobot(self, self.team_color, i) for i in range(0, 6)
+        ]
 
         self.opposites = [
             # 0, 1, 2, 3, 4, 5 opposite robots
@@ -62,3 +64,5 @@ class SSLMatch:
         self.game_state.update(ref_command)
 
         self.possession.update()
+        print(self.possession.get_possession())
+
