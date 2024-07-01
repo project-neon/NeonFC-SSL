@@ -12,9 +12,11 @@ class SSLMatch:
         self._referee = None
 
         # Tracking Objects
-        self.robots: list[OmniRobot] = None
         self.ball: Ball = None
+        self.robots: list[OmniRobot] = None
+        self.active_robots: list[OmniRobot] = None
         self.opposites: list[OmniRobot] = None
+        self.active_opposites: list[OmniRobot] = None
         self.game_state: StateController = None
         self.possession: PossessionTracker = None
 
@@ -38,10 +40,14 @@ class SSLMatch:
             OmniRobot(self, self.team_color, i) for i in range(0, 6)
         ]
 
+        self.active_robots = self.robots
+
         self.opposites = [
             # 0, 1, 2, 3, 4, 5 opposite robots
             OmniRobot(self, self.opponent_color, i) for i in range(0, 6)
         ]
+
+        self.active_opposites = self.opposites
 
         self.game_state = StateController(self)
 
@@ -58,8 +64,12 @@ class SSLMatch:
         for robot in self.robots:
             robot.update(frame)
 
+        self.active_robots = [r for r in self.robots if not r.missing]
+
         for opposite in self.opposites:
             opposite.update(frame)
+
+        self.active_opposites = [r for r in self.opposites if not r.missing]
 
         self.game_state.update(ref_command)
 

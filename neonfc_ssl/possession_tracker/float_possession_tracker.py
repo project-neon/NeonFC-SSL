@@ -8,7 +8,7 @@ class FloatPossessionTracker:
         self.last_poss = deque([], maxlen=10)
         self.match = match
         self.state_controller = state_controller
-        self. current_closest = None
+        self.current_closest = None
 
         console_handler = logging.StreamHandler()
         log_formatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
@@ -21,8 +21,8 @@ class FloatPossessionTracker:
     def update(self):
         dist_to_ball = lambda r: r.time_to_ball(self.match.ball)
 
-        op_closest = min(self.match.opposites, key=dist_to_ball)
-        my_closest = min(self.match.robots, key=dist_to_ball)
+        op_closest = min(self.match.active_opposites, key=dist_to_ball)
+        my_closest = min(self.match.active_robots, key=dist_to_ball)
 
         op_time = dist_to_ball(op_closest)
         my_time = dist_to_ball(my_closest)
