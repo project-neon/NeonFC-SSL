@@ -1,3 +1,4 @@
+import math
 import time
 from collections import deque
 from math import sin, cos, pi
@@ -153,14 +154,14 @@ class OmniRobot:
         return w2, w3, w4, w1
 
     def time_to_ball(self, ball):
-        avg_speed = 5
+        avg_speed = .5
         pos = np.array(ball)
         last_t = 0
-        for _ in range(20):
+        for _ in range(50):
             t = distance_between_points(pos, self)/avg_speed
             pos = ball.pos_after(t)
 
-            if abs(t - last_t) < 0.1:
+            if abs(t - last_t) < 0.01:
                 return t
 
             last_t = t

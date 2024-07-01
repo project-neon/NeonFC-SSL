@@ -84,13 +84,29 @@ class Ball(object):
         # pos = initial_pos + initial_v * t_target + 0.5 * a * t_target ^ 2
         a = 0.05 * math.pi * 9.81
 
-        if self.get_speed() == 0:
-            return self.x, self.y
+        t_max_x = abs(self.vx/a) if a else 0
+        t_max_y = abs(self.vy/a) if a else 0
 
-        t_max = a/self.get_speed()
-        dt = min(dt, t_max)
+        dt_x = min(dt, t_max_x)
+        dt_y = min(dt, t_max_y)
 
-        return self.x + self.vx * dt + 0.5 * a * dt ** 2, self.y + self.vy * dt + 0.5 * a * dt ** 2
+        return (self.x + self.vx * dt_x - math.copysign(0.5 * a * dt_x ** 2, self.vx),
+                self.y + self.vy * dt_y - math.copysign(0.5 * a * dt_y ** 2, self.vy))
+
+    def stopping_pos(self):
+        # t_max = a/v
+        # pos = initial_pos + initial_v * t_target + 0.5 * a * t_target ^ 2
+        a = 0.005 * math.pi * 9.81
+        a = 0.709189
+
+        t_max_x = abs(self.vx/a) if a else 0
+        t_max_y = abs(self.vy/a) if a else 0
+
+        dt_x = t_max_x
+        dt_y = t_max_y
+
+        return (self.x + self.vx * dt_x - math.copysign(0.5 * a * dt_x ** 2, self.vx),
+                self.y + self.vy * dt_y - math.copysign(0.5 * a * dt_y ** 2, self.vy))
 
     def _update_speeds(self):
         self._update_kalman()
