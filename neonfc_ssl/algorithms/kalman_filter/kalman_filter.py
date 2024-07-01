@@ -12,7 +12,7 @@ class KalmanFilter:
         self._Ct = np.transpose(self._C)
 
         self._R = .1 * np.identity(var_size)
-        self._Q = .003 * np.identity(obs_size)
+        self._Q = .1 * np.identity(obs_size)
 
         self.belief = np.zeros([var_size, 1])
         self.uncert = np.zeros([var_size, var_size])

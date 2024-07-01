@@ -60,8 +60,9 @@ class OmniRobot:
         return robot_data
 
     def _update_kalman(self, create=False):
-        self.dt = self.lt - time.time()
-        self.lt = time.time()
+        t = time.time()
+        self.dt = t - self.lt
+        self.lt = t
 
         A = np.array([
             [1, 0, 0, self.dt, 0, 0],
