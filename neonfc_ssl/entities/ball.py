@@ -9,11 +9,11 @@ import math
 def speed(_list, _fps):
     if len(_list) <= 1:
         return 0
-    
+
     speed_fbf = [
-        (v - i) for i, v 
+        (v - i) for i, v
         in zip(
-            _list, 
+            _list,
             list(_list)[1:]
         )
     ]
@@ -23,7 +23,7 @@ def speed(_list, _fps):
 
 class Ball(object):
     def __init__(self):
-        self.kf = KalmanFilter(4, 2, 2)
+        self.kf = KalmanFilter(4, 2, 4)
         self.lt = time.time()
         self.dt = 1/60
         self._update_kalman(create=True)
@@ -37,6 +37,7 @@ class Ball(object):
 
         self.vx, self.vy = 0, 0
         self.x, self.y = 0, 0
+        self.lx, self.ly = 0, 0
         self._np_array = None
 
     def _update_kalman(self, create=False):
@@ -62,11 +63,23 @@ class Ball(object):
             C = np.array([
                 [1, 0, 0, 0],
                 [0, 1, 0, 0],
+                [0, 0, 1, 0],
+                [0, 0, 0, 1]
             ])
         else:
             C = None
 
         self.kf.change_matrices(A, B, C)
+
+        sig = .1
+        Q = np.array([
+            [sig, 0, 0, 0],
+            [0, sig, 0, 0],
+            [0, 0, 1.4*sig/self.dt, 0],
+            [0, 0, 0, 1.4*sig/self.dt]
+        ])
+
+        self.kf.change_covariance(Q=Q)
 
     def get_name(self):
         return 'BALL'
@@ -82,7 +95,7 @@ class Ball(object):
     def pos_after(self, dt):
         # t_max = a/v
         # pos = initial_pos + initial_v * t_target + 0.5 * a * t_target ^ 2
-        a = 0.05 * math.pi * 9.81
+        a = 0.8
 
         t_max_x = abs(self.vx/a) if a else 0
         t_max_y = abs(self.vy/a) if a else 0
@@ -97,7 +110,7 @@ class Ball(object):
         # t_max = a/v
         # pos = initial_pos + initial_v * t_target + 0.5 * a * t_target ^ 2
         a = 0.005 * math.pi * 9.81
-        a = 0.709189
+        a = 0.3
 
         t_max_x = abs(self.vx/a) if a else 0
         t_max_y = abs(self.vy/a) if a else 0
@@ -114,9 +127,16 @@ class Ball(object):
             [0],
             [0]
         ])
+
+        vx = (self.current_data['x'] - self.lx)/self.dt
+        vy = (self.current_data['y'] - self.ly)/self.dt
+        self.lx, self.ly = self.current_data['x'], self.current_data['y']
+
         z = np.array([
             [self.current_data['x']],
-            [self.current_data['y']]
+            [self.current_data['y']],
+            [vx],
+            [vy]
         ])
 
         kf_output = self.kf(u, z)

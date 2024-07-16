@@ -23,7 +23,7 @@ class Coach(BaseCoach):
 
         if not self._had_possession:
             new_carrier = self._closest_to_ball()
-            self._had_possession = True
+            # self._had_possession = True
         else:
             if event := self.events.pop('Ball Holder', None):
                 new_carrier = event['target']

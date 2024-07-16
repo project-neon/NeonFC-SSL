@@ -33,7 +33,7 @@ class PerformSimplePass(State):
     def __init__(self):
         super().__init__()
         self.name = 'PerformSimplePass'
-        self.reach_speed = 0
+        self.reach_speed = 0.1
         self.g = 9.81
         self.miu = 0.05 * math.pi
 
