@@ -13,6 +13,7 @@ class OmniRobot:
         self.lt = time.time()
         self.dt = 1 / 60
         self._update_kalman(create=True)
+        self.use_kalman = False
 
         self.match = match
         self.robot_id = robot_id
@@ -98,28 +99,38 @@ class OmniRobot:
         return (self.vx ** 2 + self.vy ** 2) ** .5
 
     def update_pose(self):
-        self._update_kalman()
-        u = np.array([
-            [0],
-            [0],
-            [0]
-        ])
-        z = np.array([
-            [self.current_data['x']],
-            [self.current_data['y']],
-            [self.current_data['theta']]
-        ])
+        if self.use_kalman:
+            self._update_kalman()
+            u = np.array([
+                [0],
+                [0],
+                [0]
+            ])
+            z = np.array([
+                [self.current_data['x']],
+                [self.current_data['y']],
+                [self.current_data['theta']]
+            ])
 
-        kf_output = self.kf(u, z)
+            kf_output = self.kf(u, z)
 
-        self._np_array = kf_output
+            self._np_array = kf_output
 
-        self.x = kf_output[0, 0]
-        self.y = kf_output[1, 0]
-        self.theta = reduce_ang(kf_output[2, 0])
-        self.vx = kf_output[3, 0]
-        self.vy = kf_output[4, 0]
-        self.vtheta = kf_output[5, 0]
+            self.x = kf_output[0, 0]
+            self.y = kf_output[1, 0]
+            self.theta = reduce_ang(kf_output[2, 0])
+            self.vx = kf_output[3, 0]
+            self.vy = kf_output[4, 0]
+            self.vtheta = kf_output[5, 0]
+
+        else:
+            self.x = self.current_data['x']
+            self.y = self.current_data['y']
+            self.theta = self.current_data['theta']
+            self.vx = self.current_data['vx']
+            self.vy = self.current_data['vy']
+            self.vtheta = self.current_data['vt']
+
 
     def update(self, frame):
         self.current_data = self.get_robot_in_frame(frame)
@@ -154,7 +165,7 @@ class OmniRobot:
         return w2, w3, w4, w1
 
     def time_to_ball(self, ball):
-        avg_speed = .2
+        avg_speed = .35
         pos = np.array(ball)
         last_t = 0
         for _ in range(50):
@@ -185,4 +196,6 @@ class OmniRobot:
     def __array__(self, dtype=None, copy=None):
         if copy is False:
             raise ValueError("`copy=False` isn't supported")
-        return self._np_array[:2, 0].astype(dtype)
+        if self.use_kalman:
+            return self._np_array[:2, 0].astype(dtype)
+        return np.array([self.x, self.y], dtype=dtype)

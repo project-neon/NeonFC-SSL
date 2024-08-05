@@ -1,4 +1,5 @@
 from vision.gr_sim_vision import GrSimVision
+from vision.auto_ref_vision import AutoRefVision
 from match.ssl_match import SSLMatch
 from coach import COACHES, BaseCoach
 from comm.serial_comm import SerialComm
@@ -8,7 +9,7 @@ from referee.ssl_game_controller import SSLGameControllerReferee
 
 class Game:
     def __init__(self) -> None:
-        self.vision = GrSimVision(self)
+        self.vision = AutoRefVision(self)
         self.referee = SSLGameControllerReferee()
         self.match = SSLMatch(self)
         self.coach = COACHES["TestCoach"](self)

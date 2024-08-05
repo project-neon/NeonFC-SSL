@@ -4,7 +4,7 @@ import struct
 import logging
 import threading
 
-from neonfc_ssl.protocols.grSim import ssl_vision_wrapper_pb2
+from neonfc_ssl.protocols.gc.ssl_vision_wrapper_tracked_pb2 import TrackerWrapperPacket
 from google.protobuf.json_format import MessageToJson
 
 
@@ -17,9 +17,9 @@ def get_config(config_file=None):
     return config
 
 
-class GrSimVision(threading.Thread):
+class AutoRefVision(threading.Thread):
     def __init__(self, game, config_file=None) -> None:
-        super(GrSimVision, self).__init__()
+        super(AutoRefVision, self).__init__()
         self.config = get_config(config_file)
 
         self.game = game
@@ -29,16 +29,27 @@ class GrSimVision(threading.Thread):
 
         self.raw_detection = {
             'ball': {
-                'x': 0,
-                'y': 0,
-                'tCapture': -1,
-                'cCapture': -1
+                'x': 0.0,
+                'y': 0.0,
+                'z': 0.0,
+                'vx': 0.0,
+                'vy': 0.0,
+                'vz': 0.0,
+                'tCapture': -1
             },
             'robotsBlue': {
-                i: {'x': None, 'y': None, 'theta': None, 'tCapture': -1} for i in range(0, 6)
+                i: {
+                    'x': None, 'y': None, 'theta': None,
+                    'vx': None, 'vy': None, 'w': None,
+                    'tCapture': -1
+                } for i in range(0, 6)
             },
             'robotsYellow': {
-                i: {'x': None, 'y': None, 'theta': None, 'tCapture': -1} for i in range(0, 6)
+                i: {
+                    'x': None, 'y': None, 'theta': None,
+                    'vx': None, 'vy': None, 'w': None,
+                    'tCapture': -1
+                } for i in range(0, 6)
             },
             'meta': {
                 'has_speed': True,
@@ -49,7 +60,7 @@ class GrSimVision(threading.Thread):
             }
         }
 
-        self.vision_port = self.config['network']['vision_port']
+        self.vision_port = self.config['network']['autoref_port']
         self.host = self.config['network']['multicast_ip']
 
         console_handler = logging.StreamHandler()
@@ -65,7 +76,7 @@ class GrSimVision(threading.Thread):
         self.logger.info(f"Connection completed!")
 
         while True:
-            env = ssl_vision_wrapper_pb2.SSL_WrapperPacket()
+            env = TrackerWrapperPacket()
             data = self.vision_sock.recv(2048)
 
             env.ParseFromString(data)
@@ -73,27 +84,24 @@ class GrSimVision(threading.Thread):
             self.new_data = self.update_detection(last_frame)
 
     def update_detection(self, last_frame):
-        frame = last_frame.get('detection')
+        frame = last_frame.get('trackedFrame', None)
         if not frame:
             # pacote de deteccao sem frame
             return False
-
-        t_capture = frame.get('tCapture')
-        camera_id = frame.get('cameraId')
-        self.update_camera_capture_number(camera_id, t_capture)
+        t_capture = frame.get('timestamp')
 
         balls = frame.get('balls', [])
-        self.update_ball_detection(balls, camera_id)
+        self.update_ball_detection(balls, t_capture)
 
-        robots_blue = frame.get('robotsBlue')
-        if robots_blue:
-            for robot in robots_blue:
-                self.update_robot_detection(robot, t_capture, camera_id, color='Blue')
+        robots = frame.get('robots')
+        if robots:
+            for robot in robots:
+                self.update_robot_detection(robot, t_capture)
 
         robots_yellow = frame.get('robotsYellow')
         if robots_yellow:
             for robot in robots_yellow:
-                self.update_robot_detection(robot, t_capture, camera_id, color='Yellow')
+                self.update_robot_detection(robot, t_capture)
 
         return True
 
@@ -107,34 +115,38 @@ class GrSimVision(threading.Thread):
             'last_capture': t_capture
         }
 
-    def update_ball_detection(self, balls, camera_id):
+    def update_ball_detection(self, balls, _timestamp):
         if len(balls) > 0:
-            ball = balls[0]
+            pos = balls[0]['pos']
+            speed = balls[0]['vel']
             self.raw_detection['ball'] = {
-                'x': ball.get('x')/1000 + 9/2,
-                'y': ball.get('y')/1000 + 6/2,
-                'tCapture': ball.get('tCapture'),
-                'cCapture': camera_id
+                'x': pos['x'] + 9 / 2,
+                'y': pos['y'] + 6 / 2,
+                'z': pos['z'],
+                'vx': speed['x'],
+                'vy': speed['y'],
+                'vz': speed['z'],
+                'tCapture': _timestamp
             }
 
-    def update_robot_detection(self, robot, _timestamp, camera_id, color='Blue'):
-        robot_id = robot.get('robotId')
-        last_robot_data = self.raw_detection[ 
-            'robots' + color
-         ][robot_id]
-        
+    def update_robot_detection(self, robot, _timestamp):
+        robot_id = robot['robotId']['id']
+        color = 'Blue' if robot['robotId']['team'] == 'BLUE' else 'Yellow'
+        pos = robot['pos']
+        speed = robot['vel']
+        last_robot_data = self.raw_detection['robots' + color][robot_id]
 
-        if last_robot_data.get('tCapture') > _timestamp:
-            return
-        
-        self.raw_detection[
-            'robots' + color
-         ][robot_id] = {
-            'x': robot['x']/1000 + 9 / 2,
-            'y': robot['y']/1000 + 6 / 2,
+        # if last_robot_data.get('tCapture') > _timestamp:
+        #     return
+
+        self.raw_detection['robots' + color][robot_id] = {
+            'x': pos['x'] + 9 / 2,
+            'y': pos['y'] + 6 / 2,
             'theta': robot['orientation'],
-            'tCapture': _timestamp,
-            'cCapture': camera_id
+            'vx': speed['x'],
+            'vy': speed['y'],
+            'vt': robot['velAngular'],
+            'tCapture': _timestamp
         }
 
     def get_last_frame(self):

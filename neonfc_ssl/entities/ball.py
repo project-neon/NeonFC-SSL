@@ -27,6 +27,7 @@ class Ball(object):
         self.lt = time.time()
         self.dt = 1/60
         self._update_kalman(create=True)
+        self.use_kalman = False
 
         self.current_data = []
 
@@ -122,31 +123,38 @@ class Ball(object):
                 self.y + self.vy * dt_y - math.copysign(0.5 * a * dt_y ** 2, self.vy))
 
     def _update_speeds(self):
-        self._update_kalman()
-        u = np.array([
-            [0],
-            [0]
-        ])
+        if self.use_kalman:
+            self._update_kalman()
+            u = np.array([
+                [0],
+                [0]
+            ])
 
-        vx = (self.current_data['x'] - self.lx)/self.dt
-        vy = (self.current_data['y'] - self.ly)/self.dt
-        self.lx, self.ly = self.current_data['x'], self.current_data['y']
+            vx = (self.current_data['x'] - self.lx)/self.dt
+            vy = (self.current_data['y'] - self.ly)/self.dt
+            self.lx, self.ly = self.current_data['x'], self.current_data['y']
 
-        z = np.array([
-            [self.current_data['x']],
-            [self.current_data['y']],
-            [vx],
-            [vy]
-        ])
+            z = np.array([
+                [self.current_data['x']],
+                [self.current_data['y']],
+                [vx],
+                [vy]
+            ])
 
-        kf_output = self.kf(u, z)
+            kf_output = self.kf(u, z)
 
-        self._np_array = kf_output
+            self._np_array = kf_output
 
-        self.x = kf_output[0, 0]
-        self.y = kf_output[1, 0]
-        self.vx = kf_output[2, 0]
-        self.vy = kf_output[3, 0]
+            self.x = kf_output[0, 0]
+            self.y = kf_output[1, 0]
+            self.vx = kf_output[2, 0]
+            self.vy = kf_output[3, 0]
+
+        else:
+            self.x = self.current_data['x']
+            self.y = self.current_data['y']
+            self.vx = self.current_data['vx']
+            self.vy = self.current_data['vy']
 
     def __getitem__(self, item):
         if item == 0:
@@ -160,4 +168,6 @@ class Ball(object):
     def __array__(self, dtype=None, copy=None):
         if copy is False:
             raise ValueError("`copy=False` isn't supported")
-        return self._np_array[:2, 0].astype(dtype)
+        if self.use_kalman:
+            return self._np_array[:2, 0].astype(dtype)
+        return np.array([self.x, self.y], dtype=dtype)

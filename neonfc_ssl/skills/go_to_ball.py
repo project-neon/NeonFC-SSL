@@ -26,7 +26,7 @@ class GoToBall(BaseSkill):
         vx = math.copysign(min(abs(vx), 1), vx)
         vy = -(self._robot.y - target.y) * kp
         vy = math.copysign(min(abs(vy), 1), vy)
-        w = reduce_ang(math.atan2(self._robot.y - target.y, self._robot.x - target.x) - self._robot.theta) * kp_ang
+        w = reduce_ang(math.atan2(self._robot.y - self._match.ball.y, self._robot.x - self._match.ball.x) - self._robot.theta) * kp_ang
 
         return RobotCommand(move_speed=(vx, vy, w), spinner=d < 0.15, robot_id=self._robot.robot_id)
 
