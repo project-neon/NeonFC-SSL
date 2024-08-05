@@ -165,7 +165,7 @@ class OmniRobot:
         return w2, w3, w4, w1
 
     def time_to_ball(self, ball):
-        avg_speed = .2
+        avg_speed = .35
         pos = np.array(ball)
         last_t = 0
         for _ in range(50):

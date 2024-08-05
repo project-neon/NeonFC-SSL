@@ -60,8 +60,7 @@ class AutoRefVision(threading.Thread):
             }
         }
 
-        self.vision_port = self.config['network']['vision_port']
-        self.vision_port = 10010
+        self.vision_port = self.config['network']['autoref_port']
         self.host = self.config['network']['multicast_ip']
 
         console_handler = logging.StreamHandler()
