@@ -11,8 +11,8 @@ class KalmanFilter:
         self._C = np.zeros([obs_size, var_size])
         self._Ct = np.transpose(self._C)
 
-        self._R = .1 * np.identity(var_size)
-        self._Q = .003 * np.identity(obs_size)
+        self._R = .25 * np.identity(var_size)
+        self._Q = .1 * np.identity(obs_size)
 
         self.belief = np.zeros([var_size, 1])
         self.uncert = np.zeros([var_size, var_size])
@@ -30,6 +30,13 @@ class KalmanFilter:
         if C is not None:
             self._C = C
             self._Ct = C.transpose()
+
+    def change_covariance(self, Q=None, R=None):
+        if Q is not None:
+            self._Q = Q
+
+        if R is not None:
+            self._R = R
 
     def predict(self, ctrl):
         self.belief = np.dot(self._A, self.belief) + np.dot(self._B, ctrl)

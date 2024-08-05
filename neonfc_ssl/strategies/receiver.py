@@ -28,9 +28,9 @@ class Receiver(BaseStrategy):
             self.field.add_field(PointField(
                 self._match,
                 target=locate_robot(r),
-                radius_max=0.3,
-                decay=lambda x: x**2,
-                multiplier=-1  # 50 cm/s
+                radius_max=2,
+                decay=lambda x: 1/x,
+                multiplier=-0.5  # 50 cm/s
             ))
 
         for r in self._match.opposites:

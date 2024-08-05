@@ -2,7 +2,8 @@
     "network" : {
         "multicast_ip": "224.5.23.2",
         "host_ip": "localhost",
-        "vision_port": 10020,
+        "vision_port": 10006,
+        "autoref_port": 10010,
         "command_port": 20011
     },
     "match" : {

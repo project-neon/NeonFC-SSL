@@ -61,17 +61,16 @@ class BallHolder(BaseStrategy):
 
         self.goal_v = self.goal_probability()
         self.current_v = 1 - (distance_between_points(self._robot, (9, 3)) / 9.5) - self.possession_change_probability()
-        print('goal v', self.goal_v)
 
         next = self.active.update()
 
         if next != self.active:
             if self.active.name == "Pass":
-                self._coach.event[self.name] = {'target', self.passing_to}
+                self._coach.events[self.name] = {'target': self.passing_to.robot_id}
             self.active = next
             if self.active.name == "Pass":
                 self.passing_to = self.passable_robots[self.max_idx]
-                self.active.start(self._robot, self.passable_robots[self.max_idx])
+                self.active.start(self._robot, target=self.passing_to)
             else:
                 self.active.start(self._robot)
 
@@ -80,7 +79,7 @@ class BallHolder(BaseStrategy):
     def pass_transition(self):
         # if self.max_value > (
         #         1 - (distance_between_points(self._robot, (9, 3)) / 9.5)) * 0.1 and self.max_value > self.goal_v:
-        if self.max_value > self.current_v and self.max_value > self.goal_v:
+        if self.max_value > self.current_v:
             return True
         return False
 
@@ -116,7 +115,8 @@ class BallHolder(BaseStrategy):
 
         goal_posts = ((9, 2.5), (9, 3.5))
         goal_posts = (
-            angle_between(self._robot, robot_lock, goal_posts[0]), angle_between(self._robot, robot_lock, goal_posts[1]))
+            angle_between(self._robot, robot_lock, goal_posts[0]), angle_between(self._robot, robot_lock, goal_posts[1])
+        )
 
         robot_angles = [angle_between(self._robot, robot_lock, robot)
                         for robot in self._match.opposites if robot.x > self._robot.x and not robot.missing]
@@ -140,6 +140,4 @@ class BallHolder(BaseStrategy):
         for v, p in zip(self.pass_value(), self.pass_probability()):
             # action.append(v * p - (1-p))  # consider loosing ball
             action.append(v * p)  # simple
-            print(v, p)
-        print('a', action)
         return action

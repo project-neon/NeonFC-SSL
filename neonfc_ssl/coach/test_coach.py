@@ -23,12 +23,12 @@ class Coach(BaseCoach):
 
         if not self._had_possession:
             new_carrier = self._closest_to_ball()
-            self._had_possession = True
+            # self._had_possession = True
         else:
-            if event := self.events.get('Ball Holder', None):
+            if event := self.events.pop('Ball Holder', None):
                 new_carrier = event['target']
 
-        if new_carrier:
+        if new_carrier is not None:
             temp_s = self._strategies_attack[new_carrier]
             self._strategies_attack[new_carrier] = self._strategies_attack[self._ball_carrier_id]
             self._strategies_attack[self._ball_carrier_id] = temp_s
@@ -38,6 +38,4 @@ class Coach(BaseCoach):
                 robot.set_strategy(self._strategies_attack[robot.robot_id])
 
     def _closest_to_ball(self):
-        ball = self._match.ball
-        dists = [(r, math.sqrt((r.x-ball.x)**2 + (r.y-ball.y)**2)) for r in self._active_robots]
-        return min(dists, key=lambda x: x[1])[0].robot_id
+        return self._match.possession.current_closest.robot_id

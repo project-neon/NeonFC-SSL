@@ -15,19 +15,18 @@ class GoToBall(BaseSkill):
             self.univector.add_obstacle(robot, 0.25)
 
     def decide(self):
-        ball = self._match.ball
-        guide = math.atan2(3 - ball.y, 9 - ball.x)
+        ttb = self._robot.time_to_ball(self._match.ball)
+        target = Point(*self._match.ball.pos_after(ttb))
 
-        self.univector.set_target(target=ball, guide=guide, guide_type='a')
-        theta = self.univector.compute(self._robot)
-
-        d = ((self._robot.x - ball.x) ** 2 + (self._robot.y - ball.y) ** 2) ** .5
-        kp = 1
+        d = ((self._robot.x - target.x) ** 2 + (self._robot.x - target.x) ** 2) ** .5
+        kp = 5
         kp_ang = 1.5
 
-        vx = math.cos(theta) * kp
-        vy = math.sin(theta) * kp
-        w = reduce_ang(math.atan2(self._robot.y - ball.y, self._robot.x - ball.x) - self._robot.theta) * kp_ang
+        vx = -(self._robot.x - target.x) * kp
+        vx = math.copysign(min(abs(vx), 1), vx)
+        vy = -(self._robot.y - target.y) * kp
+        vy = math.copysign(min(abs(vy), 1), vy)
+        w = reduce_ang(math.atan2(self._robot.y - self._match.ball.y, self._robot.x - self._match.ball.x) - self._robot.theta) * kp_ang
 
         return RobotCommand(move_speed=(vx, vy, w), spinner=d < 0.15, robot_id=self._robot.robot_id)
 
