@@ -19,13 +19,13 @@ class TurnToPass(State):
         self.target = target
 
     def decide(self):
-        target = math.atan2(self.target.y - self.robot.y, self.target.x - self.robot.x)
+        target = math.atan2(self.target[1] - self.robot.y, self.target[0] - self.robot.x)
         desired = reduce_ang(target - self.robot.theta)
         kp = -9
         return RobotCommand(spinner=True, move_speed=(0, 0, desired * kp), robot_id=self.robot.robot_id)
 
     def check_complete(self):
-        target = math.atan2(self.target.y - self.robot.y, self.target.x - self.robot.x)
+        target = math.atan2(self.target[1] - self.robot.y, self.target[0] - self.robot.x)
         return abs(reduce_ang(target - self.robot.theta)) <= 0.02
 
 
@@ -33,7 +33,7 @@ class PerformSimplePass(State):
     def __init__(self):
         super().__init__()
         self.name = 'PerformSimplePass'
-        self.reach_speed = 0.1
+        self.reach_speed = 0
         self.g = 9.81
         self.miu = 0.05 * math.pi
 
@@ -42,7 +42,7 @@ class PerformSimplePass(State):
         self.target = target
 
     def decide(self):
-        d = math.sqrt((self.robot.x - self.target.x) ** 2 + (self.robot.y - self.target.y) ** 2)
+        d = math.sqrt((self.robot.x - self.target[0]) ** 2 + (self.robot.y - self.target[1]) ** 2)
         vb = math.sqrt(self.reach_speed ** 2 + 2 * self.g * self.miu * d)
         return RobotCommand(kick_speed=(vb, 0), robot_id=self.robot.robot_id)
 
