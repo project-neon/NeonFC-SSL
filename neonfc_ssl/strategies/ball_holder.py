@@ -2,7 +2,8 @@ from neonfc_ssl.skills import *
 from neonfc_ssl.strategies.base_strategy import BaseStrategy
 import math
 import numpy as np
-from neonfc_ssl.commons.math import distance_between_points, angle_between_3_points
+import time
+from collections import deque
 
 
 def angle_between(p1, p2, p3):
@@ -17,6 +18,9 @@ class BallHolder(BaseStrategy):
 
         self.max_value = 0
         self.max_idx = 0
+
+        self.t0 = time.time()
+        self.ts = deque(maxlen=60)
 
         self.goal_v = 0
 
@@ -54,90 +58,98 @@ class BallHolder(BaseStrategy):
         self.passable_robots = [r for r in self._match.robots if not r.missing and r is not self._robot]
         self.intercepting_robots = [r for r in self._match.opposites if not r.missing]
 
-        actions = self.pass_ex_value()
-
-        self.max_value = max(actions)
-        self.max_idx = actions.index(self.max_value)
-
-        self.goal_v = self.goal_probability()
-        self.current_v = 1 - (distance_between_points(self._robot, (9, 3)) / 9.5) - self.possession_change_probability()
-
         next = self.active.update()
-
         if next != self.active:
-            if self.active.name == "Pass":
-                self._coach.events[self.name] = {'target': self.passing_to.robot_id}
             self.active = next
             if self.active.name == "Pass":
-                self.passing_to = self.passable_robots[self.max_idx]
+                self.passing_to = self.decide_action()
                 self.active.start(self._robot, target=self.passing_to)
             else:
                 self.active.start(self._robot)
 
         return self.active.decide()
 
+    def decide_action(self):
+        p = self._passing_targets()
+        vals = self._receiving_probability(p)*self._pass_probability(p)*self._goal_probability(p)
+        target = np.argmax(vals)
+        return p[target]
+
     def pass_transition(self):
         # if self.max_value > (
         #         1 - (distance_between_points(self._robot, (9, 3)) / 9.5)) * 0.1 and self.max_value > self.goal_v:
-        if self.max_value > self.current_v:
-            return True
-        return False
+        # if self.max_value > self.current_v:
+        return True
+        # return False
 
     def shoot_transition(self):
         # if self.goal_v > (
         #         1 - (distance_between_points(self._robot, (9, 3)) / 9.5)) * 0.1 and self.goal_v > self.max_value:
-        if self.goal_v > self.current_v and self.goal_v > self.max_value:
-            return True
+        # if self.goal_v > self.current_v and self.goal_v > self.max_value:
+        #     return True
         return False
 
-    def pass_value(self):
-        return [.5*(1 - (distance_between_points(r, (9, 3)) / 9.5)) for r in self.passable_robots]
+    def _passing_targets(self):
+        dx, dy = 0.1, 0.1
+        # Area 0
+        upx, lwx = 4.5, 9
+        upy, lwy = 0, 2
 
-    def pass_probability(self):
-        # for each opponent robot closest to the ball than the target check its angle (opposite_ball_target)
+        x = np.linspace(lwx+dx, upx-dx, 18)
+        y = np.linspace(lwy+dy, upy-dy, 8)
+        xs, ys = np.meshgrid(x, y)
+        a0 = np.transpose(np.array([xs.flatten(), ys.flatten()]))
 
-        ball = np.array(self._match.ball)
-        out = []
-        for target in self.passable_robots:
-            limit = distance_between_points(ball, target),
-            out.append(min([angle_between_3_points(target, ball, opp)
-                            for opp in self.intercepting_robots if distance_between_points(ball, opp) < limit],
-                           default=math.pi))
+        # Area 1
+        upx, lwx = 4.5, 8
+        upy, lwy = 2, 4
 
-        return [min(1, 4*i / math.pi) for i in out]
+        x = np.linspace(lwx+dx, upx-dx, 14)
+        y = np.linspace(lwy+dy, upy-dy, 10)
+        xs, ys = np.meshgrid(x, y)
+        a1 = np.transpose(np.array([xs.flatten(), ys.flatten()]))
 
-    def possession_change_probability(self):
-        closest = min(map(lambda x: distance_between_points(x, self._robot), self.intercepting_robots))
-        return 1 - min(1, closest/3)
+        # Area 2
+        upx, lwx = 4.5, 9
+        upy, lwy = 4, 6
 
-    def goal_probability(self):
-        robot_lock = (self._robot.x, 0)
+        x = np.linspace(lwx+dx, upx-dx, 18)
+        y = np.linspace(lwy+dy, upy-dy, 8)
+        xs, ys = np.meshgrid(x, y)
+        a2 = np.transpose(np.array([xs.flatten(), ys.flatten()]))
 
-        goal_posts = ((9, 2.5), (9, 3.5))
-        goal_posts = (
-            angle_between(self._robot, robot_lock, goal_posts[0]), angle_between(self._robot, robot_lock, goal_posts[1])
-        )
+        return np.concatenate((a0, a1, a2))
 
-        robot_angles = [angle_between(self._robot, robot_lock, robot)
-                        for robot in self._match.opposites if robot.x > self._robot.x and not robot.missing]
-        robot_angles.append(goal_posts[0])
-        robot_angles.append(goal_posts[1])
+    def _pass_probability(self, p):
+        dp = p - self._robot
+        px = dp[:, 0]
+        py = dp[:, 1]
 
-        robot_angles.sort()
-        robot_angles = list(filter(lambda x: goal_posts[0] <= x <= goal_posts[1], robot_angles))
+        norm = px * px + py * py
+        total = np.inf*np.ones(p.shape[0])
 
-        diffs = []
+        for op in self.intercepting_robots:
+            u = np.divide((op[0] - self._robot[0]) * px + (op[1] - self._robot[1]) * py, norm)
+            u = np.minimum(np.maximum(u, 0), 1)
 
-        for a, b in zip(robot_angles[:-1], robot_angles[1:]):
-            diffs.append((a, b - a))
+            dx = self._robot[0] + u * px - op[0]
+            dy = self._robot[1] + u * py - op[1]
 
-        _, window = max(diffs, key=lambda x: x[1])
+            total = np.minimum(dx**2 + dy**2, total)
 
-        return 6*window / math.pi
+        # return total
+        return np.minimum(np.divide(0.1, total), 1)
 
-    def pass_ex_value(self):
-        action = []
-        for v, p in zip(self.pass_value(), self.pass_probability()):
-            # action.append(v * p - (1-p))  # consider loosing ball
-            action.append(v * p)  # simple
-        return action
+    def _receiving_probability(self, p):
+        closest_teammate_dist = np.inf * np.ones(p.shape[0])
+        for r in self.passable_robots:
+            closest_teammate_dist = np.minimum(np.linalg.norm(r-p), closest_teammate_dist)
+
+        closest_opponent_dist = np.inf * np.ones(p.shape[0])
+        for r in self.intercepting_robots:
+            closest_opponent_dist = np.minimum(np.linalg.norm(r-p), closest_opponent_dist)
+
+        return closest_opponent_dist < closest_teammate_dist
+
+    def _goal_probability(self, p):
+        return np.linalg.norm(np.array([9, 3])-p)
