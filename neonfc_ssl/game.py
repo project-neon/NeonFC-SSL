@@ -9,14 +9,18 @@ from referee.ssl_game_controller import SSLGameControllerReferee
 
 class Game:
     def __init__(self) -> None:
-        self.vision = AutoRefVision(self)
+        self.ssl_vison = GrSimVision(self)
+        self.auto_ref = AutoRefVision(self)
+        self.vision = self.auto_ref
+        self.geometry = self.ssl_vison
         self.referee = SSLGameControllerReferee()
         self.match = SSLMatch(self)
         self.coach = COACHES["TestCoach"](self)
         self.comm = GrComm(self)
 
     def start(self):
-        self.vision.start()
+        self.ssl_vison.start()
+        self.auto_ref.start()
         self.referee.start()
         self.match.start()
         self.coach.start()

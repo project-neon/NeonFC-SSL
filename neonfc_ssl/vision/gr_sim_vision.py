@@ -27,6 +27,56 @@ class GrSimVision(threading.Thread):
         self._fps = 60
         self.new_data = False
 
+        self.raw_geometry = {
+            'fieldLength': 0,
+            'fieldWidth': 0,
+            'goalWidth': 0,
+            'fieldLines': {
+                'LeftGoalLine':{
+                    'p1': {
+                        'x': 0,
+                        'y': 0
+                    }
+                },
+                'RightGoalLine':{
+                    'p1': {
+                        'x': 0,
+                        'y': 0,
+                    }
+                },
+                'HalfwayLine':{
+                    'p1':{
+                        'x': 0,
+                        'y': 0
+                    }
+                },
+                'LeftPenaltyStretch':{
+                    'p1':{
+                        'x': 0,
+                        'y': 0
+                    }
+                },
+                'RightPenaltyStretch':{
+                    'p1':{
+                        'x': 0,
+                        'y': 0
+                    }
+                },
+                'RightGoalBottomLine':{
+                    'p1':{
+                        'x': 0,
+                        'y': 0
+                    }
+                },
+                'LeftGoalBottomLine':{
+                    'p1':{
+                        'x': 0,
+                        'y': 0
+                    }
+                }
+            }
+        }
+
         self.raw_detection = {
             'ball': {
                 'x': 0,
@@ -69,8 +119,10 @@ class GrSimVision(threading.Thread):
             data = self.vision_sock.recv(2048)
 
             env.ParseFromString(data)
+        
             last_frame = json.loads(MessageToJson(env))
             self.new_data = self.update_detection(last_frame)
+            self.new_geometry = self.update_geometry(last_frame)
 
     def update_detection(self, last_frame):
         frame = last_frame.get('detection')
@@ -96,6 +148,38 @@ class GrSimVision(threading.Thread):
                 self.update_robot_detection(robot, t_capture, camera_id, color='Yellow')
 
         return True
+    
+    def update_geometry(self, last_frame):
+        frame = last_frame.get('geometry')
+
+        if not frame:
+            # pacote de deteccao sem frame
+            return False
+        
+        frame = frame.get('field')
+
+        self.raw_geometry['fieldLength'] = frame.get('fieldLength')/1000
+        self.raw_geometry['fieldWidth'] = frame.get('fieldWidth')/1000
+        self.raw_geometry['goalWidth'] = frame.get('goalWidth')/1000
+
+        self.raw_geometry['fieldLines']['LeftGoalLine']['p1']['x'] = (frame.get('fieldLines')[2].get('p1').get('x')/1000)+4.5
+        self.raw_geometry['fieldLines']['RightGoalLine']['p1']['x'] = (frame.get('fieldLines')[3].get('p1').get('x')/1000)+4.5
+        self.raw_geometry['fieldLines']['HalfwayLine']['p1']['x'] = (frame.get('fieldLines')[4].get('p1').get('x')/1000)+4.5
+        self.raw_geometry['fieldLines']['LeftPenaltyStretch']['p1']['x'] = (frame.get('fieldLines')[6].get('p1').get('x')/1000)+4.5
+        self.raw_geometry['fieldLines']['RightPenaltyStretch']['p1']['x'] = (frame.get('fieldLines')[7].get('p1').get('x')/1000)+4.5
+        self.raw_geometry['fieldLines']['RightGoalBottomLine']['p1']['x'] = (frame.get('fieldLines')[9].get('p1').get('x')/1000)+4.5
+        self.raw_geometry['fieldLines']['LeftGoalBottomLine']['p1']['x'] = (frame.get('fieldLines')[12].get('p1').get('x')/1000)+4.5
+
+        self.raw_geometry['fieldLines']['LeftGoalLine']['p1']['y'] = (frame.get('fieldLines')[2].get('p1').get('y')/1000)+3
+        self.raw_geometry['fieldLines']['RightGoalLine']['p1']['y'] = (frame.get('fieldLines')[3].get('p1').get('y')/1000)+3
+        self.raw_geometry['fieldLines']['HalfwayLine']['p1']['y'] = (frame.get('fieldLines')[4].get('p1').get('y')/1000)+3
+        self.raw_geometry['fieldLines']['LeftPenaltyStretch']['p1']['y'] = (frame.get('fieldLines')[6].get('p1').get('y')/1000)+3
+        self.raw_geometry['fieldLines']['RightPenaltyStretch']['p1']['y'] = (frame.get('fieldLines')[7].get('p1').get('y')/1000)+3
+        self.raw_geometry['fieldLines']['RightGoalBottomLine']['p1']['y'] = (frame.get('fieldLines')[9].get('p1').get('y')/1000)+3
+        self.raw_geometry['fieldLines']['LeftGoalBottomLine']['p1']['y'] = (frame.get('fieldLines')[12].get('p1').get('y')/1000)+3
+
+        return True
+
 
     def update_camera_capture_number(self, camera_id, t_capture):
         last_camera_data = self.raw_detection['meta']['cameras'][camera_id]
@@ -136,6 +220,10 @@ class GrSimVision(threading.Thread):
             'tCapture': _timestamp,
             'cCapture': camera_id
         }
+    
+    def get_geometry(self):
+        self.new_data = False
+        return self.raw_geometry
 
     def get_last_frame(self):
         self.new_data = False
