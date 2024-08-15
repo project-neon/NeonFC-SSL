@@ -8,8 +8,8 @@ class SSLMatch:
         self._game = game
 
         # Input Layer classes
-        self._vision1 = None
-        self._vision2 = None
+        self._geometry = None
+        self._vision = None
         self._referee = None
 
         # Tracking Objects
@@ -32,8 +32,8 @@ class SSLMatch:
         print("Starting match module starting ...")
 
         # Get Last Layer Classes
-        self._vision1 = self._game.vision1
-        self._vision2 = self._game.vision2
+        self._geometry = self._game.geometry
+        self._vision = self._game.vision
         self._referee = self._game.referee
 
         # Create Layer
@@ -61,8 +61,8 @@ class SSLMatch:
         print("Match module started")
 
     def update(self):
-        frame = self._vision2.get_last_frame()
-        geometry = self._vision1.get_geometry()
+        frame = self._vision.get_last_frame()
+        geometry = self._geometry.get_geometry()
 
         ref_command = self._referee.simplify()
 

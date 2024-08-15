@@ -39,13 +39,8 @@ class Field(object):
         self.leftFirstPost = [self.current_data.get('fieldLines').get('LeftGoalBottomLine').get('p1').get('x'), 
                               self.current_data.get('fieldLines').get('LeftGoalBottomLine').get('p1').get('y')]
         
-        print(f"x: {self.leftFirstPost[0]}, y:{self.leftGoalLine[1]}")
-
 
     def update(self, frame):
         self.current_data = frame
         if self.current_data is not None:
             self._update_geometry()
-
-        #print(f"{self.current_data}\n\n")
-    
