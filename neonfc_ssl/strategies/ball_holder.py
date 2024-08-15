@@ -138,7 +138,7 @@ class BallHolder(BaseStrategy):
             total = np.minimum(dx**2 + dy**2, total)
 
         # return total
-        return np.minimum(np.divide(0.1, total), 1)
+        return np.minimum(np.sqrt(total), 1)
 
     def _receiving_probability(self, p):
         closest_teammate_dist = np.inf * np.ones(p.shape[0])
