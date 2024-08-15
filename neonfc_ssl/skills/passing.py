@@ -36,6 +36,9 @@ class PerformSimplePass(State):
         self.reach_speed = 0
         self.g = 9.81
         self.miu = 0.05 * math.pi
+        self.c = 0.7
+        self.a_s = -14
+        self.a_r = -0.7
 
     def start(self, robot, target):
         self.robot = robot
@@ -44,6 +47,15 @@ class PerformSimplePass(State):
     def decide(self):
         d = math.sqrt((self.robot.x - self.target[0]) ** 2 + (self.robot.y - self.target[1]) ** 2)
         vb = math.sqrt(self.reach_speed ** 2 + 2 * self.g * self.miu * d)
+
+        # using simple constant acceleration method
+        # vb = math.sqrt(self.reach_speed ** 2 + 2 * self.g * self.miu * d)
+
+        # using two 2 state ball model
+        s_f = (self.c**2-1)/self.a_s
+        r_f = -self.c**2/self.a_r
+        vb = math.sqrt(2*d/(s_f+r_f))
+
         return RobotCommand(kick_speed=(vb, 0), robot_id=self.robot.robot_id)
 
 
