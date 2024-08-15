@@ -152,4 +152,21 @@ class BallHolder(BaseStrategy):
         return closest_opponent_dist > closest_teammate_dist
 
     def _goal_probability(self, p):
-        return np.linalg.norm(np.array([9, 3])-p)
+        dp = np.array([9, 3]) - p
+        px = dp[:, 0]
+        py = dp[:, 1]
+
+        norm = px * px + py * py
+        total = np.inf*np.ones(p.shape[0])
+
+        for op in self.intercepting_robots:
+            u = np.divide((op[0] - p[:, 0]) * px + (op[1] - p[:, 1]) * py, norm)
+            u = np.minimum(np.maximum(u, 0), 1)
+
+            dx = p[:, 0] + u * px - op[0]
+            dy = p[:, 1] + u * py - op[1]
+
+            total = np.minimum(dx**2 + dy**2, total)
+
+        # return total
+        return np.minimum(np.sqrt(total), 1)
