@@ -143,13 +143,13 @@ class BallHolder(BaseStrategy):
     def _receiving_probability(self, p):
         closest_teammate_dist = np.inf * np.ones(p.shape[0])
         for r in self.passable_robots:
-            closest_teammate_dist = np.minimum(np.linalg.norm(r-p), closest_teammate_dist)
+            closest_teammate_dist = np.minimum(np.sum(np.square(r-p), axis=1), closest_teammate_dist)
 
         closest_opponent_dist = np.inf * np.ones(p.shape[0])
         for r in self.intercepting_robots:
-            closest_opponent_dist = np.minimum(np.linalg.norm(r-p), closest_opponent_dist)
+            closest_opponent_dist = np.minimum(np.sum(np.square(r-p), axis=1), closest_opponent_dist)
 
-        return closest_opponent_dist < closest_teammate_dist
+        return closest_opponent_dist > closest_teammate_dist
 
     def _goal_probability(self, p):
         return np.linalg.norm(np.array([9, 3])-p)
