@@ -13,6 +13,7 @@ numpy = "^1.26.0"
 serial = "^0.0.97"
 pyserial = "^3.5"
 neonpathplanning = "^1.0.1"
+matplotlib = "^3.9.2"
 
 
 [build-system]

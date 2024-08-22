@@ -18,6 +18,7 @@ class BallHolder(BaseStrategy):
         self.intercepting_robots = []
 
         self.t0 = time.time()
+        self.last_info = time.time()
         self.ts = deque(maxlen=60)
 
         self._shooting_value = 0
@@ -81,6 +82,15 @@ class BallHolder(BaseStrategy):
                 self.active.start(self._robot, target=self._pass_target)
             else:
                 self.active.start(self._robot)
+
+        if time.time() - self.last_info > 0.1:
+            self.last_info = time.time()
+            MESSAGE = 'a'.join([
+                ';'.join([f"%0.2f,%0.2f" % (r.x, r.y) for r in self.passable_robots]),
+                ';'.join([f"%0.2f,%0.2f" % (r.x, r.y) for r in self.intercepting_robots]),
+                "%0.2f,%0.2f" % (self._robot.x, self._robot.y)
+            ]).encode('ascii')
+            self.sock.sendto(MESSAGE, (self.UDP_IP, self.UDP_PORT))
 
         return self.active.decide()
 
