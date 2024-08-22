@@ -1,59 +1,88 @@
-import numpy as np
+from neonfc_ssl.strategies.base_strategy import BaseStrategy
+from neonfc_ssl.skills import *
+from NeonPathPlanning import Point
 
-from math import log
-from neonfc_ssl.algorithms.potential_fields.fields import PointField
+from commons.math import point_in_rect
+from math import pi
 
-def unit_vector(vector):
-    """ Returns the unit vector of the vector."""
-    if np.linalg.norm(vector) == 0:
-        return np.array([0, 0])
-    return vector / np.linalg.norm(vector)
-
-def to_point(target, robot, decay=lambda x: 1, max_radius=1, speed=2):
-    to_target = np.subtract(target, robot)
-
-    to_taget_scalar = np.linalg.norm(to_target)
-
-    to_target_norm = unit_vector(to_target)
-
-    to_target_scalar_norm = max(0, min(1, to_taget_scalar/max_radius))
-
-    force = decay(to_target_scalar_norm)
-
-
-    return [
-        to_target_norm[0] * force * speed,
-        to_target_norm[1] * force * speed
-    ]
-
-class GoalKeeper():
-    def __init__(self, robot):
-        self.name = 'GOALKEEPER'
-        self.match = robot.game.match
-        self.robot = robot
+class GoalKeeper(BaseStrategy):
+    def __init__(self, coach, match):
+        super().__init__('Goalkeeper', coach, match)
         
-        self.goal_right = -480
-        self.goal_left = 480
+        self.field = self._match.field
+        self.target = None
 
-    def start(self):
-        def proj(m):
-            # talvez precd cisa mudar em função do lado do campo
-            projection_rate = -(m.ball.x-.15)/(1-.15)
-            projection_point = m.ball.y + projection_rate * m.ball.vy
+        self.states = {
+            'pass': SimplePass(coach, match),
+            'go_to_ball': GoToBall(coach, match),
+            'wait': Wait(coach, match),
+            'move_to_pose': MoveToPose(coach, match)
+        }
 
-            y = min(
-                max(projection_point, self.goal_right), 
-                self.goal_left
-            )
-            return -4450, y
+        self.states["wait"].add_transition(self.states["move_to_pose"], self.move_to_pose_transition)
+        self.states["move_to_pose"].add_transition(self.states["go_to_ball"], self.go_to_ball_transition)
+        self.states["move_to_pose"].add_transition(self.states["wait"], self.wait_transition)
+        self.states["go_to_ball"].add_transition(self.states["pass"], self.pass_transisition)
+        self.states["pass"].add_transition(self.states["move_to_pose"], self.move_to_pose_transition)
 
-        self.to_ball = PointField(
-                self.match,
-                target = proj,
-                radius = 5,
-                multiplier = 5,
-                decay = lambda x : log(x/2) + x
-            )
+
+    def _start(self):
+        self.active = self.states['wait']
+        self.active.start(self._robot)
 
     def decide(self):
-        return *self.to_ball.compute([self.robot.x, self.robot.y]), 0
+        next = self.active.update()
+    
+        if next.name != "MoveToPose":
+            self.active = next
+            
+            if self.active.name == "Pass":
+                _passing_to = Point(2, 2)
+                self.active.start(self._robot, target=_passing_to)
+            
+            else:
+                self.active.start(self._robot)
+        
+        else:
+            target = self.defense_target()
+            self.active = next
+            self.active.start(self._robot, target=target)
+
+        return self.active.decide()
+    
+    def defense_target(self):
+        return [0.2, self._match.ball.y, 0]
+
+    def wait_transition(self):
+        if self._match.ball.x > self.field.halfwayLine[0]:
+            return True
+        return False
+
+
+    def move_to_pose_transition(self):
+        is_in_rect = point_in_rect([self._match.ball.x, self._match.ball.y],
+                                      [self.field.leftFirstPost[0], self.field.leftFirstPost[1],
+                                       self.field.goalWidth, 2*self.field.fieldLength])
+        
+        if not is_in_rect and self._match.ball.x <= self.field.halfwayLine[0]:
+            return True
+        return False
+
+
+    def go_to_ball_transition(self):
+        # is_in_rect = point_in_rect([self._match.ball.x, self._match.ball.y],
+        #                               [self.field.leftFirstPost[0], self.field.leftFirstPost[1],
+        #                                self.field.goalWidth, 0])
+        
+        if (self._match.ball.x < 1) and (self._match.ball.y > 2) and (self._match.ball.y < 4):
+            return True        
+        return False
+
+
+    def pass_transisition(self):
+        is_in_rect = point_in_rect([self._match.ball.x, self._match.ball.y],
+                                      [self._robot.x-0.15, self._robot.y-0.15, 0.3, 0.3])
+        
+        if is_in_rect:
+            return True
+        return False
