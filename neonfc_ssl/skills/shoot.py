@@ -61,7 +61,7 @@ class PerformShoot(State):
         self.robot = robot
 
     def decide(self):
-        return RobotCommand(kick_speed=(10, 0), robot_id=self.robot.robot_id)
+        return RobotCommand(kick_speed=(6.5, 0), robot_id=self.robot.robot_id)
 
 
 class Shoot(BaseSkill):
