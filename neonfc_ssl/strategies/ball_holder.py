@@ -33,6 +33,7 @@ class BallHolder(BaseStrategy):
             'go_to_ball': GoToBall(coach, match),
             'wait': Wait(coach, match),
             'shoot': Shoot(coach, match),
+            'dribble': Dribble(coach, match)
         }
 
         def close_to_ball():
@@ -47,9 +48,11 @@ class BallHolder(BaseStrategy):
         self.states['pass'].add_transition(self.states['go_to_ball'], not_func(close_to_ball))
         self.states['wait'].add_transition(self.states['go_to_ball'], not_func(close_to_ball))
         self.states['shoot'].add_transition(self.states['go_to_ball'], not_func(close_to_ball))
+        self.states['dribble'].add_transition(self.states['wait'], not_func(close_to_ball))
         self.states['go_to_ball'].add_transition(self.states['wait'], close_to_ball)
         self.states['wait'].add_transition(self.states['pass'], self.pass_transition)
         self.states['wait'].add_transition(self.states['shoot'], self.shoot_transition)
+        self.states['wait'].add_transition(self.states['dribble'], self.dribble_transition)
 
         self.message = None
         self.passing_to = None
@@ -114,10 +117,18 @@ class BallHolder(BaseStrategy):
         p = self._passing_targets()
         vals = 1 * self._receiving_probability(p) * self._pass_probability(p) * self._goal_probability(p)
         target = np.argmax(vals)
-        return p[target]
 
         self._pass_value = vals[target]
         self._pass_target = p[target]
+    
+    def dribble_transition(self):
+        # if self._shooting_value < self._pass_value:
+        #     return True
+        if self._shooting_value < self._pass_value and \
+                np.sum(np.square(self._match.possession.contact_start_position-self._pass_target)) < 0.9:
+            return True
+
+        return False
 
     def pass_transition(self):
         # return False
