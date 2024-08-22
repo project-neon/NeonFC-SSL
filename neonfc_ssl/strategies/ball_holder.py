@@ -4,6 +4,7 @@ import math
 import numpy as np
 import time
 from collections import deque
+import socket
 
 
 def angle_between(p1, p2, p3):
@@ -16,13 +17,16 @@ class BallHolder(BaseStrategy):
         self.passable_robots = []
         self.intercepting_robots = []
 
-        self.max_value = 0
-        self.max_idx = 0
-
         self.t0 = time.time()
         self.ts = deque(maxlen=60)
 
-        self.goal_v = 0
+        self._shooting_value = 0
+        self._pass_value = 0
+        self._pass_target = np.array([0, 0])
+
+        self.p = None
+        self.val_max = None
+        self.vals = None
 
         self.states = {
             'pass': SimplePass(coach, match),
@@ -50,6 +54,10 @@ class BallHolder(BaseStrategy):
         self.message = None
         self.passing_to = None
 
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.UDP_IP = "127.0.0.1"
+        self.UDP_PORT = 5005
+
     def _start(self):
         self.active = self.states['go_to_ball']
         self.active.start(self._robot)
@@ -57,43 +65,79 @@ class BallHolder(BaseStrategy):
     def decide(self):
         self.passable_robots = [r for r in self._match.robots if not r.missing and r is not self._robot]
         self.intercepting_robots = [r for r in self._match.opposites if not r.missing]
+        
+        self.update_shooting_value()
+        self.update_pass_value()
 
         next = self.active.update()
         if next != self.active:
             self.active = next
             if self.active.name == "Pass":
-                self.passing_to = self.decide_action()
-                self.active.start(self._robot, target=self.passing_to)
+                self.active.start(self._robot, target=self._pass_target)
+            elif self.active.name == "Dribble":
+                self.active.start(self._robot, target=self._pass_target)
             else:
                 self.active.start(self._robot)
 
         return self.active.decide()
 
-    def decide_action(self):
+    def update_shooting_value(self):
+        if self._robot.x > 9:
+            self._shooting_value = 0
+            return
+
+        robot_lock = (self._robot.x, 0)
+
+        goal_posts = ((9, 2.5), (9, 3.5))
+        goal_posts = (
+            angle_between(self._robot, robot_lock, goal_posts[0]), angle_between(self._robot, robot_lock, goal_posts[1])
+        )
+
+        robot_angles = [angle_between(self._robot, robot_lock, robot)
+                        for robot in self._match.opposites if robot.x > self._robot.x and not robot.missing]
+        robot_angles.append(goal_posts[0])
+        robot_angles.append(goal_posts[1])
+
+        robot_angles.sort()
+        robot_angles = list(filter(lambda x: goal_posts[0] <= x <= goal_posts[1], robot_angles))
+
+        diffs = []
+
+        for a, b in zip(robot_angles[:-1], robot_angles[1:]):
+            diffs.append((a, b - a))
+
+        _, window = max(diffs, key=lambda x: x[1])
+
+        self._shooting_value = 5 * window / math.pi
+
+    def update_pass_value(self):
         p = self._passing_targets()
-        vals = self._receiving_probability(p)*self._pass_probability(p)*self._goal_probability(p)
+        vals = 1 * self._receiving_probability(p) * self._pass_probability(p) * self._goal_probability(p)
         target = np.argmax(vals)
         return p[target]
 
+        self._pass_value = vals[target]
+        self._pass_target = p[target]
+
     def pass_transition(self):
-        # if self.max_value > (
-        #         1 - (distance_between_points(self._robot, (9, 3)) / 9.5)) * 0.1 and self.max_value > self.goal_v:
-        # if self.max_value > self.current_v:
-        return True
         # return False
+        if self._shooting_value < self._pass_value and \
+                np.sum(np.square(self._match.possession.contact_start_position-self._pass_target)) >= 0.9:
+            return True
+
+        return False
 
     def shoot_transition(self):
-        # if self.goal_v > (
-        #         1 - (distance_between_points(self._robot, (9, 3)) / 9.5)) * 0.1 and self.goal_v > self.max_value:
-        # if self.goal_v > self.current_v and self.goal_v > self.max_value:
-        #     return True
+        if self._shooting_value >= self._pass_value:
+            return True
+
         return False
 
     def _passing_targets(self):
         dx, dy = 0.1, 0.1
         # Area 0
-        upx, lwx = 4.5, 9
-        upy, lwy = 0, 2
+        lwx, upx = 4.5, 9
+        lwy, upy = 0, 2
 
         x = np.linspace(lwx+dx, upx-dx, 18)
         y = np.linspace(lwy+dy, upy-dy, 8)
@@ -101,8 +145,8 @@ class BallHolder(BaseStrategy):
         a0 = np.transpose(np.array([xs.flatten(), ys.flatten()]))
 
         # Area 1
-        upx, lwx = 4.5, 8
-        upy, lwy = 2, 4
+        lwx, upx = 4.5, 8
+        lwy, upy = 2, 4
 
         x = np.linspace(lwx+dx, upx-dx, 14)
         y = np.linspace(lwy+dy, upy-dy, 10)
@@ -110,8 +154,8 @@ class BallHolder(BaseStrategy):
         a1 = np.transpose(np.array([xs.flatten(), ys.flatten()]))
 
         # Area 2
-        upx, lwx = 4.5, 9
-        upy, lwy = 4, 6
+        lwx, upx = 4.5, 9
+        lwy, upy = 4, 6
 
         x = np.linspace(lwx+dx, upx-dx, 18)
         y = np.linspace(lwy+dy, upy-dy, 8)

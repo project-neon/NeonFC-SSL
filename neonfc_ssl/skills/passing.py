@@ -46,7 +46,6 @@ class PerformSimplePass(State):
 
     def decide(self):
         d = math.sqrt((self.robot.x - self.target[0]) ** 2 + (self.robot.y - self.target[1]) ** 2)
-        vb = math.sqrt(self.reach_speed ** 2 + 2 * self.g * self.miu * d)
 
         # using simple constant acceleration method
         # vb = math.sqrt(self.reach_speed ** 2 + 2 * self.g * self.miu * d)
@@ -55,6 +54,8 @@ class PerformSimplePass(State):
         s_f = (self.c**2-1)/self.a_s
         r_f = -self.c**2/self.a_r
         vb = math.sqrt(2*d/(s_f+r_f))
+
+        vb = max(vb, 6.5)
 
         return RobotCommand(kick_speed=(vb, 0), robot_id=self.robot.robot_id)
 
