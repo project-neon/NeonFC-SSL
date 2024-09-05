@@ -22,7 +22,7 @@ class TurnToShoot(State):
     def decide(self):
         desired = reduce_ang(self.target - self.robot.theta)
         kp = -9
-        return RobotCommand(spinner=True, move_speed=(0, 0, desired*kp), robot_id=self.robot.robot_id)
+        return RobotCommand(spinner=True, move_speed=(0, 0, desired*kp), robot=self.robot)
 
     def check_complete(self):
         return abs(reduce_ang(self.target - self.robot.theta)) <= 0.05
@@ -61,7 +61,7 @@ class PerformShoot(State):
         self.robot = robot
 
     def decide(self):
-        return RobotCommand(kick_speed=(6.5, 0), robot_id=self.robot.robot_id)
+        return RobotCommand(move_speed=(0, 0, 0), kick_speed=(6.5, 0), robot=self.robot)
 
 
 class Shoot(BaseSkill):

@@ -22,7 +22,7 @@ class TurnToPass(State):
         target = math.atan2(self.target[1] - self.robot.y, self.target[0] - self.robot.x)
         desired = reduce_ang(target - self.robot.theta)
         kp = -9
-        return RobotCommand(spinner=True, move_speed=(0, 0, desired * kp), robot_id=self.robot.robot_id)
+        return RobotCommand(spinner=True, move_speed=(0, 0, desired * kp), robot=self.robot)
 
     def check_complete(self):
         target = math.atan2(self.target[1] - self.robot.y, self.target[0] - self.robot.x)
@@ -55,9 +55,9 @@ class PerformSimplePass(State):
         r_f = -self.c**2/self.a_r
         vb = math.sqrt(2*d/(s_f+r_f))
 
-        vb = max(vb, 6.5)
+        vb = min(vb, 6.5)
 
-        return RobotCommand(kick_speed=(vb, 0), robot_id=self.robot.robot_id)
+        return RobotCommand(move_speed=(0, 0, 0), kick_speed=(vb, 0), robot=self.robot)
 
 
 class PerformChipPass(State):

@@ -28,7 +28,7 @@ class BaseCoach(ABC):
         self._match = self._game.match
         self._robots = self._match.robots
 
-        self.commands = {'team': {
+        self.commands = {'meta': {
             'color': self._match.team_color
         }, 'robots': []}
 

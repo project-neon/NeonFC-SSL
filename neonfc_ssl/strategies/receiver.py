@@ -57,4 +57,4 @@ class Receiver(BaseStrategy):
     def decide(self):
         vx, vy = self.field.compute([self._robot.x, self._robot.y])
 
-        return RobotCommand(move_speed=(vx, vy, 0), robot_id=self._robot.robot_id)
+        return RobotCommand(move_speed=(vx, vy, 0), robot=self._robot)

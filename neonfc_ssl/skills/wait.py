@@ -9,7 +9,7 @@ class Wait(BaseSkill):
 
     def decide(self):
         return RobotCommand(
-            robot_id=self._robot.robot_id,
+            robot=self._robot,
             spinner=True,
             move_speed=(0, 0, random.normalvariate(0, 0.2))
         )
