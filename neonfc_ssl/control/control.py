@@ -30,6 +30,10 @@ class Control:
         self.KP = 2
         self.KP_ang = 1.5  # -9
 
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.UDP_IP = "127.0.0.1"
+        self.UDP_PORT = 5006
+
         self.new_data = False
 
     def start(self):
@@ -91,6 +95,9 @@ class Control:
                 vg.Point(command.target_pose[0], command.target_pose[1])
             )
             next_point = points[1]
+
+            if len(points) > 2 and distance_between_points(command.robot, [next_point.x, next_point.y]) < 0.05:
+                next_point = points[2]
 
             dx = next_point.x - command.robot.x
             dy = next_point.y - command.robot.y
