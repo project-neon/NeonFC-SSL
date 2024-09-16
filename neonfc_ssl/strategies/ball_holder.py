@@ -51,6 +51,8 @@ class BallHolder(BaseStrategy):
         self.states['shoot'].add_transition(self.states['go_to_ball'], not_func(close_to_ball))
         self.states['dribble'].add_transition(self.states['wait'], not_func(close_to_ball))
         self.states['go_to_ball'].add_transition(self.states['wait'], close_to_ball)
+        self.states['dribble'].add_transition(self.states['pass'], self.pass_transition)
+        self.states['dribble'].add_transition(self.states['shoot'], self.shoot_transition)
         self.states['wait'].add_transition(self.states['pass'], self.pass_transition)
         self.states['wait'].add_transition(self.states['shoot'], self.shoot_transition)
         self.states['wait'].add_transition(self.states['dribble'], self.dribble_transition)
