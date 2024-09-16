@@ -4,7 +4,7 @@ import pyvisgraph as vg
 from neonfc_ssl.entities import Field, RobotCommand
 from neonfc_ssl.match.ssl_match import SSLMatch
 from neonfc_ssl.coach import BaseCoach
-from neonfc_ssl.commons.math import reduce_ang
+from neonfc_ssl.commons.math import reduce_ang, distance_between_points
 
 
 class Control:
@@ -27,8 +27,8 @@ class Control:
         # cores you have, use 'cat /proc/cpuinfo | grep processor | wc -l'"
         self._num_workers = 8
 
-        self.KP = 1 # 5
-        self.KP_ang = 1  # -9
+        self.KP = 2
+        self.KP_ang = 1.5  # -9
 
         self.new_data = False
 
@@ -40,13 +40,25 @@ class Control:
         self._field = self._match.field
         self._coach = self._game.coach
 
+        r = 0.09
+        h05 = self._field.fieldWidth/2
+
         # Create Layer
         self.vis_graph = vg.VisGraph()
         self._field_poly = [[
-            vg.Point(0, 0),
-            vg.Point(self._field.fieldLength + 0.6, 0),
-            vg.Point(self._field.fieldLength + 0.6, self._field.fieldWidth + 0.6),
-            vg.Point(0, self._field.fieldWidth + 0.6)
+            vg.Point(-0.3 + r, -0.3 + r),
+            vg.Point(self._field.fieldLength + 0.3 - r, -0.3 + r),
+            vg.Point(self._field.fieldLength + 0.3 - r, self._field.fieldWidth + 0.3 - r),
+            vg.Point(-0.3 + r, self._field.fieldWidth + 0.3 - r)
+        ], [
+            vg.Point(r, h05 - 0.52 - r),
+            vg.Point(-0.2-r, h05 - 0.52 - r),
+            vg.Point(-0.2-r, h05 + 0.52 + r),
+            vg.Point(r, h05 + 0.52 + r),
+            vg.Point(r, h05 + 0.5 - r),
+            vg.Point(r-0.18, h05 + 0.5 - r),
+            vg.Point(r-0.18, h05 - 0.5 + r),
+            vg.Point(r, h05 - 0.5 + r)
         ]]
 
         print("Control module started")
@@ -67,8 +79,8 @@ class Control:
         self.commands = self._coach.commands['robots']
 
         opposites_poly = [self.gen_triangles(r, .18 + 0.1) for r in self._match.opposites if not r.missing]
-        # self.vis_graph.build(self._field_poly + opposites_poly, workers=self._num_workers, status=False)
-        self.vis_graph.build(opposites_poly, workers=self._num_workers, status=False)
+        self.vis_graph.build(self._field_poly + opposites_poly, workers=self._num_workers, status=False)
+        # self.vis_graph.build(opposites_poly, workers=self._num_workers, status=False)
 
         for command in self.commands:
             if command.target_pose is None:
