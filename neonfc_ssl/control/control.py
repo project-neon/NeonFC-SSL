@@ -79,7 +79,7 @@ class Control:
             vg.Point(r - 0.18, h05 - 0.5 + r),
             vg.Point(r, h05 - 0.5 + r)
         ], [
-            # -- Friendly Goal Posts -- #
+            # -- Opponent Goal Area -- #
             vg.Point(self._field.fieldLength, h05 - 1),
             vg.Point(self._field.fieldLength, h05 + 1),
             vg.Point(self._field.fieldLength - 1, h05 + 1),
