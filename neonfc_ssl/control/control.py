@@ -45,24 +45,42 @@ class Control:
         self._coach = self._game.coach
 
         r = 0.09
-        h05 = self._field.fieldWidth/2
+        h05 = self._field.fieldWidth / 2
 
         # Create Layer
         self.vis_graph = vg.VisGraph()
         self._field_poly = [[
+            # -- Field Limits -- #
             vg.Point(-0.3 + r, -0.3 + r),
             vg.Point(self._field.fieldLength + 0.3 - r, -0.3 + r),
             vg.Point(self._field.fieldLength + 0.3 - r, self._field.fieldWidth + 0.3 - r),
             vg.Point(-0.3 + r, self._field.fieldWidth + 0.3 - r)
         ], [
+            # -- Opponent Goal Posts -- #
+            vg.Point(self._field.fieldLength - r, h05 - 0.52 - r),
+            vg.Point(self._field.fieldLength - (-0.2 - r), h05 - 0.52 - r),
+            vg.Point(self._field.fieldLength - (-0.2 - r), h05 + 0.52 + r),
+            vg.Point(self._field.fieldLength - r, h05 + 0.52 + r),
+            vg.Point(self._field.fieldLength - r, h05 + 0.5 - r),
+            vg.Point(self._field.fieldLength - (r - 0.18), h05 + 0.5 - r),
+            vg.Point(self._field.fieldLength - (r - 0.18), h05 - 0.5 + r),
+            vg.Point(self._field.fieldLength - r, h05 - 0.5 + r)
+        ], [
+            # -- Friendly Goal Posts -- #
             vg.Point(r, h05 - 0.52 - r),
-            vg.Point(-0.2-r, h05 - 0.52 - r),
-            vg.Point(-0.2-r, h05 + 0.52 + r),
+            vg.Point(-0.2 - r, h05 - 0.52 - r),
+            vg.Point(-0.2 - r, h05 + 0.52 + r),
             vg.Point(r, h05 + 0.52 + r),
             vg.Point(r, h05 + 0.5 - r),
-            vg.Point(r-0.18, h05 + 0.5 - r),
-            vg.Point(r-0.18, h05 - 0.5 + r),
+            vg.Point(r - 0.18, h05 + 0.5 - r),
+            vg.Point(r - 0.18, h05 - 0.5 + r),
             vg.Point(r, h05 - 0.5 + r)
+        ], [
+            # -- Friendly Goal Posts -- #
+            vg.Point(self._field.fieldLength, h05 - 1),
+            vg.Point(self._field.fieldLength, h05 + 1),
+            vg.Point(self._field.fieldLength - 1, h05 + 1),
+            vg.Point(self._field.fieldLength - 1, h05 - 1)
         ]]
 
         print("Control module started")
@@ -94,6 +112,7 @@ class Control:
                 vg.Point(command.robot.x, command.robot.y),
                 vg.Point(command.target_pose[0], command.target_pose[1])
             )
+            all_paths.append(points)
             next_point = points[1]
 
             if len(points) > 2 and distance_between_points(command.robot, [next_point.x, next_point.y]) < 0.05:
