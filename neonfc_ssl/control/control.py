@@ -1,5 +1,7 @@
 import math
 import pyvisgraph as vg
+import time
+import socket
 
 from neonfc_ssl.entities import Field, RobotCommand
 from neonfc_ssl.match.ssl_match import SSLMatch
@@ -9,6 +11,7 @@ from neonfc_ssl.commons.math import reduce_ang, distance_between_points
 
 class Control:
     def __init__(self, game) -> None:
+        self.last_info = time.time()
         self._game = game
 
         # Previous Layer Classes
@@ -102,7 +105,8 @@ class Control:
 
         opposites_poly = [self.gen_triangles(r, .18 + 0.1) for r in self._match.opposites if not r.missing]
         self.vis_graph.build(self._field_poly + opposites_poly, workers=self._num_workers, status=False)
-        # self.vis_graph.build(opposites_poly, workers=self._num_workers, status=False)
+
+        all_paths = []
 
         for command in self.commands:
             if command.target_pose is None:
@@ -124,5 +128,13 @@ class Control:
             dt = reduce_ang(command.target_pose[2] - command.robot.theta)
 
             command.move_speed = (dx * self.KP, dy * self.KP, dt * self.KP_ang)
+
+        if time.time() - self.last_info > 0.1:
+            self.last_info = time.time()
+            paths = []
+            for path in all_paths:
+                paths.append(';'.join(f"%0.2f,%0.2f" % (point.x, point.y) for point in path))
+            MESSAGE = 'a'.join(paths).encode('ascii')
+            self.sock.sendto(MESSAGE, (self.UDP_IP, self.UDP_PORT))
 
         self.new_data = True
