@@ -2,8 +2,8 @@ class Field(object):
     def __init__(self):
         self.current_data = []
 
-        self.fieldLength = 0
-        self.fieldWidth = 0
+        self.fieldLength = 9
+        self.fieldWidth = 6
         self.goalWidth = 0
         self.leftGoalLine = [0, 0]
         self.rightGoalLine = [0, 0]

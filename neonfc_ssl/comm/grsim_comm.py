@@ -44,18 +44,20 @@ class GrComm(object):
 
     def start(self):
         print("Starting communication...")
-        self._coach = self._game.coach
+        self._control = self._game.control
         self.command_sock = self._create_socket()
         print("Communication socket created!")
     
     def send(self):
-        cmds = self._coach.commands
-        self._coach.new_data = False
+        cmds = self._control.commands
+        color = self._control.meta['color']
+        self._control.new_data = False
 
         commands = grSim_Commands()
-        commands.isteamyellow = self._get_robot_color(cmds['team'])
+        commands.isteamyellow = self._get_robot_color(color)
         commands.timestamp = 0
-        for robot in cmds['robots']:
+        for robot in cmds:
+            robot.global_speed_to_wheel_speed()
             command = commands.robot_commands.add()
             command.wheel1 = robot.wheel_speed[0]
             command.wheel2 = robot.wheel_speed[1]
@@ -68,7 +70,7 @@ class GrComm(object):
             command.velangular = 0
             command.spinner = robot.spinner
             command.wheelsspeed = True
-            command.id = robot.robot_id
+            command.id = robot.robot.robot_id
         
         packet = grSim_Packet()
         packet.commands.CopyFrom(commands)
@@ -79,7 +81,7 @@ class GrComm(object):
         )
 
     def _get_robot_color(self, team):
-        return True if team['color'] == 'yellow' else False
+        return True if team == 'yellow' else False
 
     def _create_socket(self):
         return socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

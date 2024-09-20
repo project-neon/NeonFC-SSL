@@ -131,7 +131,6 @@ class OmniRobot:
             self.vy = self.current_data['vy']
             self.vtheta = self.current_data['vt']
 
-
     def update(self, frame):
         self.current_data = self.get_robot_in_frame(frame)
         if self.current_data.get('tCapture') != self.last_appearance:
@@ -145,31 +144,14 @@ class OmniRobot:
 
     def decide(self):
         desired = self.strategy.decide()
-        desired.wheel_speed = self.global_speed_to_wheel_speed(*desired.move_speed)
         return desired
-
-    def global_speed_to_wheel_speed(self, vx, vy, w):
-        R = self.dimensions['L']
-        r = self.dimensions['R']
-        theta = self.theta
-
-        a = 0.7071
-        st = sin(theta)
-        ct = cos(theta)
-
-        w1 = (-R * w + a * vx * (ct - st) + a * vy * (ct + st)) / r
-        w2 = (-R * w + a * vx * (-ct - st) + a * vy * (ct - st)) / r
-        w3 = (-R * w + a * vx * (-ct + st) + a * vy * (-ct - st)) / r
-        w4 = (-R * w + a * vx * (ct + st) + a * vy * (-ct + st)) / r
-
-        return w2, w3, w4, w1
 
     def time_to_ball(self, ball):
         avg_speed = .35
         pos = np.array(ball)
         last_t = 0
         for _ in range(50):
-            t = distance_between_points(pos, self)/avg_speed
+            t = distance_between_points(pos, self) / avg_speed
             pos = ball.pos_after(t)
 
             if abs(t - last_t) < 0.01:

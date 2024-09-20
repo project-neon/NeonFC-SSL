@@ -22,7 +22,7 @@ class SSLMatch:
         self.game_state: StateController = None
         self.possession: PossessionTracker = None
 
-        # Other Tracking Info
+        # Other Tracking Parameters
         self.goalkeeper_id = 0
         self.team_color = 'blue'
         self.opponent_color = 'yellow'

@@ -14,6 +14,8 @@ serial = "^0.0.97"
 pyserial = "^3.5"
 neonpathplanning = "^1.0.1"
 matplotlib = "^3.9.2"
+pyvisgraph = "^0.2.1"
+tqdm = "^4.66.5"
 
 
 [build-system]
