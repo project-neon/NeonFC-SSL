@@ -24,9 +24,8 @@ class SSLMatch:
 
         # Other Tracking Parameters
         self.goalkeeper_id = 0
-        self.team_color = 'blue'
-        self.opponent_color = 'yellow'
-        self.team_side = 'left'
+        self.team_color = self._game.config['match']['team_color']
+        self.opponent_color = 'yellow' if self._game.config['match']['team_color'] == 'blue' else 'blue'
 
     def start(self):
         print("Starting match module starting ...")
