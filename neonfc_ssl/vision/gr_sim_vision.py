@@ -3,26 +3,17 @@ import socket
 import struct
 import logging
 import threading
-
-from neonfc_ssl.protocols.grSim import ssl_vision_wrapper_pb2
+import math
 from google.protobuf.json_format import MessageToJson
-
-
-def get_config(config_file=None):
-    if config_file:
-        config = json.loads(open(config_file, 'r').read())
-    else:
-        config = json.loads(open('config.json', 'r').read())
-
-    return config
+from neonfc_ssl.protocols.grSim import ssl_vision_wrapper_pb2
 
 
 class GrSimVision(threading.Thread):
-    def __init__(self, game, config_file=None) -> None:
+    def __init__(self, game) -> None:
         super(GrSimVision, self).__init__()
-        self.config = get_config(config_file)
 
         self.game = game
+        self.config = self.game.config
 
         self._fps = 60
         self.new_data = False
@@ -99,6 +90,9 @@ class GrSimVision(threading.Thread):
             }
         }
 
+        self.side_factor = 1
+        self.angle_factor = 0
+
         self.vision_port = self.config['network']['vision_port']
         self.host = self.config['network']['multicast_ip']
 
@@ -133,6 +127,9 @@ class GrSimVision(threading.Thread):
         t_capture = frame.get('tCapture')
         camera_id = frame.get('cameraId')
         self.update_camera_capture_number(camera_id, t_capture)
+
+        self.side_factor = 1 if self.config['match']['team_side'] == 'left' else -1
+        self.angle_factor = 0 if self.config['match']['team_side'] == 'left' else math.pi
 
         balls = frame.get('balls', [])
         self.update_ball_detection(balls, camera_id)
@@ -180,7 +177,6 @@ class GrSimVision(threading.Thread):
 
         return True
 
-
     def update_camera_capture_number(self, camera_id, t_capture):
         last_camera_data = self.raw_detection['meta']['cameras'][camera_id]
 
@@ -195,8 +191,8 @@ class GrSimVision(threading.Thread):
         if len(balls) > 0:
             ball = balls[0]
             self.raw_detection['ball'] = {
-                'x': ball.get('x')/1000 + 9/2,
-                'y': ball.get('y')/1000 + 6/2,
+                'x': self.side_factor * ball.get('x')/1000 + 9/2,
+                'y': self.side_factor * ball.get('y')/1000 + 6/2,
                 'tCapture': ball.get('tCapture'),
                 'cCapture': camera_id
             }
@@ -206,7 +202,6 @@ class GrSimVision(threading.Thread):
         last_robot_data = self.raw_detection[ 
             'robots' + color
          ][robot_id]
-        
 
         if last_robot_data.get('tCapture') > _timestamp:
             return
@@ -214,9 +209,9 @@ class GrSimVision(threading.Thread):
         self.raw_detection[
             'robots' + color
          ][robot_id] = {
-            'x': robot['x']/1000 + 9 / 2,
-            'y': robot['y']/1000 + 6 / 2,
-            'theta': robot['orientation'],
+            'x': self.side_factor * robot['x']/1000 + 9 / 2,
+            'y': self.side_factor * robot['y']/1000 + 6 / 2,
+            'theta': robot['orientation'] + self.angle_factor,
             'tCapture': _timestamp,
             'cCapture': camera_id
         }

@@ -3,26 +3,18 @@ import socket
 import struct
 import logging
 import threading
-
-from neonfc_ssl.protocols.gc.ssl_vision_wrapper_tracked_pb2 import TrackerWrapperPacket
+import math
 from google.protobuf.json_format import MessageToJson
 
-
-def get_config(config_file=None):
-    if config_file:
-        config = json.loads(open(config_file, 'r').read())
-    else:
-        config = json.loads(open('config.json', 'r').read())
-
-    return config
+from neonfc_ssl.protocols.gc.ssl_vision_wrapper_tracked_pb2 import TrackerWrapperPacket
 
 
 class AutoRefVision(threading.Thread):
     def __init__(self, game, config_file=None) -> None:
         super(AutoRefVision, self).__init__()
-        self.config = get_config(config_file)
 
         self.game = game
+        self.config = self.game.config
 
         self._fps = 60
         self.new_data = False
@@ -60,6 +52,9 @@ class AutoRefVision(threading.Thread):
             }
         }
 
+        self.side_factor = 1
+        self.angle_factor = 0
+
         self.vision_port = self.config['network']['autoref_port']
         self.host = self.config['network']['multicast_ip']
 
@@ -89,6 +84,9 @@ class AutoRefVision(threading.Thread):
             # pacote de deteccao sem frame
             return False
         t_capture = frame.get('timestamp')
+
+        self.side_factor = 1 if self.config['match']['team_side'] == 'left' else -1
+        self.angle_factor = 0 if self.config['match']['team_side'] == 'left' else math.pi
 
         balls = frame.get('balls', [])
         self.update_ball_detection(balls, t_capture)
@@ -120,11 +118,11 @@ class AutoRefVision(threading.Thread):
             pos = balls[0]['pos']
             speed = balls[0]['vel']
             self.raw_detection['ball'] = {
-                'x': pos['x'] + 9 / 2,
-                'y': pos['y'] + 6 / 2,
+                'x': self.side_factor*pos['x'] + 9/2,
+                'y': self.side_factor*pos['y'] + 6/2,
                 'z': pos['z'],
-                'vx': speed['x'],
-                'vy': speed['y'],
+                'vx': self.side_factor*speed['x'],
+                'vy': self.side_factor*speed['y'],
                 'vz': speed['z'],
                 'tCapture': _timestamp
             }
@@ -140,11 +138,11 @@ class AutoRefVision(threading.Thread):
         #     return
 
         self.raw_detection['robots' + color][robot_id] = {
-            'x': pos['x'] + 9 / 2,
-            'y': pos['y'] + 6 / 2,
-            'theta': robot['orientation'],
-            'vx': speed['x'],
-            'vy': speed['y'],
+            'x': self.side_factor*pos['x'] + 9/2,
+            'y': self.side_factor*pos['y'] + 6/2,
+            'theta': robot['orientation'] + self.angle_factor,
+            'vx': self.side_factor*speed['x'],
+            'vy': self.side_factor*speed['y'],
             'vt': robot['velAngular'],
             'tCapture': _timestamp
         }
