@@ -1,3 +1,5 @@
+import logging
+
 from neonfc_ssl.entities import OmniRobot, Ball, Field
 from neonfc_ssl.possession_tracker import FloatPossessionTracker as PossessionTracker
 from neonfc_ssl.state_controller import StateController
@@ -27,8 +29,10 @@ class SSLMatch:
         self.team_color = self._game.config['match']['team_color']
         self.opponent_color = 'yellow' if self._game.config['match']['team_color'] == 'blue' else 'blue'
 
+        self.logger = logging.getLogger("match")
+
     def start(self):
-        print("Starting match module starting ...")
+        self.logger.info("Starting match module starting ...")
 
         # Get Last Layer Classes
         self._geometry = self._game.geometry
@@ -57,7 +61,7 @@ class SSLMatch:
 
         self.possession = PossessionTracker(self, self.game_state)
 
-        print("Match module started")
+        self.logger.info("Match module started!")
 
     def update(self):
         frame = self._vision.get_last_frame()

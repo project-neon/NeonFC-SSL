@@ -1,3 +1,4 @@
+import logging
 import socket
 
 from neonfc_ssl.protocols.grSim.grSim_Commands_pb2 import grSim_Commands
@@ -14,6 +15,8 @@ class GrComm(object):
 
         self.command_port = 20011
         self.host = 'localhost'
+
+        self.logger = logging.getLogger("comm")
 
     def freeze(self, robot_commands = []):
         commands = grSim_Commands()
@@ -43,10 +46,10 @@ class GrComm(object):
         )
 
     def start(self):
-        print("Starting communication...")
+        self.logger.info("Starting GRSim communication...")
         self._control = self._game.control
         self.command_sock = self._create_socket()
-        print("Communication socket created!")
+        self.logger.info("GRSim communication module started!")
     
     def send(self):
         cmds = self._control.commands

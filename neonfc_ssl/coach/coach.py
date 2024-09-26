@@ -1,3 +1,4 @@
+import logging
 from abc import ABC, abstractmethod
 from concurrent import futures
 from neonfc_ssl.strategies import Still
@@ -21,8 +22,10 @@ class BaseCoach(ABC):
 
         self.events = {}
 
+        self.logger = logging.getLogger("coach")
+
     def start(self):
-        print("Starting coach module starting ...")
+        self.logger.info("Starting coach module starting ...")
 
         # Last Layer Classes
         self._match = self._game.match
@@ -37,7 +40,7 @@ class BaseCoach(ABC):
 
         self._start()
 
-        print("Coach module started")
+        self.logger.info("Coach module started!")
 
     def _start(self):
         pass

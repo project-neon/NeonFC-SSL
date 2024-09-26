@@ -24,11 +24,7 @@ class BoolPossessionTracker:
             'Penalty'
         ]
 
-        console_handler = logging.StreamHandler()
-        log_formatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
-        self.logger = logging.Logger("StateController")
-        console_handler.setFormatter(log_formatter)
-        self.logger.addHandler(console_handler)
+        self.logger = logging.getLogger("match")
 
         def update_on_state(color):
             def wrapped(state, **kwargs):

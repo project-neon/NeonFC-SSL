@@ -98,17 +98,14 @@ class GrSimVision(threading.Thread):
         self.vision_port = self.config['network']['vision_port']
         self.host = self.config['network']['multicast_ip']
 
-        console_handler = logging.StreamHandler()
-        log_formatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
-        self.logger = logging.Logger("vision")
-        console_handler.setFormatter(log_formatter)
-        self.logger.addHandler(console_handler)
+        self.logger = logging.getLogger("input")
 
     def run(self):
+        self.logger.info(f"Starting SSL-Vision module...")
         self.logger.info(f"Creating socket with address: {self.host} and port: {self.vision_port}")
         self.vision_sock = self._create_socket()
         self._wait_to_connect()
-        self.logger.info(f"Connection completed!")
+        self.logger.info(f"SSL-Vision module started!")
 
         self.running = True
         while self.running:
@@ -120,6 +117,8 @@ class GrSimVision(threading.Thread):
             last_frame = json.loads(MessageToJson(env))
             self.new_data = self.update_detection(last_frame)
             self.new_geometry = self.update_geometry(last_frame)
+
+        self.logger.info(f"SSL-Vision module stopped!")
 
     def stop(self):
         self.running = False

@@ -1,3 +1,4 @@
+import logging
 import os
 import serial
 import json
@@ -10,10 +11,13 @@ class SerialComm(object):
         self.command_port = "/dev/ttyACM0"
         self.baud_rate = 115200
 
+        self.logger = logging.getLogger("comm")
+
     def start(self):
-        print("Starting communication...")
+        self.logger.info("Starting serial communication...")
+        self.logger.info(f"Creating communication port at {self.command_port}")
         self.comm = serial.Serial(self.command_port, self.baud_rate)
-        print(f"Communication port created on {self.command_port}!")
+        self.logger.info(f"Serial communication module started!")
     
     def freeze(self, robot_commands = []):
         message = "<"
