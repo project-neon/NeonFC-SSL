@@ -7,7 +7,61 @@
         "command_port": 20011
     },
     "match" : {
+        "team_1": "Neon",
+        "team_2": "Test",
+        "event": "Test",
         "team_side": "left",
         "team_color": "yellow"
+    },
+    "logger": {
+        "version": 1,
+        "disable_existing_loggers": false,
+        "formatters": {
+            "simple": {
+                "format": "[%(levelname)s|%(module)s|L%(lineno)d] %(asctime)s: %(message)s",
+                "datefmt": "%H:%M:%S"
+            },
+            "jsonl": {
+                "()": "logger.JSONLFormatter",
+                "fmt_keys": {
+                  "message": "message",
+                  "timestamp": "timestamp",
+                  "logger": "name"
+                },
+                "datefmt": "%H:%M:%S"
+            }
+        },
+        "handlers": {
+          "stdout": {
+            "class": "logging.StreamHandler",
+            "level": "DEBUG",
+            "formatter": "simple",
+            "stream": "ext://sys.stdout"
+          },
+          "stderr": {
+            "class": "logging.StreamHandler",
+            "level": "WARNING",
+            "formatter": "simple",
+            "stream": "ext://sys.stderr"
+          },
+          "file": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "level": "DECISION",
+            "formatter": "jsonl",
+            "filename": "logs/neon_fc.log.jsonl",
+            "maxBytes": 3000000,
+            "backupCount": 3
+          }
+        },
+        "loggers": {
+          "root": {
+            "level": "NOTSET",
+            "handlers": [
+              "stdout",
+              "stderr",
+              "file"
+            ]
+          }
+        }
     }
 }
