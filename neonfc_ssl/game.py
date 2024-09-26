@@ -92,7 +92,8 @@ class Game:
 
             self.match_name = f"{t1}x{t2}@{event}"
 
-        self.config['logger']['handlers']['file']['filename'] = f"logs/{self.match_name}.log.jsonl"
+        self.config['logger']['handlers']['main_log']['filename'] = f"logs/{self.match_name}.log.jsonl"
+        self.config['logger']['handlers']['game_log']['filename'] = f"logs/{self.match_name}.gamelog.jsonl"
         logging.config.dictConfig(self.config['logger'])
 
     def stop_threads(self):

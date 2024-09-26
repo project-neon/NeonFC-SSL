@@ -31,6 +31,11 @@
                 "datefmt": "%H:%M:%S"
             }
         },
+        "filters": {
+          "only_game": {
+            "()": "logger.OnlyGameFilter"
+          }
+        },
         "handlers": {
           "stdout": {
             "class": "logging.StreamHandler",
@@ -44,11 +49,19 @@
             "formatter": "simple",
             "stream": "ext://sys.stderr"
           },
-          "file": {
+          "main_log": {
             "class": "logging.handlers.RotatingFileHandler",
             "level": "DECISION",
             "formatter": "jsonl",
             "filename": "logs/neon_fc.log.jsonl",
+            "maxBytes": 3000000,
+            "backupCount": 3
+          },
+          "game_log": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "filters": ["only_game"],
+            "formatter": "jsonl",
+            "filename": "logs/neon_fc.gamelog.jsonl",
             "maxBytes": 3000000,
             "backupCount": 3
           }
@@ -59,7 +72,8 @@
             "handlers": [
               "stdout",
               "stderr",
-              "file"
+              "main_log",
+              "game_log"
             ]
           }
         }
