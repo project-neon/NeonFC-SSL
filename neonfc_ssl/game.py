@@ -1,4 +1,5 @@
 import json
+import atexit
 from vision.gr_sim_vision import GrSimVision
 from vision.auto_ref_vision import AutoRefVision
 from match.ssl_match import SSLMatch
@@ -62,6 +63,11 @@ class Game:
         self.comm.start()
 
         self.update()
+
+    def stop_threads(self):
+        self.ssl_vison.stop()
+        self.auto_ref.stop()
+        self.referee.stop()
 
     def update(self):
         while True:

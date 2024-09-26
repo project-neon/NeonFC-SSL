@@ -13,6 +13,8 @@ class SSLGameControllerReferee(threading.Thread):
         self.referee_port = 10003
         self.host = '224.5.23.1'
 
+        self.running = False
+
         self._referee_message = {}
 
         # logging.basicConfig(filename="GAME_CONTROLLER.log",
@@ -26,11 +28,15 @@ class SSLGameControllerReferee(threading.Thread):
         print("Starting referee...")
         self.referee_sock = self._create_socket()
         print("Referee completed!")
-        while True:
+        self.running = True
+        while self.running:
             c = Referee()
             data = self.referee_sock.recv(1024)
             c.ParseFromString(data)
             self._referee_message = json.loads(MessageToJson(c))
+
+    def stop(self):
+        self.running = False
 
     def can_play(self):
         if not self._referee_message:
