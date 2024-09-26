@@ -103,11 +103,14 @@ class Game:
 
     def update(self):
         while True:
-            if self.vision.new_data:
-                self.match.update()
-                self.coach.update()
-                self.control.update()
-                self.comm.send()
+            try:
+                if self.vision.new_data:
+                    self.match.update()
+                    self.coach.update()
+                    self.control.update()
+                    self.comm.send()
+            except KeyboardInterrupt:
+                break
 
 
 game = Game()

@@ -14,6 +14,7 @@ class GrSimVision(threading.Thread):
 
         self.game = game
         self.config = self.game.config
+        self.daemon = True
 
         self.running = False
 
@@ -117,11 +118,12 @@ class GrSimVision(threading.Thread):
             last_frame = json.loads(MessageToJson(env))
             self.new_data = self.update_detection(last_frame)
             self.new_geometry = self.update_geometry(last_frame)
-
-        self.logger.info(f"SSL-Vision module stopped!")
+        self.stop()
 
     def stop(self):
         self.running = False
+        self.vision_sock.close()
+        self.logger.info(f"SSL-Vision module stopped!")
 
     def update_detection(self, last_frame):
         frame = last_frame.get('detection')

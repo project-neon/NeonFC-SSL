@@ -15,6 +15,7 @@ class AutoRefVision(threading.Thread):
 
         self.game = game
         self.config = self.game.config
+        self.daemon = True
 
         self.running = False
 
@@ -76,11 +77,12 @@ class AutoRefVision(threading.Thread):
             env.ParseFromString(data)
             last_frame = json.loads(MessageToJson(env))
             self.new_data = self.update_detection(last_frame)
-
-        self.logger.info(f"AutoRef-Vision module stopped!")
+        self.stop()
 
     def stop(self):
         self.running = False
+        self.vision_sock.close()
+        self.logger.info(f"AutoRef-Vision module stopped!")
 
     def update_detection(self, last_frame):
         frame = last_frame.get('trackedFrame', None)

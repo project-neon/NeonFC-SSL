@@ -14,6 +14,7 @@ class SSLGameControllerReferee(threading.Thread):
         self.host = '224.5.23.1'
 
         self.running = False
+        self.daemon = True
 
         self._referee_message = {}
 
@@ -32,11 +33,12 @@ class SSLGameControllerReferee(threading.Thread):
             data = self.referee_sock.recv(1024)
             c.ParseFromString(data)
             self._referee_message = json.loads(MessageToJson(c))
-
-        self.logger.info("Referee module stopped!")
+        self.stop()
 
     def stop(self):
         self.running = False
+        self.referee_sock.close()
+        self.logger.info("Referee module stopped!")
 
     def can_play(self):
         if not self._referee_message:
