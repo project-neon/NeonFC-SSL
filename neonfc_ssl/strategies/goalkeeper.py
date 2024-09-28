@@ -2,8 +2,8 @@ from neonfc_ssl.strategies.base_strategy import BaseStrategy
 from neonfc_ssl.skills import *
 from NeonPathPlanning import Point
 
-from commons.math import point_in_rect
-from math import pi
+from commons.math import point_in_rect, distance_between_points
+from math import tan, pi
 
 class GoalKeeper(BaseStrategy):
     def __init__(self, coach, match):
@@ -15,24 +15,21 @@ class GoalKeeper(BaseStrategy):
         self.states = {
             'pass': SimplePass(coach, match),
             'go_to_ball': GoToBall(coach, match),
-            'wait': Wait(coach, match),
             'move_to_pose': MoveToPose(coach, match)
         }
 
-        self.states["wait"].add_transition(self.states["move_to_pose"], self.move_to_pose_transition)
         self.states["move_to_pose"].add_transition(self.states["go_to_ball"], self.go_to_ball_transition)
-        self.states["move_to_pose"].add_transition(self.states["wait"], self.wait_transition)
         self.states["go_to_ball"].add_transition(self.states["pass"], self.pass_transisition)
         self.states["pass"].add_transition(self.states["move_to_pose"], self.move_to_pose_transition)
 
 
     def _start(self):
-        self.active = self.states['wait']
-        self.active.start(self._robot)
+        self.active = self.states['move_to_pose']
+        self.active.start(self._robot, target=self.defense_target)
 
     def decide(self):
         next = self.active.update()
-    
+        
         if next.name != "MoveToPose":
             self.active = next
             
@@ -51,12 +48,44 @@ class GoalKeeper(BaseStrategy):
         return self.active.decide()
     
     def defense_target(self):
-        return [0.2, self._match.ball.y, 0]
+        ball = self._match.ball
+        y_goal_min = 2.5 + 0.15
+        y_goal_max = 3.5 - 0.15
+        x = 0.2
+        
+        if ball.vx == 0:
+            return [self._robot.x, self._robot.y, self._robot.theta]
+        
+        elif ball.x > self.field.halfwayLine[0]:
+            return [x, self.field.fieldWidth/2, 0]
 
-    def wait_transition(self):
-        if self._match.ball.x > self.field.halfwayLine[0]:
-            return True
-        return False
+        y_max = ((y_goal_max-ball.y)/(-ball.x))*(x-ball.x)+ball.y
+        y_min = ((y_goal_min-ball.y)/(-ball.x))*(x-ball.x)+ball.y
+
+        closest = 100000
+        for robot in self._match.opposites:
+            dist = distance_between_points([ball.x, ball.y], [robot.x, robot.y])
+            if dist < closest:
+                closest = dist
+                theta = robot.theta - pi
+                x_robot = robot.x
+                y_robot = robot.y
+            
+                
+        if closest < 0.15:
+            y = tan(theta)*(x-x_robot)+y_robot
+        
+        else:
+            y = (ball.vy/ball.vx)*(x-ball.x)+ball.y
+            theta = ball.vy/ball.vx
+        
+        if y > y_max:
+            y = y_max
+        
+        if y < y_min:
+            y = y_min
+        
+        return [x, y, theta]
 
 
     def move_to_pose_transition(self):
@@ -70,10 +99,6 @@ class GoalKeeper(BaseStrategy):
 
 
     def go_to_ball_transition(self):
-        # is_in_rect = point_in_rect([self._match.ball.x, self._match.ball.y],
-        #                               [self.field.leftFirstPost[0], self.field.leftFirstPost[1],
-        #                                self.field.goalWidth, 0])
-        
         if (self._match.ball.x < 1) and (self._match.ball.y > 2) and (self._match.ball.y < 4):
             return True        
         return False
