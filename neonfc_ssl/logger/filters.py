@@ -15,7 +15,6 @@ class GameFilter(logging.Filter):
             if record.created - self.last_log_time >= self.refresh_rate:
                 self.last_log_time = record.created
                 return True
-            print("rejected frame")
             return False
 
         return True

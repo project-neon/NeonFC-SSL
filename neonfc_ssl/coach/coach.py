@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from concurrent import futures
 from neonfc_ssl.strategies import Still
 from neonfc_ssl.match.ssl_match import SSLMatch
+from neonfc_ssl.entities import RobotCommand
 
 
 class BaseCoach(ABC):
@@ -17,7 +18,7 @@ class BaseCoach(ABC):
         self._n_active_robots = None
         self._robots = None
 
-        self.commands = None
+        self.commands: list[RobotCommand] = None
         self.new_data = False
 
         self.events = {}

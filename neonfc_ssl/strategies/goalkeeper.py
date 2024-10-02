@@ -39,6 +39,7 @@ class GoalKeeper(BaseStrategy):
         
         if next.name != "MoveToPose":
             self.active = next
+            print(self.active.name)
             
             if self.active.name == "Pass":
                 _passing_to = Point(5, 4)
@@ -48,6 +49,7 @@ class GoalKeeper(BaseStrategy):
                 self.active.start(self._robot)
         
         else:
+            print(self.active.name)
             target = self.defense_target()
             self.active = next
             self.active.start(self._robot, target=target)
