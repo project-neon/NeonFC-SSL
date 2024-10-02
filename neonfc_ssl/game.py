@@ -1,6 +1,7 @@
 import json
 import atexit
 import logging.config
+import time
 from vision.gr_sim_vision import GrSimVision
 from vision.auto_ref_vision import AutoRefVision
 from match.ssl_match import SSLMatch
@@ -106,10 +107,22 @@ class Game:
         while True:
             try:
                 if self.vision.new_data:
+                    t = [time.time()]
                     self.match.update()
+                    t.append(time.time())
                     self.coach.update()
+                    t.append(time.time())
                     self.control.update()
+                    t.append(time.time())
                     self.comm.send()
+                    t.append(time.time())
+                    self.logger.info(f"total:  {1/(t[4]-t[0]):.2f} Hz")
+                    if self.config['match'].get('time_login', False):
+                        self.logger.info(f"match:  {1/(t[1]-t[0]):.2f} Hz")
+                        self.logger.info(f"coach:  {1/(t[2]-t[1]):.2f} Hz")
+                        self.logger.info(f"control:  {1/(t[3]-t[2]):.2f} Hz")
+                        self.logger.info(f"comm:  {1/(t[4]-t[3]):.2f} Hz")
+
             except KeyboardInterrupt:
                 break
 
