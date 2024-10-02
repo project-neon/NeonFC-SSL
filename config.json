@@ -10,8 +10,8 @@
         "team_1": "Neon",
         "team_2": "Test",
         "event": "Test",
-        "team_side": "right",
-        "team_color": "yellow",
+        "team_side": "left",
+        "team_color": "blue",
         "time_login": false
     },
     "logger": {
