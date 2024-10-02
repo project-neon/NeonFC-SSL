@@ -15,6 +15,9 @@ class AutoRefVision(threading.Thread):
 
         self.game = game
         self.config = self.game.config
+        self.daemon = True
+
+        self.running = False
 
         self._fps = 60
         self.new_data = False
@@ -58,25 +61,28 @@ class AutoRefVision(threading.Thread):
         self.vision_port = self.config['network']['autoref_port']
         self.host = self.config['network']['multicast_ip']
 
-        console_handler = logging.StreamHandler()
-        log_formatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
-        self.logger = logging.Logger("vision")
-        console_handler.setFormatter(log_formatter)
-        self.logger.addHandler(console_handler)
+        self.logger = logging.getLogger("input")
 
     def run(self):
+        self.logger.info(f"Starting AutoRef-Vision module...")
         self.logger.info(f"Creating socket with address: {self.host} and port: {self.vision_port}")
         self.vision_sock = self._create_socket()
         self._wait_to_connect()
-        self.logger.info(f"Connection completed!")
+        self.logger.info(f"AutoRef-Vision module started!")
 
-        while True:
+        self.running = True
+        while self.running:
             env = TrackerWrapperPacket()
             data = self.vision_sock.recv(2048)
-
             env.ParseFromString(data)
             last_frame = json.loads(MessageToJson(env))
             self.new_data = self.update_detection(last_frame)
+        self.stop()
+
+    def stop(self):
+        self.running = False
+        self.vision_sock.close()
+        self.logger.info(f"AutoRef-Vision module stopped!")
 
     def update_detection(self, last_frame):
         frame = last_frame.get('trackedFrame', None)

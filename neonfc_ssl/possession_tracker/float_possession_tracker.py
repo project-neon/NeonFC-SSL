@@ -14,11 +14,7 @@ class FloatPossessionTracker:
         self.in_ball_contact = False
         self.contact_start_position = np.array([0, 0])
 
-        console_handler = logging.StreamHandler()
-        log_formatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
-        self.logger = logging.Logger("StateController")
-        console_handler.setFormatter(log_formatter)
-        self.logger.addHandler(console_handler)
+        self.logger = logging.getLogger("match")
 
         self.logger.info(f"{self.get_possession()} team ball possession")
 

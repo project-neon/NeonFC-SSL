@@ -2,7 +2,7 @@ import json
 import socket
 import struct
 import threading
-
+import logging
 from google.protobuf.json_format import MessageToJson
 from neonfc_ssl.protocols.gc.ssl_gc_referee_message_pb2 import Referee
 
@@ -13,24 +13,32 @@ class SSLGameControllerReferee(threading.Thread):
         self.referee_port = 10003
         self.host = '224.5.23.1'
 
+        self.running = False
+        self.daemon = True
+
         self._referee_message = {}
 
-        # logging.basicConfig(filename="GAME_CONTROLLER.log",
-        #             filemode='a',
-        #             format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
-        #             datefmt='%H:%M:%S',
-        #             level=logging.DEBUG)
+        self.logger = logging.getLogger("input")
 
     def run(self):
         """Calls _create_socket() and parses the status message from the Referee."""
-        print("Starting referee...")
+        self.logger.info("Starting referee module...")
+        self.logger.info(f"Creating socket with address: {self.host} and port: {self.referee_port}")
         self.referee_sock = self._create_socket()
-        print("Referee completed!")
-        while True:
+        self.logger.info("Referee module started!")
+
+        self.running = True
+        while self.running:
             c = Referee()
             data = self.referee_sock.recv(1024)
             c.ParseFromString(data)
             self._referee_message = json.loads(MessageToJson(c))
+        self.stop()
+
+    def stop(self):
+        self.running = False
+        self.referee_sock.close()
+        self.logger.info("Referee module stopped!")
 
     def can_play(self):
         if not self._referee_message:

@@ -1,3 +1,4 @@
+import logging
 from neonfc_ssl.entities import OmniRobot, Ball, Field
 from neonfc_ssl.possession_tracker import FloatPossessionTracker as PossessionTracker
 from neonfc_ssl.state_controller import StateController
@@ -27,8 +28,10 @@ class SSLMatch:
         self.team_color = self._game.config['match']['team_color']
         self.opponent_color = 'yellow' if self._game.config['match']['team_color'] == 'blue' else 'blue'
 
+        self.logger = logging.getLogger("match")
+
     def start(self):
-        print("Starting match module starting ...")
+        self.logger.info("Starting match module starting ...")
 
         # Get Last Layer Classes
         self._geometry = self._game.geometry
@@ -57,7 +60,7 @@ class SSLMatch:
 
         self.possession = PossessionTracker(self, self.game_state)
 
-        print("Match module started")
+        self.logger.info("Match module started!")
 
     def update(self):
         frame = self._vision.get_last_frame()
@@ -68,16 +71,32 @@ class SSLMatch:
         self.field.update(geometry)
 
         self.ball.update(frame)
+        extra = {'ball': [
+            round(self.ball.x, 3), round(self.ball.y, 3),
+            round(self.ball.vx, 3), round(self.ball.vy, 3)
+        ], 'b': {}, 'y': {}}
 
         for robot in self.robots:
             robot.update(frame)
+            extra[robot.team_color[0]][robot.robot_id] = [
+                int(robot.missing),
+                round(robot.x, 3), round(robot.y, 3), round(robot.theta, 3),
+                round(robot.vx, 3), round(robot.vy, 3), round(robot.vtheta, 3)
+            ]
 
         self.active_robots = [r for r in self.robots if not r.missing]
 
         for opposite in self.opposites:
             opposite.update(frame)
+            extra[opposite.team_color[0]][opposite.robot_id] = [
+                int(opposite.missing),
+                round(opposite.x, 3), round(opposite.y, 3), round(opposite.theta, 3),
+                round(opposite.vx, 3), round(opposite.vy, 3), round(opposite.vtheta, 3)
+            ]
 
         self.active_opposites = [r for r in self.opposites if not r.missing]
+
+        self.logger.game("frame", extra=extra)
 
         self.game_state.update(ref_command)
 

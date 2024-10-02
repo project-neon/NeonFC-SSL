@@ -1,3 +1,4 @@
+import logging
 import math
 import pyvisgraph as vg
 import time
@@ -39,8 +40,10 @@ class Control:
 
         self.new_data = False
 
+        self.logger = logging.getLogger("control")
+
     def start(self):
-        print("Starting control module starting ...")
+        self.logger.info("Starting control module starting ...")
 
         # Get Last Layer Classes
         self._match = self._game.match
@@ -86,7 +89,7 @@ class Control:
             vg.Point(self._field.fieldLength - 1, h05 - 1)
         ]]
 
-        print("Control module started")
+        self.logger.info("Control module started!")
 
     def gen_triangles(self, center, radius) -> list[vg.Point]:
         # P1: [robot.x, 2 * radius + robot.y]
