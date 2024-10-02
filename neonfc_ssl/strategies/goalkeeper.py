@@ -18,8 +18,15 @@ class GoalKeeper(BaseStrategy):
             'move_to_pose': MoveToPose(coach, match)
         }
 
+        def not_func(f):
+            def wrapped():
+                return not f()
+
+            return wrapped
+
         self.states["move_to_pose"].add_transition(self.states["go_to_ball"], self.go_to_ball_transition)
         self.states["go_to_ball"].add_transition(self.states["pass"], self.pass_transisition)
+        self.states["go_to_ball"].add_transition(self.states["move_to_pose"], not_func(self.go_to_ball_transition))
         self.states["pass"].add_transition(self.states["move_to_pose"], self.move_to_pose_transition)
 
 
@@ -34,7 +41,7 @@ class GoalKeeper(BaseStrategy):
             self.active = next
             
             if self.active.name == "Pass":
-                _passing_to = Point(2, 2)
+                _passing_to = Point(5, 4)
                 self.active.start(self._robot, target=_passing_to)
             
             else:
@@ -79,13 +86,21 @@ class GoalKeeper(BaseStrategy):
             y = (ball.vy/ball.vx)*(x-ball.x)+ball.y
             theta = ball.vy/ball.vx
         
-        if y > y_max:
-            y = y_max
+        if ball.y > self.field.fieldWidth/2:
+            y += 0.1
         
-        if y < y_min:
-            y = y_min
-        
+        else:
+            y -= 0.1
+
+        y = max(min(y, y_max, y_goal_max), y_min, y_goal_min)
+
         return [x, y, theta]
+    
+    
+    def ball_in_area(self):
+        if (self._match.ball.x < 1) and (self._match.ball.y > 2) and (self._match.ball.y < 4):
+            return True
+        return False
 
 
     def move_to_pose_transition(self):
@@ -108,6 +123,6 @@ class GoalKeeper(BaseStrategy):
         is_in_rect = point_in_rect([self._match.ball.x, self._match.ball.y],
                                       [self._robot.x-0.15, self._robot.y-0.15, 0.3, 0.3])
         
-        if is_in_rect:
-            return True
+        if is_in_rect and self.ball_in_area():
+            return True        
         return False
