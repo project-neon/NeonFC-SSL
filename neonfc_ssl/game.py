@@ -62,6 +62,7 @@ class Game:
     def start(self):
         self.logger.info("Starting game")
         info = {"t1": self.t1, "t2": self.t2, "event": self.event, "vision": type(self.vision).__name__}
+        self.logger.game("game meta", extra={"type": 'ssl'})
         self.logger.game("game begin", extra=info)
         info["coach"] = "TestCoach"
         self.logger.decision("game begin", extra=info)

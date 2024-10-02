@@ -29,11 +29,19 @@
                   "logger": "name"
                 },
                 "datefmt": "%H:%M:%S"
+            },
+            "game_format": {
+                "()": "logger.JSONLFormatter",
+                "fmt_keys": {
+                  "message": "message",
+                  "timestamp": "timestamp"
+                },
+                "datefmt": "%H:%M:%S.%f"
             }
         },
         "filters": {
-          "only_game": {
-            "()": "logger.OnlyGameFilter"
+          "game_events": {
+            "()": "logger.GameFilter"
           }
         },
         "handlers": {
@@ -59,8 +67,8 @@
           },
           "game_log": {
             "class": "logging.handlers.RotatingFileHandler",
-            "filters": ["only_game"],
-            "formatter": "jsonl",
+            "filters": ["game_events"],
+            "formatter": "game_format",
             "filename": "logs/neon_fc.gamelog.jsonl",
             "maxBytes": 3000000,
             "backupCount": 3
