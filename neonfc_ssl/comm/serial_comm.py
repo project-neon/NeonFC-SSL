@@ -46,6 +46,7 @@ class SerialComm:
 
         message = "<"
         for robot in cmds:
+            robot.global_speed_to_local_speed()
             message += (
                 f"{robot.robot.robot_id},"
                 f"{round(robot.local_speed[0], 4)},"
