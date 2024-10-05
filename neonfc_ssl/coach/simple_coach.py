@@ -1,6 +1,6 @@
 import math
 from neonfc_ssl.coach import BaseCoach
-from neonfc_ssl.strategies import Receiver, BallHolder, GoalKeeper, Libero
+from neonfc_ssl.strategies import BaseStrategy, Receiver, BallHolder, GoalKeeper, Libero, Still
 import numpy as np
 
 
@@ -8,15 +8,24 @@ class Coach(BaseCoach):
     NAME = "SimpleCoach"
 
     def _start(self):
+        # Create strategies objects
+
+        # Especial cases
         self._strategy_gk = GoalKeeper(self, self._match)
+        self._strategy_bh = BallHolder(self, self._match)
         self._gk_id = 0
-        self._strategy_lb = Libero(self, self._match)
 
-        self._strategies_attack = {robot.robot_id: Receiver(self, self._match) for robot in self._match.robots[:-1]}
-        self._strategies_attack[self._match.robots[-1].robot_id] = BallHolder(self, self._match)
-        self._ball_carrier_id = self._match.robots[-1].robot_id
+        # Default attack strategies
+        self._secondary_attack_strategies: dict[int, BaseStrategy] = {
+            robot.robot_id: Receiver(self, self._match) for robot in self._match.robots if robot.robot_id != self._gk_id
+        }
+        self._secondary_attack_strategies[self._gk_id] = self._strategy_gk
 
-        self._had_possession = False
+        # Default defense strategies
+        self._secondary_defense_strategies: dict[int, BaseStrategy] = {
+            robot.robot_id: Libero(self, self._match) for robot in self._match.robots if robot.robot_id != self._gk_id
+        }
+        self._secondary_defense_strategies[self._gk_id] = self._strategy_gk
 
     def decide(self):
         if self.has_possession:
@@ -24,47 +33,33 @@ class Coach(BaseCoach):
         else:
             self._defending()
 
-        # for robot in self._match.robots:
-        #     print(f"id {robot.robot_id}, stat {robot.strategy.name}")
-
     def _defending(self):
-        attacker = self._closest_non_keeper()
+        # when in possession check the ball carrier (smaller time to ball), than it becomes ball carrier
+        new_carrier = self._closest_non_keeper()
 
-        for robot in self._active_robots:
-            if robot.robot_id == self._gk_id:
-                robot.set_strategy(self._strategy_gk)
-            elif attacker == robot:
-                robot.set_strategy(self._strategies_attack[self._ball_carrier_id])
+        # the carrier receives its strategies and every other receives its secondary strategies
+        for robot in self._robots:
+            if robot.robot_id == new_carrier:
+                robot.set_strategy(self._strategy_bh)
             else:
-                robot.set_strategy(self._strategy_lb)
+                robot.set_strategy(self._secondary_attack_strategies[robot.robot_id])
 
     def _closest_non_keeper(self):
         sq_dist_to_ball = lambda r: np.sum(np.square(np.array(r)-self._match.ball)) \
             if r.robot_id != self._gk_id else np.inf
         my_closest = min(self._match.active_robots, key=sq_dist_to_ball, default=None)
-        return my_closest
+        return my_closest.robot_id
 
     def _attacking(self):
-        new_carrier = None
+        # when in possession check the ball carrier (smaller time to ball), than it becomes ball carrier
+        new_carrier = self._closest_to_ball()
 
-        if not self._had_possession:
-            new_carrier = self._closest_to_ball()
-            # self._had_possession = True
-        else:
-            if event := self.events.pop('Ball Holder', None):
-                new_carrier = event['target']
-
-        if new_carrier is not None:
-            temp_s = self._strategies_attack[new_carrier]
-            self._strategies_attack[new_carrier] = self._strategies_attack[self._ball_carrier_id]
-            self._strategies_attack[self._ball_carrier_id] = temp_s
-            self._ball_carrier_id = new_carrier
-
-            for robot in self._active_robots:
-                if robot.robot_id == self._gk_id and robot.robot_id != self._ball_carrier_id:
-                    robot.set_strategy(self._strategy_gk)
-                else:
-                    robot.set_strategy(self._strategies_attack[robot.robot_id])
+        # the carrier receives its strategies and every other receives its secondary strategies
+        for robot in self._robots:
+            if robot.robot_id == new_carrier:
+                robot.set_strategy(self._strategy_bh)
+            else:
+                robot.set_strategy(self._secondary_attack_strategies[robot.robot_id])
 
     def _closest_to_ball(self):
         return self._match.possession.current_closest.robot_id
