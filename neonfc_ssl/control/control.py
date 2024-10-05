@@ -1,9 +1,7 @@
 import logging
-import math
 import pyvisgraph as vg
 import time
 import socket
-
 from neonfc_ssl.entities import Field, RobotCommand
 from neonfc_ssl.match.ssl_match import SSLMatch
 from neonfc_ssl.coach import BaseCoach
@@ -22,8 +20,7 @@ class Control:
 
         # Control Objects
         self.commands: list[RobotCommand] = None
-        self.meta: dict = None
-        self.vis_graph: vg.VisGraph = None
+        self._vis_graph: vg.VisGraph = None
         self._field_poly: list[list[vg.Point]] = None
 
         # Other Control Parameters
@@ -40,6 +37,7 @@ class Control:
 
         self.new_data = False
 
+        # Control Logger
         self.logger = logging.getLogger("control")
 
     def start(self):
@@ -54,7 +52,7 @@ class Control:
         h05 = self._field.fieldWidth / 2
 
         # Create Layer
-        self.vis_graph = vg.VisGraph()
+        self._vis_graph = vg.VisGraph()
         self._field_poly = [[
             # -- Field Limits -- #
             vg.Point(-0.3 + r, -0.3 + r),
@@ -85,24 +83,12 @@ class Control:
 
         self.logger.info("Control module started!")
 
-    def gen_triangles(self, center, radius) -> list[vg.Point]:
-        # P1: [robot.x, 2 * radius + robot.y]
-        # P2: [robot.x - (sin(60)  2 * radius), robot.y - radius]
-        # P3: [robot.x + (sin(60)  2 * radius), robot.y - radius]
-
-        return [
-            vg.Point(center[0], 2 * radius + center[1]),
-            vg.Point(center[0] - 1.7 * radius, center[1] - radius),
-            vg.Point(center[0] + 1.7 * radius, center[1] - radius),
-        ]
-
     def update(self):
-        self.meta = self._coach.commands['meta']
-        self.commands = self._coach.commands['robots']
+        self.commands = self._coach.commands
 
         opposites_poly = [self.gen_triangles(r, .18 + 0.1) for r in self._match.opposites if not r.missing]
         t = time.time()
-        self.vis_graph.build(self._field_poly + opposites_poly, workers=self._num_workers, status=False)
+        self._vis_graph.build(self._field_poly + opposites_poly, workers=self._num_workers, status=False)
         dt = time.time()-t
         # print("graph building took:", dt, f"({1/dt:.2f}Hz)")
 
@@ -112,13 +98,13 @@ class Control:
             if command.target_pose is None:
                 continue
 
-            points = self.vis_graph.shortest_path(
+            points = self._vis_graph.shortest_path(
                 vg.Point(command.robot.x, command.robot.y),
                 vg.Point(command.target_pose[0], command.target_pose[1])
             )
-            print(command.robot.robot_id, command.target_pose[0], command.target_pose[1])
+
             all_paths.append(points)
-            next_point = points[1]
+            next_point = points[1] if len(points) > 1 else points[0]
 
             if len(points) > 2 and distance_between_points(command.robot, [next_point.x, next_point.y]) < 0.05:
                 next_point = points[2]
@@ -139,3 +125,15 @@ class Control:
             self.sock.sendto(MESSAGE, (self.UDP_IP, self.UDP_PORT))
 
         self.new_data = True
+
+    @staticmethod
+    def gen_triangles(center, radius) -> list[vg.Point]:
+        # P1: [robot.x, 2 * radius + robot.y]
+        # P2: [robot.x - (sin(60)  2 * radius), robot.y - radius]
+        # P3: [robot.x + (sin(60)  2 * radius), robot.y - radius]
+
+        return [
+            vg.Point(center[0], 2 * radius + center[1]),
+            vg.Point(center[0] - 1.7 * radius, center[1] - radius),
+            vg.Point(center[0] + 1.7 * radius, center[1] - radius),
+        ]
