@@ -17,6 +17,7 @@ class RobotCommand:
 
     # Control
     move_speed: Optional[Tuple[float, float, float]] = None  # vx, vy, omega
+    local_speed: Optional[Tuple[float, float, float]] = None
     wheel_speed: Optional[Tuple[float, float, float, float]] = None
 
     def limit_speed(self, v):

@@ -1,65 +1,71 @@
 import logging
 import socket
-
 from neonfc_ssl.protocols.grSim.grSim_Commands_pb2 import grSim_Commands
 from neonfc_ssl.protocols.grSim.grSim_Packet_pb2 import grSim_Packet
+from neonfc_ssl.control import Control
 
 
-class GrComm(object):
+class GrComm:
     def __init__(self, game):
-        super(GrComm, self).__init__()
-
-        self.commands = []
         self._game = game
-        self.config = self._game.config
-        self._coach = None
+        self._config = self._game.config
 
-        self.command_port = self.config['network']['command_port']
-        self.host = self.config['network']['host_ip']
+        # Control Layer Class
+        self._control: Control = None
 
+        # GrSim Comm Classes
+        self.commands = []
+        self.command_sock = None
+
+        # GrSim Comm Parameters
+        self.command_port = self._config['network']['command_port']
+        self.host = self._config['network']['host_ip']
+
+        # Coach Layer Logger
         self.logger = logging.getLogger("comm")
-
-    def freeze(self, robot_commands = []):
-        commands = grSim_Commands()
-        commands.isteamyellow = False
-        commands.timestamp = 0
-
-        command = commands.robot_commands.add()
-        command.wheel1 = 0
-        command.wheel2 = 0
-        command.wheel3 = 0
-        command.wheel4 = 0
-        command.kickspeedx = 0
-        command.kickspeedz = 0
-        command.veltangent = 0
-        command.velnormal = 0
-        command.velangular = 0
-        command.spinner = False
-        command.wheelsspeed = True
-        command.id = 0
-        
-        packet = grSim_Packet()
-        packet.commands.CopyFrom(commands)
-
-        self.command_sock.sendto(
-            packet.SerializeToString(), 
-            (self.host, self.command_port)
-        )
 
     def start(self):
         self.logger.info("Starting GRSim communication...")
+
         self._control = self._game.control
+
+        self.logger.info(f"Creating socket with address: {self.host} and port: {self.command_port}")
         self.command_sock = self._create_socket()
+
         self.logger.info("GRSim communication module started!")
+
+    def freeze(self):
+        commands = grSim_Commands()
+        commands.isteamyellow = self._config['match']['team_color'] == 'yellow'
+        commands.timestamp = 0
+
+        for robot in self._config['match']['robots_ids']:
+            command = commands.robot_commands.add()
+            command.wheel1 = 0
+            command.wheel2 = 0
+            command.wheel3 = 0
+            command.wheel4 = 0
+
+            command.kickspeedx = 0
+            command.kickspeedz = 0
+            command.veltangent = 0
+            command.velnormal = 0
+            command.velangular = 0
+
+            command.spinner = False
+            command.wheelsspeed = True
+            command.id = robot
+
+        self.send(commands)
     
-    def send(self):
+    def update(self):
         cmds = self._control.commands
-        color = self._control.meta['color']
         self._control.new_data = False
 
         commands = grSim_Commands()
-        commands.isteamyellow = self._get_robot_color(color)
+        commands.isteamyellow = self._config['match']['team_color'] == 'yellow'
         commands.timestamp = 0
+
         for robot in cmds:
             robot.global_speed_to_wheel_speed()
             command = commands.robot_commands.add()
@@ -75,17 +81,17 @@ class GrComm(object):
             command.spinner = robot.spinner
             command.wheelsspeed = True
             command.id = robot.robot.robot_id
-        
+
+        self.send(commands)
+
+    def send(self, commands):
         packet = grSim_Packet()
         packet.commands.CopyFrom(commands)
 
         self.command_sock.sendto(
-            packet.SerializeToString(), 
+            packet.SerializeToString(),
             (self.host, self.command_port)
         )
-
-    def _get_robot_color(self, team):
-        return True if team == 'yellow' else False
 
     def _create_socket(self):
         return socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

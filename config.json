@@ -6,12 +6,17 @@
         "autoref_port": 10010,
         "command_port": 20011
     },
+    "serial": {
+        "command_port": "/dev/ttyACM0",
+        "baud_rate": 115200
+    },
     "match" : {
         "team_1": "Neon",
         "team_2": "Test",
         "event": "Test",
         "team_side": "left",
         "team_color": "blue",
+        "robots_ids": [0, 1, 2],
         "time_login": false
     },
     "logger": {
