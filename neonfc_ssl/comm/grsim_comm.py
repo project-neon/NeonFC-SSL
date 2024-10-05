@@ -11,10 +11,11 @@ class GrComm(object):
 
         self.commands = []
         self._game = game
+        self.config = self._game.config
         self._coach = None
 
-        self.command_port = 20011
-        self.host = 'localhost'
+        self.command_port = self.config['network']['command_port']
+        self.host = self.config['network']['host_ip']
 
         self.logger = logging.getLogger("comm")
 
