@@ -42,7 +42,7 @@ class SSLMatch:
         self.ball = Ball()
 
         self.robots = [
-            OmniRobot(self, self.team_color, i) for i in range(0, 6)
+            OmniRobot(self, self.team_color, i) for i in range(0, 15)
         ]
 
         self.field = Field()
@@ -51,7 +51,7 @@ class SSLMatch:
 
         self.opposites = [
             # 0, 1, 2, 3, 4, 5 opposite robots
-            OmniRobot(self, self.opponent_color, i) for i in range(0, 6)
+            OmniRobot(self, self.opponent_color, i) for i in range(0, 15)
         ]
 
         self.active_opposites = self.opposites

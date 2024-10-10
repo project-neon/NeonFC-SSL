@@ -133,6 +133,8 @@ class OmniRobot:
 
     def update(self, frame):
         self.current_data = self.get_robot_in_frame(frame)
+        if self.current_data is None:
+            return
         if self.current_data.get('tCapture') != self.last_appearance:
             self.last_appearance = self.current_data.get('tCapture')
             self.missing = False

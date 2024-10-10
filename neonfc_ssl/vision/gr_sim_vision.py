@@ -79,10 +79,10 @@ class GrSimVision(threading.Thread):
                 'cCapture': -1
             },
             'robotsBlue': {
-                i: {'x': None, 'y': None, 'theta': None, 'tCapture': -1} for i in range(0, 6)
+                i: {'x': None, 'y': None, 'theta': None, 'tCapture': -1} for i in range(0, 15)
             },
             'robotsYellow': {
-                i: {'x': None, 'y': None, 'theta': None, 'tCapture': -1} for i in range(0, 6)
+                i: {'x': None, 'y': None, 'theta': None, 'tCapture': -1} for i in range(0, 15)
             },
             'meta': {
                 'has_speed': True,
@@ -172,7 +172,7 @@ class GrSimVision(threading.Thread):
         self.raw_geometry['fieldLines']['LeftPenaltyStretch']['p1']['x'] = (frame.get('fieldLines')[6].get('p1').get('x')/1000)+4.5
         self.raw_geometry['fieldLines']['RightPenaltyStretch']['p1']['x'] = (frame.get('fieldLines')[7].get('p1').get('x')/1000)+4.5
         self.raw_geometry['fieldLines']['RightGoalBottomLine']['p1']['x'] = (frame.get('fieldLines')[9].get('p1').get('x')/1000)+4.5
-        self.raw_geometry['fieldLines']['LeftGoalBottomLine']['p1']['x'] = (frame.get('fieldLines')[12].get('p1').get('x')/1000)+4.5
+        # self.raw_geometry['fieldLines']['LeftGoalBottomLine']['p1']['x'] = (frame.get('fieldLines')[12].get('p1').get('x')/1000)+4.5
 
         self.raw_geometry['fieldLines']['LeftGoalLine']['p1']['y'] = (frame.get('fieldLines')[2].get('p1').get('y')/1000)+3
         self.raw_geometry['fieldLines']['RightGoalLine']['p1']['y'] = (frame.get('fieldLines')[3].get('p1').get('y')/1000)+3
@@ -180,7 +180,7 @@ class GrSimVision(threading.Thread):
         self.raw_geometry['fieldLines']['LeftPenaltyStretch']['p1']['y'] = (frame.get('fieldLines')[6].get('p1').get('y')/1000)+3
         self.raw_geometry['fieldLines']['RightPenaltyStretch']['p1']['y'] = (frame.get('fieldLines')[7].get('p1').get('y')/1000)+3
         self.raw_geometry['fieldLines']['RightGoalBottomLine']['p1']['y'] = (frame.get('fieldLines')[9].get('p1').get('y')/1000)+3
-        self.raw_geometry['fieldLines']['LeftGoalBottomLine']['p1']['y'] = (frame.get('fieldLines')[12].get('p1').get('y')/1000)+3
+        # self.raw_geometry['fieldLines']['LeftGoalBottomLine']['p1']['y'] = (frame.get('fieldLines')[12].get('p1').get('y')/1000)+3
 
         return True
 
