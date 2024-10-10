@@ -42,7 +42,7 @@ class Coach(BaseCoach):
             if robot.robot_id == new_carrier:
                 robot.set_strategy(self._strategy_bh)
             else:
-                robot.set_strategy(self._secondary_attack_strategies[robot.robot_id])
+                robot.set_strategy(self._secondary_defense_strategies[robot.robot_id])
 
     def _closest_non_keeper(self):
         sq_dist_to_ball = lambda r: np.sum(np.square(np.array(r)-self._match.ball)) \
