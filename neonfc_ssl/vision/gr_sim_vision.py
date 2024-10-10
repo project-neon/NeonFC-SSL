@@ -20,6 +20,7 @@ class GrSimVision(threading.Thread):
 
         self._fps = 60
         self.new_data = False
+        self.any_geometry = False
 
         self.raw_geometry = {
             'fieldLength': 0,
@@ -159,6 +160,7 @@ class GrSimVision(threading.Thread):
         if not frame:
             # pacote de deteccao sem frame
             return False
+        self.any_geometry = True
         
         frame = frame.get('field')
 
@@ -166,21 +168,21 @@ class GrSimVision(threading.Thread):
         self.raw_geometry['fieldWidth'] = frame.get('fieldWidth')/1000
         self.raw_geometry['goalWidth'] = frame.get('goalWidth')/1000
 
-        self.raw_geometry['fieldLines']['LeftGoalLine']['p1']['x'] = (frame.get('fieldLines')[2].get('p1').get('x')/1000)+4.5
-        self.raw_geometry['fieldLines']['RightGoalLine']['p1']['x'] = (frame.get('fieldLines')[3].get('p1').get('x')/1000)+4.5
-        self.raw_geometry['fieldLines']['HalfwayLine']['p1']['x'] = (frame.get('fieldLines')[4].get('p1').get('x')/1000)+4.5
-        self.raw_geometry['fieldLines']['LeftPenaltyStretch']['p1']['x'] = (frame.get('fieldLines')[6].get('p1').get('x')/1000)+4.5
-        self.raw_geometry['fieldLines']['RightPenaltyStretch']['p1']['x'] = (frame.get('fieldLines')[7].get('p1').get('x')/1000)+4.5
-        self.raw_geometry['fieldLines']['RightGoalBottomLine']['p1']['x'] = (frame.get('fieldLines')[9].get('p1').get('x')/1000)+4.5
-        # self.raw_geometry['fieldLines']['LeftGoalBottomLine']['p1']['x'] = (frame.get('fieldLines')[12].get('p1').get('x')/1000)+4.5
+        self.raw_geometry['fieldLines']['LeftGoalLine']['p1']['x'] = (frame.get('fieldLines')[2].get('p1').get('x')/1000)
+        self.raw_geometry['fieldLines']['RightGoalLine']['p1']['x'] = (frame.get('fieldLines')[3].get('p1').get('x')/1000)
+        self.raw_geometry['fieldLines']['HalfwayLine']['p1']['x'] = (frame.get('fieldLines')[4].get('p1').get('x')/1000)
+        self.raw_geometry['fieldLines']['LeftPenaltyStretch']['p1']['x'] = (frame.get('fieldLines')[6].get('p1').get('x')/1000)
+        self.raw_geometry['fieldLines']['RightPenaltyStretch']['p1']['x'] = (frame.get('fieldLines')[7].get('p1').get('x')/1000)
+        self.raw_geometry['fieldLines']['RightGoalBottomLine']['p1']['x'] = (frame.get('fieldLines')[9].get('p1').get('x')/1000)
+        # self.raw_geometry['fieldLines']['LeftGoalBottomLine']['p1']['x'] = (frame.get('fieldLines')[12].get('p1').get('x')/1000)
 
-        self.raw_geometry['fieldLines']['LeftGoalLine']['p1']['y'] = (frame.get('fieldLines')[2].get('p1').get('y')/1000)+3
-        self.raw_geometry['fieldLines']['RightGoalLine']['p1']['y'] = (frame.get('fieldLines')[3].get('p1').get('y')/1000)+3
-        self.raw_geometry['fieldLines']['HalfwayLine']['p1']['y'] = (frame.get('fieldLines')[4].get('p1').get('y')/1000)+3
-        self.raw_geometry['fieldLines']['LeftPenaltyStretch']['p1']['y'] = (frame.get('fieldLines')[6].get('p1').get('y')/1000)+3
-        self.raw_geometry['fieldLines']['RightPenaltyStretch']['p1']['y'] = (frame.get('fieldLines')[7].get('p1').get('y')/1000)+3
-        self.raw_geometry['fieldLines']['RightGoalBottomLine']['p1']['y'] = (frame.get('fieldLines')[9].get('p1').get('y')/1000)+3
-        # self.raw_geometry['fieldLines']['LeftGoalBottomLine']['p1']['y'] = (frame.get('fieldLines')[12].get('p1').get('y')/1000)+3
+        self.raw_geometry['fieldLines']['LeftGoalLine']['p1']['y'] = (frame.get('fieldLines')[2].get('p1').get('y')/1000)
+        self.raw_geometry['fieldLines']['RightGoalLine']['p1']['y'] = (frame.get('fieldLines')[3].get('p1').get('y')/1000)
+        self.raw_geometry['fieldLines']['HalfwayLine']['p1']['y'] = (frame.get('fieldLines')[4].get('p1').get('y')/1000)
+        self.raw_geometry['fieldLines']['LeftPenaltyStretch']['p1']['y'] = (frame.get('fieldLines')[6].get('p1').get('y')/1000)
+        self.raw_geometry['fieldLines']['RightPenaltyStretch']['p1']['y'] = (frame.get('fieldLines')[7].get('p1').get('y')/1000)
+        self.raw_geometry['fieldLines']['RightGoalBottomLine']['p1']['y'] = (frame.get('fieldLines')[9].get('p1').get('y')/1000)
+        # self.raw_geometry['fieldLines']['LeftGoalBottomLine']['p1']['y'] = (frame.get('fieldLines')[12].get('p1').get('y')/1000)
 
         return True
 

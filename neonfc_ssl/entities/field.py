@@ -1,46 +1,62 @@
-class Field(object):
-    def __init__(self):
-        self.current_data = []
+from dataclasses import dataclass
 
-        self.fieldLength = 9
-        self.fieldWidth = 6
-        self.goalWidth = 0
-        self.leftGoalLine = [0, 0]
-        self.rightGoalLine = [0, 0]
-        self.halfwayLine = [0, 0]
-        self.leftArea = [0, 0]
-        self.rightArea = [0, 0]
-        self.rightFirstPost = [0, 0]
-        self.leftFirstPost = [0, 0]
 
-    def _update_geometry(self):
-        self.fieldLength = self.current_data.get('fieldLength')
-        self.fieldWidth = self.current_data.get('fieldWidth')
-        self.goalWidth = self.current_data.get('goalWidth')
+@dataclass
+class Field:
+    fieldLength: int = 9
+    fieldWidth: int = 6
+    goalWidth: int = 0
+    leftGoalLine: tuple[int, int] = tuple((0, 0))
+    rightGoalLine: tuple[int, int] = tuple((0, 0))
+    halfwayLine: tuple[int, int] = tuple((0, 0))
+    leftArea: tuple[int, int] = tuple((0, 0))
+    rightArea: tuple[int, int] = tuple((0, 0))
+    rightFirstPost: tuple[int, int] = tuple((0, 0))
+    leftFirstPost: tuple[int, int] = tuple((0, 0))
 
-        self.leftGoalLine = [self.current_data.get('fieldLines').get('LeftGoalLine').get('p1').get('x'),
-                             self.current_data.get('fieldLines').get('LeftGoalLine').get('p1').get('y')]
-        
-        self.rightGoalLine = [self.current_data.get('fieldLines').get('RightGoalLine').get('p1').get('x'),
-                              self.current_data.get('fieldLines').get('RightGoalLine').get('p1').get('y')]
-        
-        self.halfwayLine = [self.current_data.get('fieldLines').get('HalfwayLine').get('p1').get('x'),
-                            self.current_data.get('fieldLines').get('HalfwayLine').get('p1').get('y')]
-        
-        self.leftArea = [self.current_data.get('fieldLines').get('LeftPenaltyStretch').get('p1').get('x'),
-                         self.current_data.get('fieldLines').get('LeftPenaltyStretch').get('p1').get('y')]
-        
-        self.rightArea = [self.current_data.get('fieldLines').get('RightPenaltyStretch').get('p1').get('x'),
-                          self.current_data.get('fieldLines').get('RightPenaltyStretch').get('p1').get('y')]
-        
-        self.rightFirstPost = [self.current_data.get('fieldLines').get('RightGoalBottomLine').get('p1').get('x'),
-                               self.current_data.get('fieldLines').get('RightGoalBottomLine').get('p1').get('y')
-                               ]
-        self.leftFirstPost = [self.current_data.get('fieldLines').get('LeftGoalBottomLine').get('p1').get('x'), 
-                              self.current_data.get('fieldLines').get('LeftGoalBottomLine').get('p1').get('y')]
-        
+    initialized: bool = False
 
     def update(self, frame):
-        self.current_data = frame
-        if self.current_data is not None:
-            self._update_geometry()
+        if frame is None:
+            return 
+        
+        self.fieldLength = frame.get('fieldLength')
+        self.fieldWidth = frame.get('fieldWidth')
+        self.goalWidth = frame.get('goalWidth')
+
+        self.leftGoalLine = (
+            frame.get('fieldLines').get('LeftGoalLine').get('p1').get('x') + .5 * self.fieldLength,
+            frame.get('fieldLines').get('LeftGoalLine').get('p1').get('y') + .5 * self.fieldWidth
+        )
+
+        self.rightGoalLine = (
+            frame.get('fieldLines').get('RightGoalLine').get('p1').get('x') + .5 * self.fieldLength,
+            frame.get('fieldLines').get('RightGoalLine').get('p1').get('y') + .5 * self.fieldWidth
+        )
+        
+        self.halfwayLine = (
+            frame.get('fieldLines').get('HalfwayLine').get('p1').get('x') + .5 * self.fieldLength,
+            frame.get('fieldLines').get('HalfwayLine').get('p1').get('y') + .5 * self.fieldWidth
+        )
+        
+        self.leftArea = (
+            frame.get('fieldLines').get('LeftPenaltyStretch').get('p1').get('x') + .5 * self.fieldLength,
+            frame.get('fieldLines').get('LeftPenaltyStretch').get('p1').get('y') + .5 * self.fieldWidth
+        )
+        
+        self.rightArea = (
+            frame.get('fieldLines').get('RightPenaltyStretch').get('p1').get('x') + .5 * self.fieldLength,
+            frame.get('fieldLines').get('RightPenaltyStretch').get('p1').get('y') + .5 * self.fieldWidth
+        )
+        
+        self.rightFirstPost = (
+            frame.get('fieldLines').get('RightGoalBottomLine').get('p1').get('x') + .5 * self.fieldLength,
+            frame.get('fieldLines').get('RightGoalBottomLine').get('p1').get('y') + .5 * self.fieldWidth
+        )
+
+        self.leftFirstPost = (
+            frame.get('fieldLines').get('LeftGoalBottomLine').get('p1').get('x') + .5 * self.fieldLength,
+            frame.get('fieldLines').get('LeftGoalBottomLine').get('p1').get('y') + .5 * self.fieldWidth
+        )
+
+        self.initialized = True

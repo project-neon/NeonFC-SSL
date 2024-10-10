@@ -106,7 +106,7 @@ class Game:
     def update(self):
         while True:
             try:
-                if self.vision.new_data:
+                if self.vision.new_data and self.geometry.any_geometry:
                     t = [time.time()]
                     self.match.update()
                     t.append(time.time())
