@@ -37,14 +37,14 @@ class AutoRefVision(threading.Thread):
                     'x': None, 'y': None, 'theta': None,
                     'vx': None, 'vy': None, 'w': None,
                     'tCapture': -1
-                } for i in range(0, 6)
+                } for i in range(0, 16)
             },
             'robotsYellow': {
                 i: {
                     'x': None, 'y': None, 'theta': None,
                     'vx': None, 'vy': None, 'w': None,
                     'tCapture': -1
-                } for i in range(0, 6)
+                } for i in range(0, 16)
             },
             'meta': {
                 'has_speed': True,

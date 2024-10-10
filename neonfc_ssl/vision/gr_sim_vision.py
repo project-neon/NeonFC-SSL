@@ -79,10 +79,10 @@ class GrSimVision(threading.Thread):
                 'cCapture': -1
             },
             'robotsBlue': {
-                i: {'x': None, 'y': None, 'theta': None, 'tCapture': -1} for i in range(0, 15)
+                i: {'x': None, 'y': None, 'theta': None, 'tCapture': -1} for i in range(0, 16)
             },
             'robotsYellow': {
-                i: {'x': None, 'y': None, 'theta': None, 'tCapture': -1} for i in range(0, 15)
+                i: {'x': None, 'y': None, 'theta': None, 'tCapture': -1} for i in range(0, 16)
             },
             'meta': {
                 'has_speed': True,
