@@ -129,7 +129,7 @@ class StateController:
         if next_state != self.current_state:
             self.logger.info(f"Changing state {self.current_state.name} -> {next_state.name}")
             self.current_state = next_state
-            self.current_state.start(self._match, ref['color'], ref['pos'])
+            self.current_state.start(self._match, ref['team'], ref['pos'])
 
     def __eq__(self, other):
         return self.current_state.name == other
