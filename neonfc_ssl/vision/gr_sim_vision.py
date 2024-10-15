@@ -20,6 +20,7 @@ class GrSimVision(threading.Thread):
 
         self._fps = 60
         self.new_data = False
+        self.any_geometry = False
 
         self.raw_geometry = {
             'fieldLength': 0,
@@ -79,10 +80,10 @@ class GrSimVision(threading.Thread):
                 'cCapture': -1
             },
             'robotsBlue': {
-                i: {'x': None, 'y': None, 'theta': None, 'tCapture': -1} for i in range(0, 6)
+                i: {'x': None, 'y': None, 'theta': None, 'tCapture': -1} for i in range(0, 16)
             },
             'robotsYellow': {
-                i: {'x': None, 'y': None, 'theta': None, 'tCapture': -1} for i in range(0, 6)
+                i: {'x': None, 'y': None, 'theta': None, 'tCapture': -1} for i in range(0, 16)
             },
             'meta': {
                 'has_speed': True,
@@ -159,6 +160,7 @@ class GrSimVision(threading.Thread):
         if not frame:
             # pacote de deteccao sem frame
             return False
+        self.any_geometry = True
         
         frame = frame.get('field')
 
@@ -166,21 +168,21 @@ class GrSimVision(threading.Thread):
         self.raw_geometry['fieldWidth'] = frame.get('fieldWidth')/1000
         self.raw_geometry['goalWidth'] = frame.get('goalWidth')/1000
 
-        self.raw_geometry['fieldLines']['LeftGoalLine']['p1']['x'] = (frame.get('fieldLines')[2].get('p1').get('x')/1000)+4.5
-        self.raw_geometry['fieldLines']['RightGoalLine']['p1']['x'] = (frame.get('fieldLines')[3].get('p1').get('x')/1000)+4.5
-        self.raw_geometry['fieldLines']['HalfwayLine']['p1']['x'] = (frame.get('fieldLines')[4].get('p1').get('x')/1000)+4.5
-        self.raw_geometry['fieldLines']['LeftPenaltyStretch']['p1']['x'] = (frame.get('fieldLines')[6].get('p1').get('x')/1000)+4.5
-        self.raw_geometry['fieldLines']['RightPenaltyStretch']['p1']['x'] = (frame.get('fieldLines')[7].get('p1').get('x')/1000)+4.5
-        self.raw_geometry['fieldLines']['RightGoalBottomLine']['p1']['x'] = (frame.get('fieldLines')[9].get('p1').get('x')/1000)+4.5
-        self.raw_geometry['fieldLines']['LeftGoalBottomLine']['p1']['x'] = (frame.get('fieldLines')[12].get('p1').get('x')/1000)+4.5
+        self.raw_geometry['fieldLines']['LeftGoalLine']['p1']['x'] = (frame.get('fieldLines')[2].get('p1').get('x')/1000)
+        self.raw_geometry['fieldLines']['RightGoalLine']['p1']['x'] = (frame.get('fieldLines')[3].get('p1').get('x')/1000)
+        self.raw_geometry['fieldLines']['HalfwayLine']['p1']['x'] = (frame.get('fieldLines')[4].get('p1').get('x')/1000)
+        self.raw_geometry['fieldLines']['LeftPenaltyStretch']['p1']['x'] = (frame.get('fieldLines')[6].get('p1').get('x')/1000)
+        self.raw_geometry['fieldLines']['RightPenaltyStretch']['p1']['x'] = (frame.get('fieldLines')[7].get('p1').get('x')/1000)
+        self.raw_geometry['fieldLines']['RightGoalBottomLine']['p1']['x'] = (frame.get('fieldLines')[9].get('p1').get('x')/1000)
+        # self.raw_geometry['fieldLines']['LeftGoalBottomLine']['p1']['x'] = (frame.get('fieldLines')[12].get('p1').get('x')/1000)
 
-        self.raw_geometry['fieldLines']['LeftGoalLine']['p1']['y'] = (frame.get('fieldLines')[2].get('p1').get('y')/1000)+3
-        self.raw_geometry['fieldLines']['RightGoalLine']['p1']['y'] = (frame.get('fieldLines')[3].get('p1').get('y')/1000)+3
-        self.raw_geometry['fieldLines']['HalfwayLine']['p1']['y'] = (frame.get('fieldLines')[4].get('p1').get('y')/1000)+3
-        self.raw_geometry['fieldLines']['LeftPenaltyStretch']['p1']['y'] = (frame.get('fieldLines')[6].get('p1').get('y')/1000)+3
-        self.raw_geometry['fieldLines']['RightPenaltyStretch']['p1']['y'] = (frame.get('fieldLines')[7].get('p1').get('y')/1000)+3
-        self.raw_geometry['fieldLines']['RightGoalBottomLine']['p1']['y'] = (frame.get('fieldLines')[9].get('p1').get('y')/1000)+3
-        self.raw_geometry['fieldLines']['LeftGoalBottomLine']['p1']['y'] = (frame.get('fieldLines')[12].get('p1').get('y')/1000)+3
+        self.raw_geometry['fieldLines']['LeftGoalLine']['p1']['y'] = (frame.get('fieldLines')[2].get('p1').get('y')/1000)
+        self.raw_geometry['fieldLines']['RightGoalLine']['p1']['y'] = (frame.get('fieldLines')[3].get('p1').get('y')/1000)
+        self.raw_geometry['fieldLines']['HalfwayLine']['p1']['y'] = (frame.get('fieldLines')[4].get('p1').get('y')/1000)
+        self.raw_geometry['fieldLines']['LeftPenaltyStretch']['p1']['y'] = (frame.get('fieldLines')[6].get('p1').get('y')/1000)
+        self.raw_geometry['fieldLines']['RightPenaltyStretch']['p1']['y'] = (frame.get('fieldLines')[7].get('p1').get('y')/1000)
+        self.raw_geometry['fieldLines']['RightGoalBottomLine']['p1']['y'] = (frame.get('fieldLines')[9].get('p1').get('y')/1000)
+        # self.raw_geometry['fieldLines']['LeftGoalBottomLine']['p1']['y'] = (frame.get('fieldLines')[12].get('p1').get('y')/1000)
 
         return True
 
@@ -198,8 +200,8 @@ class GrSimVision(threading.Thread):
         if len(balls) > 0:
             ball = balls[0]
             self.raw_detection['ball'] = {
-                'x': self.side_factor * ball.get('x')/1000 + 9/2,
-                'y': self.side_factor * ball.get('y')/1000 + 6/2,
+                'x': self.side_factor * ball.get('x')/1000,
+                'y': self.side_factor * ball.get('y')/1000,
                 'tCapture': ball.get('tCapture'),
                 'cCapture': camera_id
             }
@@ -216,8 +218,8 @@ class GrSimVision(threading.Thread):
         self.raw_detection[
             'robots' + color
          ][robot_id] = {
-            'x': self.side_factor * robot['x']/1000 + 9 / 2,
-            'y': self.side_factor * robot['y']/1000 + 6 / 2,
+            'x': self.side_factor * robot['x']/1000,
+            'y': self.side_factor * robot['y']/1000,
             'theta': robot['orientation'] + self.angle_factor,
             'tCapture': _timestamp,
             'cCapture': camera_id

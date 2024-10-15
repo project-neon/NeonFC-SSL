@@ -17,6 +17,7 @@ class RobotCommand:
 
     # Control
     move_speed: Optional[Tuple[float, float, float]] = None  # vx, vy, omega
+    local_speed: Optional[Tuple[float, float, float]] = None
     wheel_speed: Optional[Tuple[float, float, float, float]] = None
 
     def limit_speed(self, v):
@@ -42,3 +43,7 @@ class RobotCommand:
         w4 = (-R * w + a * vx * (ct + st) + a * vy * (-ct + st)) / r
 
         self.wheel_speed = (w2, w3, w4, w1)
+
+    def global_speed_to_local_speed(self):
+        # TODO
+        pass

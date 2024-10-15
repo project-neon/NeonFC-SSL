@@ -18,11 +18,12 @@ class BaseCoach(ABC):
         self._n_active_robots = None
         self._robots = None
 
-        self.commands: list[RobotCommand] = None
+        self.commands: list[RobotCommand] = []
         self.new_data = False
 
         self.events = {}
 
+        # Coach Logger
         self.logger = logging.getLogger("coach")
 
     def start(self):
@@ -31,10 +32,6 @@ class BaseCoach(ABC):
         # Last Layer Classes
         self._match = self._game.match
         self._robots = self._match.robots
-
-        self.commands = {'meta': {
-            'color': self._match.team_color
-        }, 'robots': []}
 
         for r in self._robots:
             r.set_strategy(Still(self, self._match))
@@ -67,7 +64,7 @@ class BaseCoach(ABC):
 
         self.decide()
 
-        self.commands['robots'] = []
+        self.commands = []
         '''
         https://docs.python.org/3/library/concurrent.futures.html
         '''
@@ -78,7 +75,7 @@ class BaseCoach(ABC):
             ]
 
         for future in futures.as_completed(commands_futures):
-            self.commands['robots'].append(future.result())
+            self.commands.append(future.result())
 
         self.new_data = True
 
