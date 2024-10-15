@@ -29,7 +29,7 @@ class Control:
         # Other Control Parameters
         # from pyvisgraph doc "Number of CPU cores on host computer. If you don't know how many
         # cores you have, use 'cat /proc/cpuinfo | grep processor | wc -l'"
-        self._num_workers = 8
+        self._num_workers = 1
 
         self.KP = 2
         self.KP_ang = 1.5  # -9
@@ -81,12 +81,6 @@ class Control:
             vg.Point(r - 0.18, h05 + 0.5 - r),
             vg.Point(r - 0.18, h05 - 0.5 + r),
             vg.Point(r, h05 - 0.5 + r)
-        ], [
-            # -- Opponent Goal Area -- #
-            vg.Point(self._field.fieldLength, h05 - 1),
-            vg.Point(self._field.fieldLength, h05 + 1),
-            vg.Point(self._field.fieldLength - 1, h05 + 1),
-            vg.Point(self._field.fieldLength - 1, h05 - 1)
         ]]
 
         self.logger.info("Control module started!")
@@ -107,7 +101,10 @@ class Control:
         self.commands = self._coach.commands['robots']
 
         opposites_poly = [self.gen_triangles(r, .18 + 0.1) for r in self._match.opposites if not r.missing]
+        t = time.time()
         self.vis_graph.build(self._field_poly + opposites_poly, workers=self._num_workers, status=False)
+        dt = time.time()-t
+        # print("graph building took:", dt, f"({1/dt:.2f}Hz)")
 
         all_paths = []
 
@@ -119,6 +116,7 @@ class Control:
                 vg.Point(command.robot.x, command.robot.y),
                 vg.Point(command.target_pose[0], command.target_pose[1])
             )
+            print(command.robot.robot_id, command.target_pose[0], command.target_pose[1])
             all_paths.append(points)
             next_point = points[1]
 

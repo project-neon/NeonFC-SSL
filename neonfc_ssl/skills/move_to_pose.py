@@ -13,7 +13,7 @@ class MoveToPose(BaseSkill):
         self.target = target
 
     def decide(self):
-        return RobotCommand(move_speed=self.target, robot=self._robot)
+        return RobotCommand(target_pose=self.target, robot=self._robot)
 
     def complete(self):
         ball = self._match.ball

@@ -19,11 +19,11 @@ class FloatPossessionTracker:
         self.logger.info(f"{self.get_possession()} team ball possession")
 
     def update(self):
-        time_to_ball = lambda r: r.time_to_ball(self.match.ball)
+        time_to_ball = lambda r: r.time_to_ball(self.match.ball) if r is not None else float('inf')
         sq_dist_to_ball = lambda r: np.sum(np.square(np.array(r)-self.match.ball))
 
-        op_closest = min(self.match.active_opposites, key=time_to_ball)
-        my_closest = min(self.match.active_robots, key=time_to_ball)
+        op_closest = min(self.match.active_opposites, key=time_to_ball, default=None)
+        my_closest = min(self.match.active_robots, key=time_to_ball, default=None)
 
         op_time = time_to_ball(op_closest)
         my_time = time_to_ball(my_closest)

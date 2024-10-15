@@ -49,7 +49,7 @@ class Game:
         self.match = SSLMatch(self)
 
         # Decision Layer
-        self.coach = COACHES["TestCoach"](self)
+        self.coach = COACHES["SimpleCoach"](self)
 
         # Control Layer
         self.control = Control(self)
@@ -116,7 +116,7 @@ class Game:
                     t.append(time.time())
                     self.comm.send()
                     t.append(time.time())
-                    self.logger.info(f"total:  {1/(t[4]-t[0]):.2f} Hz")
+                    # self.logger.info(f"total:  {1/(t[4]-t[0]):.2f} Hz")
                     if self.config['match'].get('time_login', False):
                         self.logger.info(f"match:  {1/(t[1]-t[0]):.2f} Hz")
                         self.logger.info(f"coach:  {1/(t[2]-t[1]):.2f} Hz")
