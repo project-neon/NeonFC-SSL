@@ -200,8 +200,8 @@ class GrSimVision(threading.Thread):
         if len(balls) > 0:
             ball = balls[0]
             self.raw_detection['ball'] = {
-                'x': self.side_factor * ball.get('x')/1000 + 9/2,
-                'y': self.side_factor * ball.get('y')/1000 + 6/2,
+                'x': self.side_factor * ball.get('x')/1000,
+                'y': self.side_factor * ball.get('y')/1000,
                 'tCapture': ball.get('tCapture'),
                 'cCapture': camera_id
             }
@@ -218,8 +218,8 @@ class GrSimVision(threading.Thread):
         self.raw_detection[
             'robots' + color
          ][robot_id] = {
-            'x': self.side_factor * robot['x']/1000 + 9 / 2,
-            'y': self.side_factor * robot['y']/1000 + 6 / 2,
+            'x': self.side_factor * robot['x']/1000,
+            'y': self.side_factor * robot['y']/1000,
             'theta': robot['orientation'] + self.angle_factor,
             'tCapture': _timestamp,
             'cCapture': camera_id

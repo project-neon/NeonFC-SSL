@@ -88,10 +88,10 @@ class Ball(object):
     def get_speed(self):
         return (self.vx**2 + self.vy**2)**.5
 
-    def update(self, frame):
+    def update(self, frame, field):
         self.current_data = frame.get('ball')
         if self.current_data is not None:
-            self._update_speeds()
+            self._update_speeds(field)
 
     def pos_after(self, dt):
         # t_max = a/v
@@ -122,7 +122,7 @@ class Ball(object):
         return (self.x + self.vx * dt_x - math.copysign(0.5 * a * dt_x ** 2, self.vx),
                 self.y + self.vy * dt_y - math.copysign(0.5 * a * dt_y ** 2, self.vy))
 
-    def _update_speeds(self):
+    def _update_speeds(self, field):
         if self.use_kalman:
             self._update_kalman()
             u = np.array([
@@ -151,8 +151,8 @@ class Ball(object):
             self.vy = kf_output[3, 0]
 
         else:
-            self.x = self.current_data['x']
-            self.y = self.current_data['y']
+            self.x = self.current_data['x'] + 0.5 * field.fieldLength
+            self.y = self.current_data['y'] + 0.5 * field.fieldWidth
             self.vx = self.current_data['vx']
             self.vy = self.current_data['vy']
 

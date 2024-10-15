@@ -124,8 +124,8 @@ class AutoRefVision(threading.Thread):
             pos = balls[0]['pos']
             speed = balls[0]['vel']
             self.raw_detection['ball'] = {
-                'x': self.side_factor*pos['x'] + 9/2,
-                'y': self.side_factor*pos['y'] + 6/2,
+                'x': self.side_factor*pos['x'],
+                'y': self.side_factor*pos['y'],
                 'z': pos['z'],
                 'vx': self.side_factor*speed['x'],
                 'vy': self.side_factor*speed['y'],
@@ -144,8 +144,8 @@ class AutoRefVision(threading.Thread):
         #     return
 
         self.raw_detection['robots' + color][robot_id] = {
-            'x': self.side_factor*pos['x'] + 9/2,
-            'y': self.side_factor*pos['y'] + 6/2,
+            'x': self.side_factor*pos['x'],
+            'y': self.side_factor*pos['y'],
             'theta': robot['orientation'] + self.angle_factor,
             'vx': self.side_factor*speed['x'],
             'vy': self.side_factor*speed['y'],

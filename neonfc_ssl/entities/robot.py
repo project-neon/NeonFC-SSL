@@ -98,7 +98,7 @@ class OmniRobot:
     def get_speed(self):
         return (self.vx ** 2 + self.vy ** 2) ** .5
 
-    def update_pose(self):
+    def update_pose(self, field):
         if self.use_kalman:
             self._update_kalman()
             u = np.array([
@@ -124,14 +124,14 @@ class OmniRobot:
             self.vtheta = kf_output[5, 0]
 
         else:
-            self.x = self.current_data['x']
-            self.y = self.current_data['y']
+            self.x = self.current_data['x'] + .5 * field.fieldLength
+            self.y = self.current_data['y'] + .5 * field.fieldWidth
             self.theta = self.current_data['theta']
             self.vx = self.current_data['vx']
             self.vy = self.current_data['vy']
             self.vtheta = self.current_data['vt']
 
-    def update(self, frame):
+    def update(self, frame, field):
         self.current_data = self.get_robot_in_frame(frame)
         if self.current_data is None:
             return
@@ -139,7 +139,7 @@ class OmniRobot:
             self.last_appearance = self.current_data.get('tCapture')
             self.missing = False
             self.missed_frames = 0
-            self.update_pose()
+            self.update_pose(field)
         else:
             self.missed_frames += 1
             self.missing = self.missed_frames >= self.ALLOWED_MISSING_FRAMES if not self.missing else True

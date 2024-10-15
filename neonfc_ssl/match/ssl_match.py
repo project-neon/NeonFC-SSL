@@ -70,14 +70,14 @@ class SSLMatch:
 
         self.field.update(geometry)
 
-        self.ball.update(frame)
+        self.ball.update(frame, self.field)
         extra = {'ball': [
             round(self.ball.x, 3), round(self.ball.y, 3),
             round(self.ball.vx, 3), round(self.ball.vy, 3)
         ], 'b': {}, 'y': {}}
 
         for robot in self.robots:
-            robot.update(frame)
+            robot.update(frame, self.field)
             extra[robot.team_color[0]][robot.robot_id] = [
                 int(robot.missing),
                 round(robot.x, 3), round(robot.y, 3), round(robot.theta, 3),
@@ -87,7 +87,7 @@ class SSLMatch:
         self.active_robots = [r for r in self.robots if not r.missing]
 
         for opposite in self.opposites:
-            opposite.update(frame)
+            opposite.update(frame, self.field)
             extra[opposite.team_color[0]][opposite.robot_id] = [
                 int(opposite.missing),
                 round(opposite.x, 3), round(opposite.y, 3), round(opposite.theta, 3),
