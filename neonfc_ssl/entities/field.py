@@ -5,6 +5,8 @@ from dataclasses import dataclass
 class Field:
     fieldLength: int = 9
     fieldWidth: int = 6
+    penaltyAreaDepth: int = 0
+    penaltyAreaWidth: int = 0
     goalWidth: int = 0
     leftGoalLine: tuple[int, int] = tuple((0, 0))
     rightGoalLine: tuple[int, int] = tuple((0, 0))
@@ -23,6 +25,8 @@ class Field:
         self.fieldLength = frame.get('fieldLength')
         self.fieldWidth = frame.get('fieldWidth')
         self.goalWidth = frame.get('goalWidth')
+        self.penaltyAreaWidth = frame.get('penaltyAreaWidth')
+        self.penaltyAreaDepth = frame.get('penaltyAreaDepth')
 
         self.leftGoalLine = (
             frame.get('fieldLines').get('LeftGoalLine').get('p1').get('x') + .5 * self.fieldLength,

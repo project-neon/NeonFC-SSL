@@ -167,6 +167,8 @@ class GrSimVision(threading.Thread):
         self.raw_geometry['fieldLength'] = frame.get('fieldLength')/1000
         self.raw_geometry['fieldWidth'] = frame.get('fieldWidth')/1000
         self.raw_geometry['goalWidth'] = frame.get('goalWidth')/1000
+        self.raw_geometry['penaltyAreaDepth'] = frame.get('penaltyAreaDepth')/1000
+        self.raw_geometry['penaltyAreaWidth'] = frame.get('penaltyAreaWidth')/1000
 
         self.raw_geometry['fieldLines']['LeftGoalLine']['p1']['x'] = (frame.get('fieldLines')[2].get('p1').get('x')/1000)
         self.raw_geometry['fieldLines']['RightGoalLine']['p1']['x'] = (frame.get('fieldLines')[3].get('p1').get('x')/1000)
