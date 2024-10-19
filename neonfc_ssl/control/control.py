@@ -28,8 +28,8 @@ class Control:
         # cores you have, use 'cat /proc/cpuinfo | grep processor | wc -l'"
         self._num_workers = 1
 
-        self.KP = 2
-        self.KP_ang = 1.5  # -9
+        self.KP = 1.5
+        self.KP_ang = 2
 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.UDP_IP = "127.0.0.1"
@@ -88,7 +88,7 @@ class Control:
 
         opposites_poly = [self.gen_triangles(r, .18 + 0.1) for r in self._match.opposites if not r.missing]
         t = time.time()
-        self._vis_graph.build(self._field_poly + opposites_poly, workers=self._num_workers, status=False)
+        # self._vis_graph.build(self._field_poly + opposites_poly, workers=self._num_workers, status=False)
         dt = time.time()-t
         # print("graph building took:", dt, f"({1/dt:.2f}Hz)")
 
@@ -98,10 +98,13 @@ class Control:
             if command.target_pose is None:
                 continue
 
-            points = self._vis_graph.shortest_path(
-                vg.Point(command.robot.x, command.robot.y),
-                vg.Point(command.target_pose[0], command.target_pose[1])
-            )
+            # points = self._vis_graph.shortest_path(
+            #     vg.Point(command.robot.x, command.robot.y),
+            #     vg.Point(command.target_pose[0], command.target_pose[1])
+            # )
+
+            points = [vg.Point(min(max(command.target_pose[0], 0), self._field.fieldLength),
+                               min(max(command.target_pose[1], 0), self._field.fieldWidth))]
 
             all_paths.append(points)
             next_point = points[1] if len(points) > 1 else points[0]
@@ -114,7 +117,7 @@ class Control:
 
             dt = reduce_ang(command.target_pose[2] - command.robot.theta)
 
-            command.move_speed = (dx * self.KP, dy * self.KP, dt * self.KP_ang)
+            command.move_speed = (dx*self.KP, dy*self.KP, dt*self.KP_ang)
 
         if time.time() - self.last_info > 0.1:
             self.last_info = time.time()
