@@ -1,8 +1,5 @@
-from NeonPathPlanning import Point, UnivectorField
-import math
 from neonfc_ssl.entities import RobotCommand
 from neonfc_ssl.skills.base_skill import BaseSkill
-from neonfc_ssl.commons.math import reduce_ang
 
 
 class MoveToPose(BaseSkill):
@@ -16,5 +13,4 @@ class MoveToPose(BaseSkill):
         return RobotCommand(target_pose=self.target, robot=self._robot)
 
     def complete(self):
-        ball = self._match.ball
-        return (((self._robot.x - ball.x) ** 2 + (self._robot.y - ball.y) ** 2) ** .5) < 0.1
+        return (((self._robot.x - self.target[0]) ** 2 + (self._robot.y - self.target[1]) ** 2) ** .5) < 0.1
