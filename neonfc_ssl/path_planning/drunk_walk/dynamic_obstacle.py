@@ -8,22 +8,22 @@ import math
 #    Collision check will take into consideration 
 @dataclass
 class DynamicObstacle(Obstacle):
-    center: Tuple[float, float] = None, None
+    center: Tuple[float, float] = Tuple((None, None))
     radius: float = None
     dynamic_radius: float = None
-    speed: Tuple[float, float] = None, None
+    speed: Tuple[float, float] = Tuple((None, None))
 
     x, y = center
     vx, vy = speed
 
 
-    def check_for_collision(self):
-        ...
+    def check_for_collision(self, point, time_step):
+        return self.distanceTo(point) > self.radius + self.get_extra_margin(time_step)
 
 
     def distanceTo(self, point: Tuple[float, float]):
         return math.sqrt( ( point[0] - self.x )**2 + ( point[1] - self.y )**2 )
 
 
-    def get_extra_margin(self):
+    def get_extra_margin(self, time_step):
         ...
