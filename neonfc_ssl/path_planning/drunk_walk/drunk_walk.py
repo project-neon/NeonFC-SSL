@@ -32,26 +32,27 @@ it will return a point of the chosen trajectory with fixed distance.
 class DrunkWalk:
     def __init__(self) -> None:
         self._pos: np.ndarray = None
-        self._vel: np.ndarray = None
+        # self._vel: float = None
         self._target: np.ndarray = None
         self._step_vector: np.ndarray = None
         self.obstacles: list[Obstacle] = []
         self._field_limits: list[Tuple[float, float]] = []
-        # self._rejected_paths: list[Tuple[Tuple[float, float], float]] = []
         self._best_rejected_path: Tuple[Tuple[float, float], float] = None
 
 
-    def find_path(self, pos: Tuple[float, float], target: Tuple[float, float]):
+    def find_path(self, pos: Tuple[float, float], target: Tuple[float, float]) -> Tuple[float, float]:
         self._pos = np.array(pos)
         self._target = np.array(target)
         self._step_vector = self._target - self._pos
+
+        self.obstacles = filter(lambda o: (np.dot(o.get_vector(pos), self._step_vector)>=0), self.obstacles)
+        self.obstacles.sort(key=lambda o: o.distance_to(pos))
         
         next_point, collision_time = self._validate_path(self._pos, self._step_vector)
 
         if collision_time is None:
             return next_point
         else:
-            # self._rejected_paths.append((next_point, collision_time))
             self._best_rejected_path = (next_point, collision_time)
 
         sub_destinations = self._gen_rnd_subdests()
@@ -61,19 +62,36 @@ class DrunkWalk:
 
             if collision_time is None:
                 return next_point
-            else:
-                if collision_time > self._best_rejected_path[1]:
-                    self._best_rejected_path = (next_point, collision_time)
+            elif collision_time > self._best_rejected_path[1]:
+                self._best_rejected_path = (next_point, collision_time)
+        
+        return self._best_rejected_path[0]
 
 
-    def _validate_path(self):
+    def _validate_path(self, start: np.ndarray, step_vector: np.ndarray) -> Tuple[Tuple[float, float], float]:
+        current_pos: np.ndarray = None
+
+        for t in np.arange(0.1, 1.1, .1):
+            current_pos = start + t*step_vector
+
+            for obs in self.obstacles:
+                if obs.check_for_collision(current_pos, t):
+                    return array2tuple(current_pos), t
+                
+        return array2tuple(current_pos), None
+    
+
+    def _gen_rnd_subdests(self) -> Tuple[float, float]:
         ...
 
 
-    def set_field_limits(self, limits: list[Tuple[float, float]]):
+    def set_field_limits(self, limits: list[Tuple[float, float]]) -> None:
         self._field_limits = limits
 
 
-    def _gen_rnd_subdests(self):
+    def add_dynamic_obstacle(self):
         ...
+    
 
+    def add_static_obstacle(self):
+        ...
