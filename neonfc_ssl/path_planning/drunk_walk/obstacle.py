@@ -6,5 +6,15 @@ from abc import ABC, abstractmethod
 @dataclass
 class Obstacle(ABC):
     @abstractmethod
+    def get_vector(self, origin):
+        raise NotImplementedError("Here goes the vector (8, D)")
+    
+
+    @abstractmethod
+    def distance_to(self, point):
+        raise NotImplementedError("Of course")
+
+
+    @abstractmethod
     def check_for_collision(self):
-        raise NotImplementedError("Implement this method >:(")
+        raise NotImplementedError("There is a collision, you can trust me :)")

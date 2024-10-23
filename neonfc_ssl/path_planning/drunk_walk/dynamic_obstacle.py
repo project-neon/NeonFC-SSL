@@ -1,6 +1,7 @@
 from neonfc_ssl.path_planning.drunk_walk.obstacle import Obstacle
 from dataclasses import dataclass
-from typing import Tuple, Optional
+from typing import Tuple
+import numpy as np
 import math
 
 
@@ -17,12 +18,16 @@ class DynamicObstacle(Obstacle):
     vx, vy = speed
 
 
-    def check_for_collision(self, point, time_step):
-        return self.distanceTo(point) > self.radius + self.get_extra_margin(time_step)
+    def get_vector(self, origin: np.ndarray):
+        return np.array(self.center) - origin
+    
 
-
-    def distanceTo(self, point: Tuple[float, float]):
+    def distance_to(self, point: Tuple[float, float]):
         return math.sqrt( ( point[0] - self.x )**2 + ( point[1] - self.y )**2 )
+
+
+    def check_for_collision(self, point, time_step):
+        return self.distanceTo(point) < self.radius + self.get_extra_margin(time_step)
 
 
     def get_extra_margin(self, time_step):
