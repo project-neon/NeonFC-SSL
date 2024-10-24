@@ -1,5 +1,6 @@
 from typing import Tuple
-from neonfc_ssl.path_planning.drunk_walk.obstacle import Obstacle
+from neonfc_ssl.path_planning.drunk_walk import Obstacle, StaticObstacle, DynamicObstacle
+from random import uniform, choice
 import numpy as np
 
 
@@ -24,7 +25,9 @@ requirements:
 By either going directly to the target, if possible, or by generating random subdestinations. As the algorithm proposes.
 Sometimes it is not possible to find an optimal path, in those cases, return the rejected path with the highest collision dist.
 
-4. Execute the trajectory, adapting it for the control we have, instead of returning the full path,
+4. Execute the trajectory.
+# TODO: evaluate first if really needed i will do it.
+Adapt it for the control we have, instead of returning the full path,
 it will return a point of the chosen trajectory with fixed distance.
 '''
 
@@ -32,7 +35,6 @@ it will return a point of the chosen trajectory with fixed distance.
 class DrunkWalk:
     def __init__(self) -> None:
         self._pos: np.ndarray = None
-        # self._vel: float = None
         self._target: np.ndarray = None
         self._step_vector: np.ndarray = None
         self.obstacles: list[Obstacle] = []
@@ -40,39 +42,41 @@ class DrunkWalk:
         self._best_rejected_path: Tuple[Tuple[float, float], float] = None
 
 
-    def find_path(self, pos: Tuple[float, float], target: Tuple[float, float]) -> Tuple[float, float]:
+    def start(self, pos: Tuple[float, float], target: Tuple[float, float]):
         self._pos = np.array(pos)
         self._target = np.array(target)
         self._step_vector = self._target - self._pos
 
-        self.obstacles = filter(lambda o: (np.dot(o.get_vector(pos), self._step_vector)>=0), self.obstacles)
-        self.obstacles.sort(key=lambda o: o.distance_to(pos))
+
+    def find_path(self) -> Tuple[float, float]:
+
+        self.obstacles.sort(key=lambda o: o.distance_to(self._pos))
         
-        next_point, collision_time = self._validate_path(self._pos, self._step_vector)
+        next_point, collision_time = self._validate_path(self._step_vector)
 
         if collision_time is None:
-            return next_point
+            return next_point #
         else:
             self._best_rejected_path = (next_point, collision_time)
 
         sub_destinations = self._gen_rnd_subdests()
 
         for sub_dest in sub_destinations:
-            next_point, collision_time = self._validate_path(self._pos, sub_dest)
+            next_point, collision_time = self._validate_path(sub_dest)
 
             if collision_time is None:
-                return next_point
+                return next_point #
             elif collision_time > self._best_rejected_path[1]:
                 self._best_rejected_path = (next_point, collision_time)
         
-        return self._best_rejected_path[0]
+        return self._best_rejected_path[0] #
 
 
-    def _validate_path(self, start: np.ndarray, step_vector: np.ndarray) -> Tuple[Tuple[float, float], float]:
+    def _validate_path(self, step_vector: np.ndarray) -> Tuple[Tuple[float, float], float]:
         current_pos: np.ndarray = None
 
         for t in np.arange(0.1, 1.1, .1):
-            current_pos = start + t*step_vector
+            current_pos = self._pos + t*step_vector
 
             for obs in self.obstacles:
                 if obs.check_for_collision(current_pos, t):
@@ -81,17 +85,41 @@ class DrunkWalk:
         return array2tuple(current_pos), None
     
 
-    def _gen_rnd_subdests(self) -> Tuple[float, float]:
-        ...
+    def _gen_rnd_subdests(self) -> list[np.ndarray]:
+        scales = [uniform(0.5, 1.5) for i in range(5)]
+        angles = [choice((1, -1))*uniform(20*np.pi/180, 140*np.pi/180) for i in range(5)]
+        angles.sort(key=lambda a: abs(a))
+
+        r = np.sqrt( self._step_vector[0]**2 + self._step_vector[1]**2 )
+        theta = np.arctan2(self._step_vector[1], self._step_vector[0])
+
+        new_thetas = [theta + a for a in angles]
+
+        result = [np.array( s*r*np.cos(a), s*r*np.sin(a) ) for s, a in zip(scales, new_thetas)]
+
+        return result
 
 
     def set_field_limits(self, limits: list[Tuple[float, float]]) -> None:
         self._field_limits = limits
 
+    
+    def _add_obstacle(self, obs: Obstacle):
+        if obs.distance_to(self._pos) < 0.1:
+            return
+        
+        if (dist := obs.distance_to(self._target) - 0.075 ) < 0:
+            v = obs.get_vector(self._target)
+            self._target += dist*(v/np.linalg.norm(v))
 
-    def add_dynamic_obstacle(self):
-        ...
+
+        if np.dot(obs.get_vector(self._pos), self._step_vector) >= 0:
+            self.obstacles.append(obs)
+
+
+    def add_dynamic_obstacle(self, center, radius, speed):
+        self._add_obstacle(DynamicObstacle(center=center, radius=radius, speed=speed))
     
 
-    def add_static_obstacle(self):
-        ...
+    def add_static_obstacle(self, start, length, height):
+        self._add_obstacle(StaticObstacle(start=start, length=length, height=height))
