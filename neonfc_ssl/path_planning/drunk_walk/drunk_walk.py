@@ -1,5 +1,7 @@
 from typing import Tuple
-from neonfc_ssl.path_planning.drunk_walk import Obstacle, StaticObstacle, DynamicObstacle
+from neonfc_ssl.path_planning.drunk_walk.obstacle import Obstacle
+from neonfc_ssl.path_planning.drunk_walk.static_obstacle import StaticObstacle
+from neonfc_ssl.path_planning.drunk_walk.dynamic_obstacle import DynamicObstacle
 from random import uniform, choice
 import numpy as np
 
@@ -108,10 +110,9 @@ class DrunkWalk:
         if obs.distance_to(self._pos) < 0.1:
             return
         
-        if (dist := obs.distance_to(self._target) - 0.075 ) < 0:
+        if (dist := obs.distance_to(self._target) - 0.075) < 0:
             v = obs.get_vector(self._target)
             self._target += dist*(v/np.linalg.norm(v))
-
 
         if np.dot(obs.get_vector(self._pos), self._step_vector) >= 0:
             self.obstacles.append(obs)

@@ -7,10 +7,10 @@ import numpy as np
 # Static obstacle: will be considered a rectangle, so its vertices will be stored. Collision checking will be simpler
 @dataclass
 class StaticObstacle(Obstacle):
-    start: Tuple[float, float] = None
-    length: float = None
-    height: float = None
-    end = Tuple((start[0] + length, start[1] + height))
+    start: np.ndarray = np.array((0, 0))
+    length: float = 0
+    height: float = 0
+    end = np.array((start[0] + length, start[1] + height))
 
 
     def get_vector(self, origin: np.ndarray) -> np.ndarray:

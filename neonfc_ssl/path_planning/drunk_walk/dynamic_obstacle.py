@@ -35,7 +35,7 @@ class DynamicObstacle(Obstacle):
         # I will explain anyway, this is due to the f_minus modelage being f_minus=0, 
         # if it was kept with the original formula c+(v/|v|)(f_minus+r_dyn), 
         # the tail of the virtual obstacle would be always the same, to avoid that this correction move the virtual obstacle a little .
-        pos_dyn = self.center + (self.speed/np.linalg.norm(self.speed))*((2/3)*r_dyn)
+        pos_dyn = self.center + (self.speed/np.linalg.norm(self.speed))*((2/3)*r_dyn) if np.linalg.norm(self.speed) > 0 else self.center
 
         return self.distance(pos_dyn, point) < self.radius + r_dyn
 
@@ -46,7 +46,7 @@ class DynamicObstacle(Obstacle):
 
         # apparently this 2 below the f_plus can be a tunable parameter, 
         # the bigger it is the smaller the virtual obstacle projection becomes, 
-        # this is different than it should be: r_dyn = (f_plus-f_minus)/2
+        # this is different from it should be: r_dyn = (f_plus-f_minus)/2
         r_dyn = f_plus/2
         
         return r_dyn
