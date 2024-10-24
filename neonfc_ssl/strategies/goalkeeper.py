@@ -1,8 +1,8 @@
 from neonfc_ssl.strategies.base_strategy import BaseStrategy
 from neonfc_ssl.skills import *
 from NeonPathPlanning import Point
-from neonfc_ssl.commons.math import point_in_rect, distance_between_points
-from math import tan, pi
+from neonfc_ssl.commons.math import point_in_rect, distance_between_points, reduce_ang
+from math import tan, pi, atan2
 
 
 class GoalKeeper(BaseStrategy):
@@ -53,46 +53,68 @@ class GoalKeeper(BaseStrategy):
 
         return self.active.decide()
 
+    # calcula os limites do y
+    def limit_y(self, x, y):
+        ball = self._match.ball
+        # y_goal_min = 2.5 + 0.15
+        # y_goal_max = 3.5 - 0.15
+        y_goal_min = 0.2 + 0.1
+        y_goal_max = 1.34 - 0.1
+
+        y_max = ((y_goal_max - ball.y) / (-ball.x)) * (x - ball.x) + ball.y + 0.1
+        y_min = ((y_goal_min - ball.y) / (-ball.x)) * (x - ball.x) + ball.y - 0.1
+        new_y = max(min(y, y_max, y_goal_max), y_min, y_goal_min)
+        return new_y
+
+
+    # calcula a posição de defesa do robô
     def defense_target(self):
         ball = self._match.ball
-        y_goal_min = 2.5 + 0.15
-        y_goal_max = 3.5 - 0.15
         x = 0.2
 
-        if ball.vx == 0:
-            return [self._robot.x, self._robot.y, self._robot.theta]
+        ang = atan2(-self._robot.y+self._match.ball.y, -self._robot.x+self._match.ball.x)
 
+        # bola quase parada
+        if ball.vx > 0.05:
+            y = self.limit_y(x, ball.y)
+            return [x, y, 0]
+
+        # bola a frente do meio campo
         elif ball.x > self.field.halfwayLine[0]:
-            return [x, self.field.fieldWidth / 2, 0]
+            return [x, self.field.fieldWidth/2, 0]
 
-        y_max = ((y_goal_max - ball.y) / (-ball.x)) * (x - ball.x) + ball.y
-        y_min = ((y_goal_min - ball.y) / (-ball.x)) * (x - ball.x) + ball.y
-
+        # checa o robo adversario mais próximo
         closest = 100000
         for robot in self._match.opposites:
             dist = distance_between_points([ball.x, ball.y], [robot.x, robot.y])
             if dist < closest:
                 closest = dist
-                theta = robot.theta - pi
+                theta = reduce_ang(robot.theta - pi)
                 x_robot = robot.x
                 y_robot = robot.y
 
+        # se o robo adversario mais prox da bola estiver perto (15 cm)
         if closest < 0.15:
             y = tan(theta) * (x - x_robot) + y_robot
 
+        # bola quase parada
+        elif abs(ball.vx) < 0.05:
+            y = self.limit_y(x, ball.y)
+            return [x, y, ang]
+
+        # proj da bola (robo adversario longe)
         else:
             y = (ball.vy / ball.vx) * (x - ball.x) + ball.y
-            theta = ball.vy / ball.vx
 
-        if ball.y > self.field.fieldWidth / 2:
-            y += 0.1
+        y = self.limit_y(x, y)
 
+        # gambiarra p defender mais rapido
+        if y > self.field.fieldWidth/2:
+            y += 0.09
         else:
-            y -= 0.1
+            y -= 0.09
 
-        y = max(min(y, y_max, y_goal_max), y_min, y_goal_min)
-
-        return [x, y, theta]
+        return [x, y, ang]
 
     def ball_in_area(self):
         if (self._match.ball.x < 1) and (self._match.ball.y > 2) and (self._match.ball.y < 4):
@@ -109,7 +131,10 @@ class GoalKeeper(BaseStrategy):
         return False
 
     def go_to_ball_transition(self):
-        if (self._match.ball.x < 1) and (self._match.ball.y > 2) and (self._match.ball.y < 4):
+        area_ymin = (self.field.fieldWidth - self.field.penaltyAreaWidth)/2
+        area_ymax = area_ymin + self.field.penaltyAreaWidth
+
+        if (self._match.ball.x < self.field.penaltyAreaDepth) and (self._match.ball.y > area_ymin) and (self._match.ball.y < area_ymax):
             return True
         return False
 

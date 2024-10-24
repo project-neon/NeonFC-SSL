@@ -2,8 +2,8 @@ from neonfc_ssl.strategies.base_strategy import BaseStrategy
 from neonfc_ssl.skills import *
 from NeonPathPlanning import Point
 
-from commons.math import point_in_rect, distance_between_points
-from math import tan, pi
+from neonfc_ssl.commons.math import point_in_rect, distance_between_points, reduce_ang
+from math import tan, pi, atan2
 
 class Libero(BaseStrategy):
     def __init__(self, coach, match):
@@ -13,12 +13,8 @@ class Libero(BaseStrategy):
         self.target = None
 
         self.states = {
-            'go_to_ball': GoToBall(coach, match),
             'move_to_pose': MoveToPose(coach, match)
         }
-
-        self.states["move_to_pose"].add_transition(self.states["go_to_ball"], self.go_to_ball_transition)
-        self.states["go_to_ball"].add_transition(self.states["move_to_pose"], self.move_to_pose_transition)
 
     def _start(self):
         self.active = self.states['move_to_pose']
@@ -37,13 +33,14 @@ class Libero(BaseStrategy):
             self.active.start(self._robot, target=target)
 
         return self.active.decide()
-    
+
+    # calcula a posição de defesa para o libero
     def defense_target(self):
         ball = self._match.ball
-        x = 1.2
-        
-        if ball.vx == 0:
-            return [self._robot.x, self._robot.y, self._robot.theta]
+        x = 0.55
+
+        if ball.vx > 0.05:
+            return [x, ball.y, 0]
         
         elif ball.x > self.field.halfwayLine[0]:
             return [x, self.field.fieldWidth/2, 0]
@@ -54,12 +51,15 @@ class Libero(BaseStrategy):
         theta = op_data[2]
         closest = op_data[3]
 
-        if ball.y > 4 and ball.x < 1:
-            target = self._defense_up(x_op, y_op, theta, closest)
-        
-        elif ball.y < 2 and ball.x < 1:
+        # bola ao lado da área (lateral direita)
+        if ball.y < (self.field.fieldWidth-self.field.penaltyAreaWidth)/2 and ball.x < self.field.penaltyAreaDepth:
             target = self._defense_down(x_op, y_op, theta, closest)
-        
+
+        # bola ao lado da área (lateral esquerda)
+        elif ball.y > ((self.field.fieldWidth-self.field.penaltyAreaWidth)/2) + self.field.penaltyAreaWidth and ball.x < self.field.penaltyAreaDepth:
+            target = self._defense_up(x_op, y_op, theta, closest)
+
+        # bola na frente da área
         else:
             target = self._defense_front(x_op, y_op, theta, closest)
 
@@ -82,77 +82,92 @@ class Libero(BaseStrategy):
 
     def _defense_front(self, x_robot, y_robot, theta, closest):
         ball = self._match.ball
-        y_goal_min = 2.5 
-        y_goal_max = 3.5 
-        x = 1.2
+        # y_goal_min = 2.5
+        # y_goal_max = 3.5
+        y_goal_min = 0.2 + 0.1
+        y_goal_max = 1.34 - 0.1
+        x = 0.55
 
         y_max = ((y_goal_max-ball.y)/(-ball.x))*(x-ball.x)+ball.y
         y_min = ((y_goal_min-ball.y)/(-ball.x))*(x-ball.x)+ball.y
 
+        # robo adversario perto da bola
         if closest < 0.15:
             y = tan(theta)*(x-x_robot)+y_robot
-        
+
+        # bola quase parada
+        elif abs(ball.vx) < 0.05:
+            y = ball.y
+            theta = atan2(-self._robot.y + self._match.ball.y, -self._robot.x + self._match.ball.x)
+            return [x, y, theta]
+
+        #proj da bola
         else:
             y = (ball.vy/ball.vx)*(x-ball.x)+ball.y
-            theta = ball.vy/ball.vx
+            theta = atan2(-self._robot.y + self._match.ball.y, -self._robot.x + self._match.ball.x)
 
         y = y_max if y > y_max else y
         y = y_min if y < y_min else y
 
+        theta = reduce_ang(theta)
         return [x, y, theta]
     
     def _defense_up(self, x_robot, y_robot, theta, closest):
         ball = self._match.ball
-        y_goal_min = 2.5 
-        y_goal_max = 3.5 
-        y = 4.2
+        y_goal_min = 0.2 + 0.1
+        y_goal_max = 1.34 - 0.1
+        y = 1.44
 
         x_min = (y-ball.y)*((-ball.x)/(y_goal_max-ball.y))+ball.x 
         x_max = (y-ball.y)*((-ball.x)/(y_goal_min-ball.y))+ball.x
 
+        # advesario perto da bola
         if closest < 0.15:
             x = ((y-y_robot)*(1/tan(theta))) + x_robot
-        
+
+        # bola quase parada
+        elif abs(ball.vx) < 0.05:
+            x = ball.x
+            theta = atan2(-self._robot.y + self._match.ball.y, -self._robot.x + self._match.ball.x)
+            return [x, y, theta]
+
+        # proj da bola
         else:
             x = ((y-ball.y)*(ball.vx/ball.vy)) + ball.x
-            theta = ball.vx/ball.vy
+            theta = atan2(-self._robot.y + self._match.ball.y, -self._robot.x + self._match.ball.x)
 
         x = x_max if x > x_max else x
         x = x_min if x < x_min else x
 
+        theta = reduce_ang(theta)
         return [x, y, theta]
     
     def _defense_down(self, x_robot, y_robot, theta, closest):
         ball = self._match.ball
-        y_goal_min = 2.5 
-        y_goal_max = 3.5 
-        y = 1.8
+        y_goal_min = 0.2 + 0.1
+        y_goal_max = 1.34 - 0.1
+        y = 0.1
 
         x_min = (y-ball.y)*((-ball.x)/(y_goal_min-ball.y))+ball.x
         x_max = (y-ball.y)*((-ball.x)/(y_goal_max-ball.y))+ball.x
 
+        # adversario proximo da bola
         if closest < 0.15:
             x = ((y-y_robot)*(1/tan(theta))) + x_robot
-        
+
+        # bola quase parada
+        elif abs(ball.vx) < 0.05:
+            x = ball.x
+            theta = atan2(-self._robot.y + self._match.ball.y, -self._robot.x + self._match.ball.x)
+            return [x, y, theta]
+
+        # proj da bola
         else:
             x = ((y-ball.y)*(ball.vx/ball.vy)) + ball.x
-            theta = ball.vx/ball.vy
+            theta = atan2(-self._robot.y + self._match.ball.y, -self._robot.x + self._match.ball.x)
 
         x = x_max if x > x_max else x
         x = x_min if x < x_min else x
 
+        theta = reduce_ang(theta)
         return [x, y, theta]
-    
-    def move_to_pose_transition(self):
-        is_in_rect = point_in_rect([self._match.ball.x, self._match.ball.y],
-                                      [self.field.leftFirstPost[0], self.field.leftFirstPost[1],
-                                       self.field.goalWidth, 2*self.field.fieldLength])
-        
-        if not is_in_rect and self._match.ball.x <= self.field.halfwayLine[0]:
-            return True
-        return False
-
-    def go_to_ball_transition(self):
-        if (self._match.ball.x < 1) and (self._match.ball.y > 2) and (self._match.ball.y < 4):
-            return True        
-        return False

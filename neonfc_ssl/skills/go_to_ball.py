@@ -14,7 +14,7 @@ class GoToBall(BaseSkill):
         target = self._match.ball.pos_after(ttb)
 
         close_to_ball = ((self._robot.x - target[0]) ** 2 + (self._robot.x - target[1]) ** 2) ** .5 < 0.15
-        theta = math.atan2(self._robot.y - self._match.ball.y, self._robot.x - self._match.ball.x)
+        theta = math.atan2(-self._robot.y+self._match.ball.y, -self._robot.x+self._match.ball.x)
 
         return RobotCommand(target_pose=(target[0], target[1], theta), spinner=close_to_ball, robot=self._robot)
 

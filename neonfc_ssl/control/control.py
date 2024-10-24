@@ -27,8 +27,8 @@ class Control:
         # cores you have, use 'cat /proc/cpuinfo | grep processor | wc -l'"
         self._num_workers = 1
 
-        self.KP = 2
-        self.KP_ang = 1.5  # -9
+        self.KP = 1.5
+        self.KP_ang = 2
 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.UDP_IP = "127.0.0.1"
@@ -92,7 +92,7 @@ class Control:
 
             dt = reduce_ang(command.target_pose[2] - command.robot.theta)
 
-            command.move_speed = (dx * self.KP, dy * self.KP, dt * self.KP_ang)
+            command.move_speed = (dx*self.KP, dy*self.KP, dt*self.KP_ang)
 
         if time.time() - self.last_info > 0.1:
             self.last_info = time.time()
