@@ -1,6 +1,6 @@
 import math
 from neonfc_ssl.coach import BaseCoach
-from neonfc_ssl.strategies import Receiver, BallHolder, Test, GoalKeeper
+from neonfc_ssl.strategies import Receiver, BallHolder, Test, GoalKeeper, Passer, Libero
 
 
 class Coach(BaseCoach):
