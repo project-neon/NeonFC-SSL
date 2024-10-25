@@ -29,15 +29,15 @@ class DynamicObstacle(Obstacle):
 
 
     def check_for_collision(self, point: np.ndarray, time_step: float) -> bool:
-        r_dyn = self.get_extra_margin(time_step)
+        # r_dyn = self.get_extra_margin(time_step)
 
         # the 2/3 here ended up also being a tunable parameter, dont ask why, please.
         # I will explain anyway, this is due to the f_minus modelage being f_minus=0, 
         # if it was kept with the original formula c+(v/|v|)(f_minus+r_dyn), 
         # the tail of the virtual obstacle would be always the same, to avoid that this correction move the virtual obstacle a little .
-        pos_dyn = self.center + (self.speed/np.linalg.norm(self.speed))*((2/3)*r_dyn) if np.linalg.norm(self.speed) > 0 else self.center
+        # pos_dyn = self.center + (self.speed/np.linalg.norm(self.speed))*((2/3)*r_dyn) if np.linalg.norm(self.speed) != 0 else self.center
 
-        return self.distance(pos_dyn, point) < self.radius + r_dyn
+        return self.distance_to(point) < self.radius
 
 
     def get_extra_margin(self, time_step: float) -> float:

@@ -5,7 +5,7 @@ import socket
 from neonfc_ssl.entities import Field, RobotCommand
 from neonfc_ssl.match.ssl_match import SSLMatch
 from neonfc_ssl.coach import BaseCoach
-from neonfc_ssl.commons.math import reduce_ang, distance_between_points
+from neonfc_ssl.commons.math import reduce_ang
 from neonfc_ssl.path_planning.drunk_walk import DrunkWalk
 
 
@@ -66,7 +66,11 @@ class Control:
             r = 0.09
 
             # -- Friendly Goalkeeper Area -- #
-            path_planning.add_static_obstacle((0, self._field.fieldWidth/2 - 1), 1, 2)
+            path_planning.add_static_obstacle(
+                (0, self._field.fieldWidth/2 - self._field.penaltyAreaWidth/2),
+                self._field.penaltyAreaDepth,
+                self._field.penaltyAreaWidth
+            )
             # -- Friendly Goal Posts -- #
             path_planning.add_static_obstacle(
                 (-r-goal_depht-post_thickness, self._field.fieldWidth/2 - r - goal_height/2),
@@ -74,12 +78,36 @@ class Control:
                 2*r + goal_height
             )
             # -- Opponent Goalkeeper Area -- #
-            path_planning.add_static_obstacle((self._field.fieldLength - 1, self._field.fieldWidth / 2 - 1), 1, 2)
+            path_planning.add_static_obstacle(
+                (self._field.fieldLength - self._field.penaltyAreaDepth, self._field.fieldWidth / 2 - self._field.penaltyAreaWidth/2),
+                self._field.penaltyAreaDepth,
+                self._field.penaltyAreaWidth
+            )
             # -- Opponent Goal Posts -- #
             path_planning.add_static_obstacle(
-                (self._field.fieldLength-r, self._field.fieldWidth/2 - r - goal_height/2),
-                2*r + post_thickness + goal_depht,
-                2*r + goal_height
+                (-1, -1),
+                self._field.fieldLength + 2,
+                0.7
+            )
+            path_planning.add_static_obstacle(
+                (self._field.fieldLength + 0.3, self._field.fieldWidth / 2 - r - goal_height / 2),
+                2 * r + post_thickness + goal_depht,
+                2 * r + goal_height
+            )
+            path_planning.add_static_obstacle(
+                (self._field.fieldLength - r, self._field.fieldWidth / 2 - r - goal_height / 2),
+                2 * r + post_thickness + goal_depht,
+                2 * r + goal_height
+            )
+            path_planning.add_static_obstacle(
+                (self._field.fieldLength - r, self._field.fieldWidth / 2 - r - goal_height / 2),
+                2 * r + post_thickness + goal_depht,
+                2 * r + goal_height
+            )
+            path_planning.add_static_obstacle(
+                (self._field.fieldLength - r, self._field.fieldWidth / 2 - r - goal_height / 2),
+                2 * r + post_thickness + goal_depht,
+                2 * r + goal_height
             )
 
             # -- Opponent Robots --#

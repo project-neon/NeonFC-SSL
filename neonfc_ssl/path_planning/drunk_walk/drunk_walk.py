@@ -63,7 +63,7 @@ class DrunkWalk:
 
         sub_destinations = self._gen_rnd_subdests()
 
-        for sub_dest in sub_destinations:
+        for i, sub_dest in enumerate(sub_destinations):
             next_point, collision_time = self._validate_path(sub_dest)
 
             if collision_time is None:
@@ -77,7 +77,7 @@ class DrunkWalk:
     def _validate_path(self, step_vector: np.ndarray) -> Tuple[Tuple[float, float], float]:
         current_pos: np.ndarray = None
 
-        for t in np.arange(0.1, 1.1, .1):
+        for t in np.arange(0.05, 1.05, 0.05):
             current_pos = self._pos + t*step_vector
 
             for obs in self.obstacles:
@@ -88,8 +88,8 @@ class DrunkWalk:
     
 
     def _gen_rnd_subdests(self) -> list[np.ndarray]:
-        scales = [uniform(0.5, 1.5) for i in range(5)]
-        angles = [choice((1, -1))*uniform(20*np.pi/180, 140*np.pi/180) for i in range(5)]
+        scales = [uniform(1, 1.5) for i in range(10)]
+        angles = [choice((1, -1))*uniform(0*np.pi/180, 45*np.pi/180) for i in range(10)]
         angles.sort(key=lambda a: abs(a))
 
         r = np.sqrt( self._step_vector[0]**2 + self._step_vector[1]**2 )
