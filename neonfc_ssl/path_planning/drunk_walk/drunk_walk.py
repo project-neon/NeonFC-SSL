@@ -51,7 +51,6 @@ class DrunkWalk:
 
 
     def find_path(self) -> Tuple[float, float]:
-
         self.obstacles.sort(key=lambda o: o.distance_to(self._pos))
         
         next_point, collision_time = self._validate_path(self._step_vector)
@@ -61,7 +60,7 @@ class DrunkWalk:
         else:
             self._best_rejected_path = (next_point, collision_time)
 
-        sub_destinations = self._gen_rnd_subdests()
+        sub_destinations = self._gen_static_subdests()
 
         for i, sub_dest in enumerate(sub_destinations):
             next_point, collision_time = self._validate_path(sub_dest)
@@ -102,20 +101,34 @@ class DrunkWalk:
         return result
 
 
+    def _gen_static_subdests(self) -> list[np.ndarray]:
+        angles = list(np.linspace(-np.pi/2, np.pi/2, 10))
+        angles.sort(key=lambda a: abs(a))
+
+        r = np.sqrt(self._step_vector[0] ** 2 + self._step_vector[1] ** 2)
+        theta = np.arctan2(self._step_vector[1], self._step_vector[0])
+
+        new_thetas = [theta + a for a in angles]
+
+        result = [np.array(r * np.cos(a), r * np.sin(a)) for a in new_thetas]
+
+        return result
+
+
     def set_field_limits(self, limits: list[Tuple[float, float]]) -> None:
         self._field_limits = limits
 
     
     def _add_obstacle(self, obs: Obstacle):
-        if obs.distance_to(self._pos) < 0.1:
-            return
+        # if obs.distance_to(self._pos) < 0.1:
+        #     return
         
-        if (dist := obs.distance_to(self._target) - 0.075) < 0:
-            v = obs.get_vector(self._target)
-            self._target += dist*(v/np.linalg.norm(v))
+        # if (dist := obs.distance_to(self._target) - 0.075) < 0:
+        #     v = obs.get_vector(self._target)
+        #     self._target += dist*(v/np.linalg.norm(v))
 
-        if np.dot(obs.get_vector(self._pos), self._step_vector) >= 0:
-            self.obstacles.append(obs)
+        # if np.dot(obs.get_vector(self._pos), self._step_vector) >= 0:
+        self.obstacles.append(obs)
 
 
     def add_dynamic_obstacle(self, center, radius, speed):

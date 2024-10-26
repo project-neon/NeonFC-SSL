@@ -1,5 +1,5 @@
 from neonfc_ssl.path_planning.drunk_walk.obstacle import Obstacle
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Tuple
 import numpy as np
 
@@ -10,8 +10,10 @@ class StaticObstacle(Obstacle):
     start: np.ndarray = np.array((0, 0))
     length: float = 0
     height: float = 0
-    end = np.array((start[0] + length, start[1] + height))
+    end: np.ndarray = field(init=False)
 
+    def __post_init__(self):
+        self.end = self.start + np.array([self.length, self.height])
 
     def get_vector(self, origin: np.ndarray) -> np.ndarray:
         dx = max(self.start[0] - origin[0], 0, origin[0] - self.end[0])
@@ -27,4 +29,8 @@ class StaticObstacle(Obstacle):
 
     # Only works for rectangular obstacles aligned with the x and y axes.
     def check_for_collision(self, point: np.ndarray, time_step: float) -> bool:
+        # if self.start[0] <= point[0] <= self.end[0] and self.start[1] <= point[1] <= self.end[1]:
+        #     print(f"{self.start=}")
+        #     print(f"{point=}")
+        #     print(f"{self.end=}")
         return self.start[0] <= point[0] <= self.end[0] and self.start[1] <= point[1] <= self.end[1]
