@@ -89,28 +89,32 @@ class Control:
                 self._field.fieldLength + 2,
                 0.7
             )
+            # -- Lower Field Limit -- #
             path_planning.add_static_obstacle(
-                (self._field.fieldLength + 0.3, self._field.fieldWidth / 2 - r - goal_height / 2),
-                2 * r + post_thickness + goal_depht,
-                2 * r + goal_height
+                (-12, -12),
+                self._field.fieldLength + 24,
+                11.7
             )
+            # -- Right Field Limit -- #
             path_planning.add_static_obstacle(
-                (self._field.fieldLength - r, self._field.fieldWidth / 2 - r - goal_height / 2),
-                2 * r + post_thickness + goal_depht,
-                2 * r + goal_height
+                (self._field.fieldLength + 0.3, -0.3),
+                11.7,
+                self._field.fieldWidth + 0.6
             )
+            # -- Upper Field Limit -- #
             path_planning.add_static_obstacle(
-                (self._field.fieldLength - r, self._field.fieldWidth / 2 - r - goal_height / 2),
-                2 * r + post_thickness + goal_depht,
-                2 * r + goal_height
+                (-12, self._field.fieldWidth + 0.3),
+                self._field.fieldLength + 24,
+                11.7
             )
+            # -- Left Field Limit -- #
             path_planning.add_static_obstacle(
-                (self._field.fieldLength - r, self._field.fieldWidth / 2 - r - goal_height / 2),
-                2 * r + post_thickness + goal_depht,
-                2 * r + goal_height
+                (-12, -0.3),
+                11.7,
+                self._field.fieldWidth + 0.6
             )
 
-            # -- Opponent Robots --#
+            # -- Opponent Robots -- #
             [path_planning.add_dynamic_obstacle(r, 0.2, np.array((r.vx, r.vy))) for r in self._match.active_opposites]
 
             next_point = path_planning.find_path()
