@@ -64,6 +64,8 @@ class Control:
             goal_depht = 0.18
             goal_height = 1
             r = 0.09
+            L = 12
+            m = 0
 
             # -- Friendly Goalkeeper Area -- #
             path_planning.add_static_obstacle(
@@ -91,27 +93,27 @@ class Control:
             )
             # -- Lower Field Limit -- #
             path_planning.add_static_obstacle(
-                (-12, -12),
-                self._field.fieldLength + 24,
-                11.7
+                (-L-m, -L-m),
+                self._field.fieldLength + 2*(m+L),
+                L+r
             )
             # -- Right Field Limit -- #
             path_planning.add_static_obstacle(
-                (self._field.fieldLength + 0.3, -0.3),
-                11.7,
-                self._field.fieldWidth + 0.6
+                (self._field.fieldLength + m - r, -m),
+                L,
+                self._field.fieldWidth + 2*m
             )
             # -- Upper Field Limit -- #
             path_planning.add_static_obstacle(
-                (-12, self._field.fieldWidth + 0.3),
-                self._field.fieldLength + 24,
-                11.7
+                (-L-m, self._field.fieldWidth + m - r),
+                self._field.fieldLength + 2*(m+L),
+                L
             )
             # -- Left Field Limit -- #
             path_planning.add_static_obstacle(
-                (-12, -0.3),
-                11.7,
-                self._field.fieldWidth + 0.6
+                (-L-m, -m),
+                L+r,
+                self._field.fieldWidth + 2*m
             )
 
             # -- Opponent Robots -- #
