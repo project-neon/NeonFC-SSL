@@ -49,13 +49,13 @@ class Game:
         self.match = SSLMatch(self)
 
         # Decision Layer
-        self.coach = COACHES["SimpleCoach"](self)
+        self.coach = COACHES["TestCoach"](self)
 
         # Control Layer
         self.control = Control(self)
 
         # Output Layer
-        self.comm = GrComm(self)
+        self.comm = SerialComm(self)
 
         # Register exit handler
         atexit.register(self.stop_threads)
