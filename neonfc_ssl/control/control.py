@@ -67,30 +67,30 @@ class Control:
             L = 12
             m = 0
 
-            # -- Friendly Goalkeeper Area -- #
-            path_planning.add_static_obstacle(
-                (0, self._field.fieldWidth/2 - self._field.penaltyAreaWidth/2),
-                self._field.penaltyAreaDepth,
-                self._field.penaltyAreaWidth
-            )
-            # -- Friendly Goal Posts -- #
-            path_planning.add_static_obstacle(
-                (-r-goal_depht-post_thickness, self._field.fieldWidth/2 - r - goal_height/2),
-                2*r + post_thickness + goal_depht,
-                2*r + goal_height
-            )
-            # -- Opponent Goalkeeper Area -- #
-            path_planning.add_static_obstacle(
-                (self._field.fieldLength - self._field.penaltyAreaDepth, self._field.fieldWidth / 2 - self._field.penaltyAreaWidth/2),
-                self._field.penaltyAreaDepth,
-                self._field.penaltyAreaWidth
-            )
-            # -- Opponent Goal Posts -- #
-            path_planning.add_static_obstacle(
-                (-1, -1),
-                self._field.fieldLength + 2,
-                0.7
-            )
+            # # -- Friendly Goalkeeper Area -- #
+            # path_planning.add_static_obstacle(
+            #     (0, self._field.fieldWidth/2 - self._field.penaltyAreaWidth/2),
+            #     self._field.penaltyAreaDepth,
+            #     self._field.penaltyAreaWidth
+            # )
+            # # -- Friendly Goal Posts -- #
+            # path_planning.add_static_obstacle(
+            #     (-r-goal_depht-post_thickness, self._field.fieldWidth/2 - r - goal_height/2),
+            #     2*r + post_thickness + goal_depht,
+            #     2*r + goal_height
+            # )
+            # # -- Opponent Goalkeeper Area -- #
+            # path_planning.add_static_obstacle(
+            #     (self._field.fieldLength - self._field.penaltyAreaDepth, self._field.fieldWidth / 2 - self._field.penaltyAreaWidth/2),
+            #     self._field.penaltyAreaDepth,
+            #     self._field.penaltyAreaWidth
+            # )
+            # # -- Opponent Goal Posts -- #
+            # path_planning.add_static_obstacle(
+            #     (-1, -1),
+            #     self._field.fieldLength + 2,
+            #     0.7
+            # )
             # -- Lower Field Limit -- #
             path_planning.add_static_obstacle(
                 (-L-m, -L-m),
