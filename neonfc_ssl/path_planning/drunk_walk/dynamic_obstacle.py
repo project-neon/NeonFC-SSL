@@ -1,6 +1,5 @@
 from neonfc_ssl.path_planning.drunk_walk.obstacle import Obstacle
-from dataclasses import dataclass
-from typing import Tuple
+from dataclasses import dataclass, field
 import numpy as np
 
 
@@ -37,7 +36,7 @@ class DynamicObstacle(Obstacle):
         # the tail of the virtual obstacle would be always the same, to avoid that this correction move the virtual obstacle a little .
         pos_dyn = self.center + (self.speed/np.linalg.norm(self.speed))*((2/3)*r_dyn) if np.linalg.norm(self.speed) > 0 else self.center
 
-        return self.distance(pos_dyn, point) < self.radius + r_dyn
+        return self.distance_to(point) < self.radius - 0.04
 
 
     def get_extra_margin(self, time_step: float) -> float:

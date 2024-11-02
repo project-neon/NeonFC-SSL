@@ -64,22 +64,49 @@ class Control:
             goal_depht = 0.18
             goal_height = 1
             r = 0.09
+            L = 12
+            m = 0
 
-            # -- Friendly Goalkeeper Area -- #
-            path_planning.add_static_obstacle((0, self._field.fieldWidth/2 - 1), 1, 2)
-            # -- Friendly Goal Posts -- #
+            # # -- Friendly Goalkeeper Area -- #
+            # path_planning.add_static_obstacle((0, self._field.fieldWidth/2 - 1), 1, 2)
+            # # -- Friendly Goal Posts -- #
+            # path_planning.add_static_obstacle(
+            #     (-r-goal_depht-post_thickness, self._field.fieldWidth/2 - r - goal_height/2),
+            #     2*r + post_thickness + goal_depht,
+            #     2*r + goal_height
+            # )
+            # # -- Opponent Goalkeeper Area -- #
+            # path_planning.add_static_obstacle((self._field.fieldLength - 1, self._field.fieldWidth / 2 - 1), 1, 2)
+            # # -- Opponent Goal Posts -- #
+            # path_planning.add_static_obstacle(
+            #     (self._field.fieldLength-r, self._field.fieldWidth/2 - r - goal_height/2),
+            #     2*r + post_thickness + goal_depht,
+            #     2*r + goal_height
+            # )
+
+            # -- Lower Field Limit -- #
             path_planning.add_static_obstacle(
-                (-r-goal_depht-post_thickness, self._field.fieldWidth/2 - r - goal_height/2),
-                2*r + post_thickness + goal_depht,
-                2*r + goal_height
+                (-L - m, -L - m),
+                self._field.fieldLength + 2 * (m + L),
+                L + r
             )
-            # -- Opponent Goalkeeper Area -- #
-            path_planning.add_static_obstacle((self._field.fieldLength - 1, self._field.fieldWidth / 2 - 1), 1, 2)
-            # -- Opponent Goal Posts -- #
+            # -- Right Field Limit -- #
             path_planning.add_static_obstacle(
-                (self._field.fieldLength-r, self._field.fieldWidth/2 - r - goal_height/2),
-                2*r + post_thickness + goal_depht,
-                2*r + goal_height
+                (self._field.fieldLength + m - r, -m),
+                L,
+                self._field.fieldWidth + 2 * m
+            )
+            # -- Upper Field Limit -- #
+            path_planning.add_static_obstacle(
+                (-L - m, self._field.fieldWidth + m - r),
+                self._field.fieldLength + 2 * (m + L),
+                L
+            )
+            # -- Left Field Limit -- #
+            path_planning.add_static_obstacle(
+                (-L - m, -m),
+                L + r,
+                self._field.fieldWidth + 2 * m
             )
 
             # -- Opponent Robots --#

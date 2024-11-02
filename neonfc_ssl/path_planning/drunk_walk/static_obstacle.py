@@ -1,6 +1,5 @@
 from neonfc_ssl.path_planning.drunk_walk.obstacle import Obstacle
 from dataclasses import dataclass
-from typing import Tuple
 import numpy as np
 
 
@@ -10,7 +9,10 @@ class StaticObstacle(Obstacle):
     start: np.ndarray = np.array((0, 0))
     length: float = 0
     height: float = 0
-    end = np.array((start[0] + length, start[1] + height))
+
+
+    def __post_init__(self):
+        self.end = self.start + np.array([self.length, self.height])
 
 
     def get_vector(self, origin: np.ndarray) -> np.ndarray:
