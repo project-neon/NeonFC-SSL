@@ -14,7 +14,7 @@ class RobotFeedback(threading.Thread):
         self.serial_port.setDTR(False)
 
         self.running = False
-        self.daemon = True
+      #  self.daemon = True
 
         #self.logger = logging.getLogger()
 
@@ -64,11 +64,11 @@ class RobotFeedback(threading.Thread):
         data_per_id = self.split_serial_per_id(serial_line)
         if len(data_per_id) > 1:
             data_list = self.convert_data_to_dict(data_per_id)
-            #print(data_list)
+            print(data_list)
             return data_list
 
     def split_serial_per_id(self, serial_line):
-        data_per_id = [i[1:] for i in serial_line.split('>')[0:3]]
+        data_per_id = [i[1:] for i in serial_line.split('>')[0:6]]
         return data_per_id
 
     def convert_data_to_dict(self, data_as_list):
