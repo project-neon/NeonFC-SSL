@@ -3,12 +3,13 @@ from neonfc_ssl.skills import *
 from NeonPathPlanning import Point
 
 from commons.math import point_in_rect, distance_between_points
-from math import tan, pi
+from math import atan2, tan, pi
 
 class Libero(BaseStrategy):
-    def __init__(self, coach, match):
+    def __init__(self, coach, match, defensive_positions):
         super().__init__('Libero', coach, match)
         
+        self.defensive_positions = defensive_positions
         self.field = self._match.field
         self.target = None
 
@@ -25,6 +26,7 @@ class Libero(BaseStrategy):
         self.active.start(self._robot, target=self.defense_target)
 
     def decide(self):
+        #print(self.defensive_positions)
         next = self.active.update()
         
         if next.name != "MoveToPose":
@@ -58,7 +60,7 @@ class Libero(BaseStrategy):
             target = self._defense_up(x_op, y_op, theta, closest)
         
         elif ball.y < 2 and ball.x < 1:
-            target = self._defense_down(x_op, y_op, theta, closest)
+                       target = self._defense_down(x_op, y_op, theta, closest)
         
         else:
             target = self._defense_front(x_op, y_op, theta, closest)
@@ -81,23 +83,11 @@ class Libero(BaseStrategy):
         return data
 
     def _defense_front(self, x_robot, y_robot, theta, closest):
-        ball = self._match.ball
-        y_goal_min = 2.5 
-        y_goal_max = 3.5 
         x = 1.2
+        y = self.defensive_positions[f'libero_{self._robot.robot_id-1}']
+        # print(f"robot_{self._robot.robot_id}: desired_y = {y}")
+        theta = atan2(-self._robot.y + self._match.ball.y, -self._robot.x + self._match.ball.x)
 
-        y_max = ((y_goal_max-ball.y)/(-ball.x))*(x-ball.x)+ball.y
-        y_min = ((y_goal_min-ball.y)/(-ball.x))*(x-ball.x)+ball.y
-
-        if closest < 0.15:
-            y = tan(theta)*(x-x_robot)+y_robot
-        
-        else:
-            y = (ball.vy/ball.vx)*(x-ball.x)+ball.y
-            theta = ball.vy/ball.vx
-
-        y = y_max if y > y_max else y
-        y = y_min if y < y_min else y
 
         return [x, y, theta]
     
