@@ -19,7 +19,11 @@ class Coach(BaseCoach):
         self._active_robots[0].set_strategy(self.test)
         self._active_robots[1].set_strategy(self.test2)
         self._active_robots[2].set_strategy(self.test3)
-        self._libero_y_positions(3)
+        self._active_robots[3].set_strategy(self.test4)
+        n=3
+        pos = self._libero_y_positions(n)
+        robots = self._active_robots[1:n+1]
+        self.cost_matrix(pos, robots)
 
     
     def _closest_opponent(self):
@@ -49,7 +53,7 @@ class Coach(BaseCoach):
         if closest < 0.15:
             y = tan(theta)*(x-x_robot)+y_robot
         
-        elif abs(ball.vx) < 0.05:
+        elif abs(ball.vx) <= 0.05:
             y = ball.y
         
         else:
@@ -57,7 +61,9 @@ class Coach(BaseCoach):
 
         y = y_max if y > y_max else y
         y = y_min if y < y_min else y
-        
+
+        print(y)
+
         return y
 
     def _libero_y_positions(self, n_robots):
@@ -76,12 +82,10 @@ class Coach(BaseCoach):
             x = 1.2
             ball = self._match.ball
             desired_pos = np.zeros((n_robots, 2))
-            robot_pos = np.zeros((n_robots, 2))
-            cost_matrix = np.zeros((n_robots, n_robots))
 
             diameter = 0.2
-            target -= diameter
-            ang = atan2(ball.vx, ball.vy) if ball.vx != 0 else 0
+            target -= diameter/2
+            ang = atan2(ball.vx, ball.vy) if abs(ball.vx) > 0.05 else 0
 
             for i in range(0, n_robots):
                 desired_pos[i][0] = x
@@ -89,23 +93,30 @@ class Coach(BaseCoach):
                     desired_pos[i][1] = target + (i * diameter)
                 elif -3.14 <= ang <= -1.57:
                     desired_pos[i][1] = target - (i * diameter)
+                else:
+                    desired_pos[i][1] = target - (i * diameter)
 
-            i = 0
-            for robot in self._match.active_robots:
-                robot_pos[i][0] = robot.x
-                robot_pos[i][1] = robot.y
-                i += 1
+            return desired_pos
 
-            i = 0
-            j = 0
-            for i in range(0, n_robots):
-                for j in range(0, n_robots):
-                    cost_matrix[i][j] = (robot_pos[i][0]-desired_pos[j][0])**2+(robot_pos[i][1]-desired_pos[j][1])**2
+    def cost_matrix(self, desired_pos, defensive_robots):
+        n_robots = len(desired_pos)
+        robot_pos = np.zeros((n_robots, 2))
+        cost_matrix = np.zeros((n_robots, n_robots))
 
-            lines, columns = linear_sum_assignment(cost_matrix)
-            # print(f'target: {desired_pos}')
-            # print(f'actual: {robot_pos}')
-            # print(cost_matrix)
-            for robot, pos in zip(lines, columns):
-                y = desired_pos[pos][1]
-                self.defensive_positions[f'libero_{robot}'] = y
+        i = 0
+        for robot in defensive_robots:
+            robot_pos[i][0] = robot.x
+            robot_pos[i][1] = robot.y
+            i += 1
+
+        for i in range(0, n_robots):
+            for j in range(0, n_robots):
+                cost_matrix[i][j] = (robot_pos[i][0]-desired_pos[j][0])**2+(robot_pos[i][1]-desired_pos[j][1])**2
+
+        lines, columns = linear_sum_assignment(cost_matrix)
+        # print(f'target: {desired_pos}')
+        # print(f'actual: {robot_pos}')
+        # print(cost_matrix)
+        for robot, pos in zip(lines, columns):
+            y = desired_pos[pos][1]
+            self.defensive_positions[f'libero_{robot}'] = y
