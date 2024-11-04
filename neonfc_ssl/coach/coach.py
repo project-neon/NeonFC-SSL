@@ -26,6 +26,16 @@ class BaseCoach(ABC):
         # Coach Logger
         self.logger = logging.getLogger("coach")
 
+        # Defensive Positions (desired y to each libero)
+        self.defensive_positions = {
+            'libero_0': 0,
+            'libero_1': 0,
+            'libero_2': 0,
+            'libero_3': 0,
+            'libero_4': 0,
+            'libero_5': 0
+        }
+
     def start(self):
         self.logger.info("Starting coach module starting ...")
 
