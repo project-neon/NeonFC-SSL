@@ -49,7 +49,7 @@ class Game:
         self.match = SSLMatch(self)
 
         # Decision Layer
-        self.coach = COACHES["SimpleCoach"](self)
+        self.coach = COACHES["TestCoach"](self)
 
         # Control Layer
         self.control = Control(self)

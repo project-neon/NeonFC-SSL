@@ -10,12 +10,11 @@ python = ">=3.9,<3.13"
 protobuf = "3.20.x"
 scipy = "^1.11.3"
 numpy = "^1.26.0"
-serial = "^0.0.97"
-pyserial = "^3.5"
 neonpathplanning = "^1.0.1"
 matplotlib = "^3.9.2"
 pyvisgraph = "^0.2.1"
 tqdm = "^4.66.5"
+pyserial = "^3.5"
 
 
 [build-system]
