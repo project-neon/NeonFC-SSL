@@ -1,7 +1,6 @@
 from neonfc_ssl.strategies.base_strategy import BaseStrategy
 from neonfc_ssl.skills import *
 from NeonPathPlanning import Point
-
 from neonfc_ssl.commons.math import point_in_rect, distance_between_points
 from math import atan2, tan, pi
 
@@ -30,11 +29,10 @@ class Libero(BaseStrategy):
         self.active.start(self._robot, target=target)
 
         return self.active.decide()
-    
+      
     def _defense_front(self):
         x = 1.2
         y = self.defensive_positions[f'libero_{self._robot.robot_id-1}']
         # print(f"robot_{self._robot.robot_id}: desired_y = {y}")
         theta = atan2(-self._robot.y + self._match.ball.y, -self._robot.x + self._match.ball.x)
-        
         return [x, y, theta]

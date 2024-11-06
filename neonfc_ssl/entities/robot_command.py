@@ -45,5 +45,22 @@ class RobotCommand:
         self.wheel_speed = (w2, w3, w4, w1)
 
     def global_speed_to_local_speed(self):
-        # TODO
-        pass
+        vx, vy, w = self.move_speed
+        theta = self.robot.theta
+
+        r_x = vx*cos(theta)+vy*sin(theta)
+        r_y = -vx*sin(theta)+vy*cos(theta)
+
+        L = 0.0785
+        r = 0.03
+
+        wheel = ((2*L*abs(w)) + (sqrt(3)*abs(r_x)) + (sqrt(3)*abs(r_y)))/(2*r)
+        wheel_max = 40
+
+        reducing_factor = min(wheel_max/wheel, 1) if wheel != 0 else 1
+
+        self.local_speed = (
+            r_x*reducing_factor,
+            r_y*reducing_factor,
+            w*reducing_factor
+        )

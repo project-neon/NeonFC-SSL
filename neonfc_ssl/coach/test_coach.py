@@ -2,8 +2,7 @@ import numpy as np
 from math import tan, atan2, pi
 from scipy.optimize import linear_sum_assignment
 from neonfc_ssl.coach import BaseCoach
-from neonfc_ssl.commons.math import distance_between_points
-from neonfc_ssl.strategies import Receiver, BallHolder, GoalKeeper, Libero, RightBack, LeftBack
+from neonfc_ssl.strategies import Receiver, BallHolder, Test, GoalKeeper, Passer, Libero
 
 
 class Coach(BaseCoach):

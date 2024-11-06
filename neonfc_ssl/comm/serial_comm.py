@@ -1,5 +1,5 @@
 import logging
-import serial
+from serial import Serial
 from neonfc_ssl.control import Control
 
 
@@ -28,7 +28,7 @@ class SerialComm:
         self._control = self._game.control
 
         self.logger.info(f"Creating serial communication port at {self.command_port}")
-        self.comm = serial.Serial(self.command_port, self.baud_rate)
+        self.comm = Serial(self.command_port, self.baud_rate)
 
         self.logger.info(f"Serial communication module started!")
     

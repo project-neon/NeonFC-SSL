@@ -27,6 +27,7 @@ class Field:
         self.goalWidth = frame.get('goalWidth')
         self.penaltyAreaDepth = frame.get('penaltyAreaDepth')  # nao tem no grsim, usar leftpenaltyscretch
         self.penaltyAreaWidth = frame.get('penaltyAreaWidth')  # idem
+        
         self.leftGoalLine = (
             frame.get('fieldLines').get('LeftGoalLine').get('p1').get('x') + .5 * self.fieldLength,
             frame.get('fieldLines').get('LeftGoalLine').get('p1').get('y') + .5 * self.fieldWidth
