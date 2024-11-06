@@ -3,29 +3,30 @@ from math import tan, atan2, pi
 from scipy.optimize import linear_sum_assignment
 from neonfc_ssl.coach import BaseCoach
 from neonfc_ssl.commons.math import distance_between_points
-from neonfc_ssl.strategies import Receiver, BallHolder, GoalKeeper, Libero
+from neonfc_ssl.strategies import Receiver, BallHolder, GoalKeeper, Libero, RightBack, LeftBack
 
 
 class Coach(BaseCoach):
     NAME = "TestCoach"
 
     def _start(self):
-        self.test = GoalKeeper(self, self._match)
-        self.test2 = Libero(self, self._match, self.defensive_positions)
-        self.test3 = Libero(self, self._match, self.defensive_positions)
-        self.test4 = Libero(self, self._match, self.defensive_positions)
+        self.keeper = GoalKeeper(self, self._match)
+        self.rb = RightBack(self, self._match)
+        self.lb = LeftBack(self, self._match)
+        self.libero1 = Libero(self, self._match, self.defensive_positions)
+        self.libero2 = Libero(self, self._match, self.defensive_positions)
+        self.ballholder = BallHolder(self, self._match)
 
     def decide(self):
-        self._active_robots[0].set_strategy(self.test)
-        self._active_robots[1].set_strategy(self.test2)
-        self._active_robots[2].set_strategy(self.test3)
-        self._active_robots[3].set_strategy(self.test4)
-        n=3
+        self._active_robots[0].set_strategy(self.rb)
+        self._active_robots[1].set_strategy(self.libero1)
+        self._active_robots[2].set_strategy(self.lb)
+
+        n=2
         pos = self._libero_y_positions(n)
         robots = self._active_robots[1:n+1]
         self.cost_matrix(pos, robots)
 
-    
     def _closest_opponent(self):
         ball = self._match.ball
 
@@ -43,9 +44,11 @@ class Coach(BaseCoach):
 
     def _ball_proj(self, x_robot, y_robot, theta, closest):
         ball = self._match.ball
-        y_goal_min = 2.5 
-        y_goal_max = 3.5 
-        x = 1.2
+        field = self._match.field
+       
+        y_goal_min = (field.fieldWidth/2)-field.goalWidth/2
+        y_goal_max = (field.fieldWidth/2)+field.goalWidth/2
+        x = field.leftPenaltyStretch[0] + 0.2
 
         y_max = ((y_goal_max-ball.y)/(-ball.x))*(x-ball.x)+ball.y
         y_min = ((y_goal_min-ball.y)/(-ball.x))*(x-ball.x)+ball.y
@@ -53,7 +56,15 @@ class Coach(BaseCoach):
         if closest < 0.15:
             y = tan(theta)*(x-x_robot)+y_robot
         
-        elif abs(ball.vx) <= 0.05:
+        elif ball.x < field.leftPenaltyStretch[0] and ball.y < field.leftPenaltyStretch[1]:
+            y = field.leftPenaltyStretch[1] - 0.2
+            return y
+        
+        elif ball.x < field.leftPenaltyStretch[0] and ball.y > (field.fieldWidth - field.leftPenaltyStretch[1]):
+            y = (field.fieldWidth - field.leftPenaltyStretch[1]) + 0.2
+            return y
+
+        elif abs(ball.vx) < 0.05:
             y = ball.y
         
         else:
@@ -62,8 +73,7 @@ class Coach(BaseCoach):
         y = y_max if y > y_max else y
         y = y_min if y < y_min else y
 
-        print(y)
-
+      
         return y
 
     def _libero_y_positions(self, n_robots):
@@ -73,16 +83,18 @@ class Coach(BaseCoach):
         theta = data[2]
         closest = data[3]
 
+        ball = self._match.ball
+        field = self._match.field
         target = self._ball_proj(x_op, y_op, theta, closest)
+        desired_pos = np.zeros((n_robots, 2))
+        x = field.leftPenaltyStretch[0] + 0.2
         
         if n_robots == 1:
-            return target
+            desired_pos[0][0] = x
+            desired_pos[0][1] = target
+            return desired_pos
         
         else:
-            x = 1.2
-            ball = self._match.ball
-            desired_pos = np.zeros((n_robots, 2))
-
             diameter = 0.2
             target -= diameter/2
             ang = atan2(ball.vx, ball.vy) if abs(ball.vx) > 0.05 else 0
@@ -95,7 +107,7 @@ class Coach(BaseCoach):
                     desired_pos[i][1] = target - (i * diameter)
                 else:
                     desired_pos[i][1] = target - (i * diameter)
-
+            
             return desired_pos
 
     def cost_matrix(self, desired_pos, defensive_robots):
