@@ -2,7 +2,8 @@ import numpy as np
 from math import tan, atan2, pi
 from scipy.optimize import linear_sum_assignment
 from neonfc_ssl.coach import BaseCoach
-from neonfc_ssl.strategies import Receiver, BallHolder, Test, GoalKeeper, Passer, Libero
+from neonfc_ssl.commons.math import distance_between_points
+from neonfc_ssl.strategies import Receiver, BallHolder, Test, GoalKeeper, Passer, Libero, RightBack, LeftBack
 
 
 class Coach(BaseCoach):
@@ -17,13 +18,13 @@ class Coach(BaseCoach):
         self.ballholder = BallHolder(self, self._match)
 
     def decide(self):
-        self._active_robots[0].set_strategy(self.rb)
-        self._active_robots[1].set_strategy(self.libero1)
-        self._active_robots[2].set_strategy(self.lb)
+        # self._active_robots[0].set_strategy(self.rb)
+        self._active_robots[0].set_strategy(self.lb)
+        #self._active_robots[1].set_strategy(self.libero1)
 
-        n=2
+        n=1
         pos = self._libero_y_positions(n)
-        robots = self._active_robots[1:n+1]
+        robots = self._active_robots[0:n]
         self.cost_matrix(pos, robots)
 
     def _closest_opponent(self):
@@ -47,11 +48,10 @@ class Coach(BaseCoach):
        
         y_goal_min = (field.fieldWidth/2)-field.goalWidth/2
         y_goal_max = (field.fieldWidth/2)+field.goalWidth/2
-        x = field.leftPenaltyStretch[0] + 0.2
+        x = field.penaltyAreaDepth + 0.2
 
         y_max = ((y_goal_max-ball.y)/(-ball.x))*(x-ball.x)+ball.y
         y_min = ((y_goal_min-ball.y)/(-ball.x))*(x-ball.x)+ball.y
-
         if closest < 0.15:
             y = tan(theta)*(x-x_robot)+y_robot
         
@@ -86,7 +86,7 @@ class Coach(BaseCoach):
         field = self._match.field
         target = self._ball_proj(x_op, y_op, theta, closest)
         desired_pos = np.zeros((n_robots, 2))
-        x = field.leftPenaltyStretch[0] + 0.2
+        x = field.penaltyAreaDepth + 0.2
         
         if n_robots == 1:
             desired_pos[0][0] = x
@@ -125,9 +125,6 @@ class Coach(BaseCoach):
                 cost_matrix[i][j] = (robot_pos[i][0]-desired_pos[j][0])**2+(robot_pos[i][1]-desired_pos[j][1])**2
 
         lines, columns = linear_sum_assignment(cost_matrix)
-        # print(f'target: {desired_pos}')
-        # print(f'actual: {robot_pos}')
-        # print(cost_matrix)
         for robot, pos in zip(lines, columns):
             y = desired_pos[pos][1]
-            self.defensive_positions[f'libero_{robot}'] = y
+            self.defensive_positions[f'libero_{defensive_robots[robot].robot_id}'] = y
