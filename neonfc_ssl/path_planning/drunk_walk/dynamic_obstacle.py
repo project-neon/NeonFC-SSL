@@ -1,5 +1,3 @@
-from fontTools.subset.svg import xpath
-
 from neonfc_ssl.path_planning.drunk_walk.obstacle import Obstacle
 from dataclasses import dataclass, field
 import numpy as np
