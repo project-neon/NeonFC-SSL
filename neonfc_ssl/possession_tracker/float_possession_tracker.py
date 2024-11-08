@@ -20,7 +20,7 @@ class FloatPossessionTracker:
 
     def update(self):
         time_to_ball = lambda r: r.time_to_ball(self.match.ball) if r is not None else float('inf')
-        sq_dist_to_ball = lambda r: np.sum(np.square(np.array(r)-self.match.ball))
+        sq_dist_to_ball = lambda r: np.sum(np.square(np.array(r)-self.match.ball)) if r is not None else float('inf')
 
         op_closest = min(self.match.active_opposites, key=time_to_ball, default=None)
         my_closest = min(self.match.active_robots, key=time_to_ball, default=None)
