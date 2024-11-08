@@ -1,3 +1,5 @@
+from fontTools.subset.svg import xpath
+
 from neonfc_ssl.path_planning.drunk_walk.obstacle import Obstacle
 from dataclasses import dataclass, field
 import numpy as np
@@ -7,12 +9,14 @@ import numpy as np
 #    Collision check will take into consideration 
 @dataclass
 class DynamicObstacle(Obstacle):
-    center: np.ndarray = np.array((None, None))
+    center: np.ndarray = field(init=False)
     radius: float = None
-    speed: np.ndarray = np.array((None, None))
+    speed: np.ndarray = field(init=False)
 
-    x, y = center
-    vx, vy = speed
+
+    def __post_init__(self):
+        self.x, self.y = self.center
+        self.vx, self.vy = self.speed
 
 
     def get_vector(self, origin: np.ndarray) -> np.ndarray:
@@ -36,7 +40,7 @@ class DynamicObstacle(Obstacle):
         # the tail of the virtual obstacle would be always the same, to avoid that this correction move the virtual obstacle a little .
         pos_dyn = self.center + (self.speed/np.linalg.norm(self.speed))*((2/3)*r_dyn) if np.linalg.norm(self.speed) > 0 else self.center
 
-        return self.distance_to(point) < self.radius - 0.04
+        return self.distance_to(point) < self.radius
 
 
     def get_extra_margin(self, time_step: float) -> float:
