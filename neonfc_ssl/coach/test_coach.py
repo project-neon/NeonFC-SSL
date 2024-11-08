@@ -53,7 +53,7 @@ class Coach(BaseCoach):
         y_min = ((y_goal_min-ball.y)/(-ball.x))*(x-ball.x)+ball.y
 
         if closest < 0.15:
-            y = tan(theta)*(x-x_robot)+y_robot
+            y = tan(theta)*(x-x_robot)+y_robotx
         
         elif ball.x < field.leftPenaltyStretch[0] and ball.y < field.leftPenaltyStretch[1]:
             y = field.leftPenaltyStretch[1] - 0.2

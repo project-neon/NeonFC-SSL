@@ -1,5 +1,5 @@
 from neonfc_ssl.path_planning.drunk_walk.obstacle import Obstacle
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Tuple
 import numpy as np
 
@@ -8,9 +8,9 @@ import numpy as np
 #    Collision check will take into consideration 
 @dataclass
 class DynamicObstacle(Obstacle):
-    center: np.ndarray = np.array((None, None))
+    center: np.ndarray = field(default_factory=lambda:np.array((None, None)))
     radius: float = None
-    speed: np.ndarray = np.array((None, None))
+    speed: np.ndarray = field(default_factory=lambda:np.array((None, None)))
 
     x, y = center
     vx, vy = speed
