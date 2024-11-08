@@ -25,9 +25,9 @@ class Field:
         self.fieldLength = frame.get('fieldLength')
         self.fieldWidth = frame.get('fieldWidth')
         self.goalWidth = frame.get('goalWidth')
-        self.penaltyAreaWidth = frame.get('penaltyAreaWidth')
-        self.penaltyAreaDepth = frame.get('penaltyAreaDepth')
-
+        self.penaltyAreaDepth = frame.get('penaltyAreaDepth')  # nao tem no grsim, usar leftpenaltyscretch
+        self.penaltyAreaWidth = frame.get('penaltyAreaWidth')  # idem
+        
         self.leftGoalLine = (
             frame.get('fieldLines').get('LeftGoalLine').get('p1').get('x') + .5 * self.fieldLength,
             frame.get('fieldLines').get('LeftGoalLine').get('p1').get('y') + .5 * self.fieldWidth
@@ -61,6 +61,16 @@ class Field:
         self.leftFirstPost = (
             frame.get('fieldLines').get('LeftGoalBottomLine').get('p1').get('x') + .5 * self.fieldLength,
             frame.get('fieldLines').get('LeftGoalBottomLine').get('p1').get('y') + .5 * self.fieldWidth
+        )
+
+        self.leftPenaltyStretch = (
+            frame.get('fieldLines').get('LeftPenaltyStretch').get('p1').get('x') + .5 * self.fieldLength,
+            frame.get('fieldLines').get('LeftPenaltyStretch').get('p1').get('y') + .5 * self.fieldWidth
+        )
+
+        self.rightPenaltyStretch = (
+            frame.get('fieldLines').get('RightPenaltyStretch').get('p1').get('x') + .5 * self.fieldLength,
+            frame.get('fieldLines').get('RightPenaltyStretch').get('p1').get('y') + .5 * self.fieldWidth
         )
 
         self.initialized = True
