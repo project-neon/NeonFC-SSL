@@ -7,14 +7,14 @@ import numpy as np
 #    Collision check will take into consideration 
 @dataclass
 class DynamicObstacle(Obstacle):
-    center: np.ndarray = field(init=False)
-    radius: float = None
-    speed: np.ndarray = field(init=False)
+    center: np.ndarray = field(init=True)
+    radius: float
+    speed: np.ndarray = field(init=True)
 
 
     def __post_init__(self):
-        self.x, self.y = self.center
-        self.vx, self.vy = self.speed
+        self.x, self.y = self.center[0], self.center[1]
+        self.vx, self.vy = self.speed[0], self.speed[1]
 
 
     def get_vector(self, origin: np.ndarray) -> np.ndarray:
