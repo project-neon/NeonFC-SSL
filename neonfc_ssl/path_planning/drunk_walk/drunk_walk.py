@@ -41,6 +41,7 @@ class DrunkWalk:
         self._step_vector: np.ndarray = None
         self.obstacles: list[Obstacle] = []
         self._field_limits: list[Tuple[float, float]] = []
+        self.min_angle = 0
         self._best_rejected_path: Tuple[Tuple[float, float], float] = None
 
 
@@ -52,6 +53,7 @@ class DrunkWalk:
 
     def find_path(self) -> Tuple[float, float]:
         self.obstacles.sort(key=lambda o: o.distance_to(self._pos))
+        self.min_angle = np.arctan2( 0.09, self.obstacles[0].distance_to(self._pos) )
         
         next_point, collision_time = self._validate_path(self._step_vector)
 
@@ -69,7 +71,7 @@ class DrunkWalk:
                 return next_point #
             elif collision_time > self._best_rejected_path[1]:
                 self._best_rejected_path = (next_point, collision_time)
-        
+
         return self._best_rejected_path[0] #
 
 
@@ -79,16 +81,16 @@ class DrunkWalk:
         for t in np.arange(0.05, 1.05, 0.05):
             current_pos = self._pos + t*step_vector
 
-            for obs in self.obstacles:
-                if obs.check_for_collision(current_pos, t):
-                    return array2tuple(current_pos), t
-                
+            # for obs in self.obstacles:
+            obs = self.obstacles[0]
+            if obs.check_for_collision(current_pos, t):
+                return array2tuple(current_pos), t
+
         return array2tuple(current_pos), None
     
 
     def _gen_rnd_subdests(self) -> list[np.ndarray]:
-        scales = [uniform(1, 1.5) for i in range(10)]
-        angles = [choice((1, -1))*uniform(0*np.pi/180, 45*np.pi/180) for i in range(10)]
+        angles = [choice((1, -1))*uniform(self.min_angle, np.pi/2) for i in range(10)]
         angles.sort(key=lambda a: abs(a))
 
         r = np.sqrt( self._step_vector[0]**2 + self._step_vector[1]**2 )
@@ -96,7 +98,21 @@ class DrunkWalk:
 
         new_thetas = [theta + a for a in angles]
 
-        result = [np.array( s*r*np.cos(a), s*r*np.sin(a) ) for s, a in zip(scales, new_thetas)]
+        result = [np.array( r*np.cos(a), r*np.sin(a) ) for a in new_thetas]
+
+        return result
+
+
+    def _gen_static_subdests(self) -> list[np.ndarray]:
+        angles = list(np.linspace(-np.pi / 2, np.pi / 2, 10))
+        angles.sort(key=lambda a: abs(a))
+
+        r = np.sqrt(self._step_vector[0] ** 2 + self._step_vector[1] ** 2)
+        theta = np.arctan2(self._step_vector[1], self._step_vector[0])
+
+        new_thetas = [theta + a for a in angles]
+
+        result = [np.array(r * np.cos(a), r * np.sin(a)) for a in new_thetas]
 
         return result
 
@@ -123,10 +139,10 @@ class DrunkWalk:
         # if obs.distance_to(self._pos) < 0.1:
         #     return
         
-        # if (dist := obs.distance_to(self._target) - 0.075) < 0:
-        #     v = obs.get_vector(self._target)
-        #     self._target += dist*(v/np.linalg.norm(v))
-
+        if (dist := obs.distance_to(self._target) - 0.075) < 0:
+            v = obs.get_vector(self._target)
+            self._target += dist*(v/np.linalg.norm(v))
+        
         # if np.dot(obs.get_vector(self._pos), self._step_vector) >= 0:
         self.obstacles.append(obs)
 
