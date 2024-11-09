@@ -33,7 +33,7 @@ class RightBack(BaseStrategy):
     def defense_target(self):
         ball = self._match.ball
         field = self._match.field
-        y = field.leftPenaltyStretch[1] - 0.2
+        #y = field.leftPenaltyStretch[1] - 0.2
         
         op_data = self._closest_opponent()
         x_op = op_data[0]
@@ -63,12 +63,13 @@ class RightBack(BaseStrategy):
     def _defense_pos(self, x_robot, y_robot, theta, closest):
         ball = self._match.ball
         field = self._match.field
-        y = field.leftPenaltyStretch[1] - 0.2
+        #y = field.leftPenaltyStretch[1] - 0.2
+        y = field.penaltyAreaWidth + ((field.fieldWidth - field.penaltyAreaWidth) / 2) - 0.2
 
         # x_min = (y-ball.y)*((-ball.x)/(y_goal_min-ball.y))+ball.x
         # x_max = (y-ball.y)*((-ball.x)/(y_goal_max-ball.y))+ball.x
         x_min = 0.15
-        x_max = field.leftPenaltyStretch[0]
+        x_max = field.penaltyAreaDepth
 
         if closest < 0.15:
             x = ((y-y_robot)*(1/tan(theta))) + x_robot
