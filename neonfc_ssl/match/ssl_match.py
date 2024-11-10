@@ -2,6 +2,7 @@ import logging
 from neonfc_ssl.entities import OmniRobot, Ball, Field
 from neonfc_ssl.possession_tracker import FloatPossessionTracker as PossessionTracker
 from neonfc_ssl.state_controller import StateController
+from neonfc_ssl.api import Api
 
 
 class SSLMatch:
@@ -27,6 +28,8 @@ class SSLMatch:
         self.goalkeeper_id = 0
         self.team_color = self._game.config['match']['team_color']
         self.opponent_color = 'yellow' if self._game.config['match']['team_color'] == 'blue' else 'blue'
+
+        self.api: Api = None
 
         self.logger = logging.getLogger("match")
 
@@ -59,6 +62,9 @@ class SSLMatch:
         self.game_state = StateController(self)
 
         self.possession = PossessionTracker(self, self.game_state)
+
+        self.api = Api(self, self._game.config)
+        self.api.start()
 
         self.logger.info("Match module started!")
 
@@ -97,6 +103,8 @@ class SSLMatch:
         self.active_opposites = [r for r in self.opposites if not r.missing]
 
         self.logger.game("frame", extra=extra)
+
+        self.api.send_data()
 
         self.game_state.update(ref_command)
 
