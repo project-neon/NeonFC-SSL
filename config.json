@@ -4,7 +4,8 @@
         "host_ip": "localhost",
         "vision_port": 10006,
         "autoref_port": 10010,
-        "command_port": 20011
+        "command_port": 20011,
+        "api_port": 43210
     },
     "serial": {
         "command_port": "/dev/ttyACM0",
