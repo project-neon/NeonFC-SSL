@@ -8,3 +8,6 @@ from neonfc_ssl.strategies.left_back import LeftBack
 from neonfc_ssl.strategies.base_strategy import BaseStrategy
 from neonfc_ssl.strategies.test import Test
 from neonfc_ssl.strategies.passer import Passer
+from neonfc_ssl.strategies.prepare_ballplacement import BallPlacement
+from neonfc_ssl.strategies.prepare_kickoff import Kickoff
+from neonfc_ssl.strategies.prepare_penalty import Penalty
