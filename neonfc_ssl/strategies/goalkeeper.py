@@ -58,8 +58,8 @@ class GoalKeeper(BaseStrategy):
         ball = self._match.ball
         field = self._match.field
 
-        y_goal_min = (field.fieldWidth/2)-field.goalWidth/2
-        y_goal_max = (field.fieldWidth/2)+field.goalWidth/2
+        y_goal_min = (field.fieldWidth/2)-field.goalWidth/2 - 0.1
+        y_goal_max = (field.fieldWidth/2)+field.goalWidth/2 + 0.1
 
         y_max = ((y_goal_max - ball.y) / (-ball.x)) * (x - ball.x) + ball.y
         y_min = ((y_goal_min - ball.y) / (-ball.x)) * (x - ball.x) + ball.y
@@ -68,7 +68,7 @@ class GoalKeeper(BaseStrategy):
     
     def ball_proj(self):
         ball = self._match.ball
-        x = 0.2
+        x = 0.1
 
         ang = atan2(-self._robot.y+self._match.ball.y, -self._robot.x+self._match.ball.x)
 
