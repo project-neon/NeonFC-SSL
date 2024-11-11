@@ -131,8 +131,8 @@ class Control:
 
         # -- Opponent Robots -- #
         [path_planning.add_dynamic_obstacle(r, 0.2, np.array((r.vx, r.vy))) for r in self._match.active_opposites]
-        [path_planning.add_dynamic_obstacle(r, 0.2, np.array((r.vx, r.vy)))
-         for r in self._match.active_robots if r != command.robot]
+        # [path_planning.add_dynamic_obstacle(r, 0.2, np.array((r.vx, r.vy)))
+        #  for r in self._match.active_robots if r != command.robot]
 
         next_point = path_planning.find_path()
 
@@ -142,3 +142,6 @@ class Control:
         dt = reduce_ang(command.target_pose[2] - command.robot.theta)
 
         command.move_speed = (dx * self.KP, dy * self.KP, dt * self.KP_ang)
+
+        if self._game.referee.is_stopped():
+            command.limit_speed(1.5)

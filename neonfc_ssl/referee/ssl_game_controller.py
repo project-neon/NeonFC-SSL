@@ -49,6 +49,12 @@ class SSLGameControllerReferee(threading.Thread):
 
         return not (_is_halted or _is_stopped)
 
+    def is_stopped(self):
+        return self._referee_message.get('command') == 'STOP'
+
+    def is_halted(self):
+        return self._referee_message.get('command') == 'HALT'
+
     def simplify(self):
         return {"command": self.get_command(), "team": self.get_team(), "pos": self.get_designated_position()}
 
