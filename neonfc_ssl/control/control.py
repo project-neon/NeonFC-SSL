@@ -131,8 +131,8 @@ class Control:
 
         # -- Opponent Robots -- #
         [path_planning.add_dynamic_obstacle(r, 0.2, np.array((r.vx, r.vy))) for r in self._match.active_opposites]
-        [path_planning.add_dynamic_obstacle(r, 0.2, np.array((r.vx, r.vy)))
-         for r in self._match.active_robots if r != command.robot]
+        # [path_planning.add_dynamic_obstacle(r, 0.2, np.array((r.vx, r.vy)))
+        #  for r in self._match.active_robots if r != command.robot]
 
         next_point = path_planning.find_path()
 

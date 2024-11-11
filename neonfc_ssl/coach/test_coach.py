@@ -15,16 +15,22 @@ class Coach(BaseCoach):
         self.lb = LeftBack(self, self._match)
         self.libero1 = Libero(self, self._match, self.defensive_positions)
         self.libero2 = Libero(self, self._match, self.defensive_positions)
+        self.libero3 = Libero(self, self._match, self.defensive_positions)
+        self.libero4 = Libero(self, self._match, self.defensive_positions)
         self.ballholder = BallHolder(self, self._match)
 
     def decide(self):
         # self._active_robots[0].set_strategy(self.rb)
-        self._active_robots[0].set_strategy(self.lb)
-        #self._active_robots[1].set_strategy(self.libero1)
+        self._active_robots[0].set_strategy(self.keeper)
+        self._active_robots[1].set_strategy(self.libero1)
+        self._active_robots[2].set_strategy(self.libero2)
+        self._active_robots[3].set_strategy(self.libero3)
+        self._active_robots[4].set_strategy(self.libero4)
+        self._active_robots[5].set_strategy(self.ballholder)
 
-        n=1
+        n=4
         pos = self._libero_y_positions(n)
-        robots = self._active_robots[0:n]
+        robots = self._active_robots[1:n+1]
         self.cost_matrix(pos, robots)
 
     def _closest_opponent(self):
@@ -71,7 +77,6 @@ class Coach(BaseCoach):
 
         y = y_max if y > y_max else y
         y = y_min if y < y_min else y
-
       
         return y
 
@@ -127,4 +132,4 @@ class Coach(BaseCoach):
         lines, columns = linear_sum_assignment(cost_matrix)
         for robot, pos in zip(lines, columns):
             y = desired_pos[pos][1]
-            self.defensive_positions[f'libero_{defensive_robots[robot].robot_id}'] = y
+            self.defensive_positions[defensive_robots[robot].robot_id] = y

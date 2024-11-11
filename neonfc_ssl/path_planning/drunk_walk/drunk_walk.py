@@ -141,7 +141,8 @@ class DrunkWalk:
         
         if (dist := obs.distance_to(self._target) - 0.075) < 0:
             v = obs.get_vector(self._target)
-            self._target += dist*(v/np.linalg.norm(v))
+            if (v_norm := np.linalg.norm(v)) != 0:
+                self._target += dist*(v/v_norm)
         
         # if np.dot(obs.get_vector(self._pos), self._step_vector) >= 0:
         self.obstacles.append(obs)
