@@ -51,7 +51,9 @@ class GoalKeeper(BaseStrategy):
             self.active = next
             self.active.start(self._robot, target=target)
 
-        return self.active.decide()
+        out = self.active.decide()
+        out.ignore_area = True
+        return out
 
     # calcula os limites do y
     def limit_y(self, x, y):

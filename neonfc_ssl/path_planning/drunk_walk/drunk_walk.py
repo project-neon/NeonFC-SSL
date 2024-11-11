@@ -136,8 +136,8 @@ class DrunkWalk:
 
     
     def _add_obstacle(self, obs: Obstacle):
-        # if obs.distance_to(self._pos) < 0.1:
-        #     return
+        if obs.distance_to(self._pos) < 0.1 and isinstance(obs, StaticObstacle):
+            return
         
         if (dist := obs.distance_to(self._target) - 0.075) < 0:
             v = obs.get_vector(self._target)
