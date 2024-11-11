@@ -138,7 +138,6 @@ class GoalKeeper(BaseStrategy):
 
         else:
             lib_y.sort()
-            print(lib_y)
             dist_between_libs = abs(lib_y[1]-lib_y[0])
 
             if dist_between_libs > 0.23:
