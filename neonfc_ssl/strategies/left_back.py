@@ -70,8 +70,8 @@ class LeftBack(BaseStrategy):
 
         y = self.y_position()
         x_min = 0.15
-        # x_max = field.leftPenaltyStretch[0]
-        x_max = field.penaltyAreaDepth
+        x_max = field.leftPenaltyStretch[0]
+        # x_max = field.penaltyAreaDepth
 
         if closest < 0.15:
             x = ((y - y_robot) * (1 / tan(theta))) + x_robot
