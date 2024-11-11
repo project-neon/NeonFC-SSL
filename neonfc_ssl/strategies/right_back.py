@@ -32,8 +32,21 @@ class RightBack(BaseStrategy):
         return self.active.decide()
     
     def defense_target(self):
-        target_theta = atan2(-self._robot.y + self._match.ball.y, -self._robot.x + self._match.ball.x)
-        return *self.expected_position(), target_theta
+        ball = self._match.ball
+        field = self._match.field
+        #y = field.leftPenaltyStretch[1] - 0.2
+        theta = atan2(-self._robot.y+self._match.ball.y, -self._robot.x+self._match.ball.x)
+        
+        op_data = self._closest_opponent()
+        x_op = op_data[0]
+        y_op = op_data[1]
+        theta = op_data[2]
+        closest = op_data[3]
+
+        target = self._defense_pos(x_op, y_op, theta, closest)
+        
+        return [target[0], target[1], theta]
+
 
     def _closest_opponent(self):
         ball = self._match.ball
@@ -62,9 +75,18 @@ class RightBack(BaseStrategy):
     def x_position(self, x_robot, y_robot, theta, closest):
         ball = self._match.ball
         field = self._match.field
+
+        #y = field.leftPenaltyStretch[1] - 0.2
+        #y = field.penaltyAreaWidth + ((field.fieldWidth - field.penaltyAreaWidth) / 2) - 0.2
+
+        # x_min = (y-ball.y)*((-ball.x)/(y_goal_min-ball.y))+ball.x
+        # x_max = (y-ball.y)*((-ball.x)/(y_goal_max-ball.y))+ball.x
+
         y = self.y_position()
+
         x_min = 0.15
         x_max = field.leftPenaltyStretch[0]
+        # x_max = field.penaltyAreaDepth
 
         if closest < 0.15:
             x = ((y-y_robot)*(1/tan(theta))) + x_robot

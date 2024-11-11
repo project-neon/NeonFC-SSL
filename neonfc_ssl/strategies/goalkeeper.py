@@ -31,7 +31,7 @@ class GoalKeeper(BaseStrategy):
 
     def _start(self):
         self.active = self.states['move_to_pose']
-        self.active.start(self._robot, target=self.defense_target)
+        self.active.start(self._robot, target=self.defense)
 
     def decide(self):
         next = self.active.update()
@@ -47,7 +47,7 @@ class GoalKeeper(BaseStrategy):
                 self.active.start(self._robot)
 
         else:
-            target = self.defense_target()
+            target = self.defense()
             self.active = next
             self.active.start(self._robot, target=target)
 
@@ -56,21 +56,19 @@ class GoalKeeper(BaseStrategy):
     # calcula os limites do y
     def limit_y(self, x, y):
         ball = self._match.ball
-        # y_goal_min = 2.5 + 0.15
-        # y_goal_max = 3.5 - 0.15
-        y_goal_min = 0.2 + 0.1
-        y_goal_max = 1.34 - 0.1
+        field = self._match.field
 
-        y_max = ((y_goal_max - ball.y) / (-ball.x)) * (x - ball.x) + ball.y + 0.1
-        y_min = ((y_goal_min - ball.y) / (-ball.x)) * (x - ball.x) + ball.y - 0.1
+        y_goal_min = (field.fieldWidth/2)-field.goalWidth/2 - 0.1
+        y_goal_max = (field.fieldWidth/2)+field.goalWidth/2 + 0.1
+
+        y_max = ((y_goal_max - ball.y) / (-ball.x)) * (x - ball.x) + ball.y
+        y_min = ((y_goal_min - ball.y) / (-ball.x)) * (x - ball.x) + ball.y
         new_y = max(min(y, y_max, y_goal_max), y_min, y_goal_min)
         return new_y
-
-
-    # calcula a posição de defesa do robô
-    def defense_target(self):
+    
+    def ball_proj(self):
         ball = self._match.ball
-        x = 0.2
+        x = 0.1
 
         ang = atan2(-self._robot.y+self._match.ball.y, -self._robot.x+self._match.ball.x)
 
@@ -108,13 +106,57 @@ class GoalKeeper(BaseStrategy):
 
         y = self.limit_y(x, y)
 
-        # gambiarra p defender mais rapido
-        if y > self.field.fieldWidth/2:
-            y += 0.09
-        else:
-            y -= 0.09
-
         return [x, y, ang]
+    
+    def y(self, x, x0, y0):
+        ball = self._match.ball
+        y = ((x-ball.x)*((ball.y - y0)/(ball.x - x0))) + ball.y
+        return y
+
+    def defense(self):
+        ball = self._match.ball
+        x = 0.2
+        theta = atan2(-self._robot.y+self._match.ball.y, -self._robot.x+self._match.ball.x)
+        ang = atan2(ball.vx, ball.vy) if abs(ball.vx) > 0.05 else 0
+
+        lib_y = []
+        lib_x = []
+        for robot in self._match.active_robots:
+            if robot.strategy.name == 'Libero':
+                lib_y.append(robot.y)
+                lib_x.append(robot.x)
+
+        if len(lib_y) == 1:
+            if 0 >= ang >= -1.57:
+                y = self.y(x, lib_x[0], lib_y[0]-0.1)
+    
+            elif -3.14 <= ang <= -1.57:
+                y = self.y(x, lib_x[0], lib_y[0]+0.1)
+            
+            else:
+                y = ball.y
+
+        else:
+            lib_y.sort()
+            print(lib_y)
+            dist_between_libs = abs(lib_y[1]-lib_y[0])
+
+            if dist_between_libs > 0.23:
+                y = self.ball_proj()[1]
+
+            else:
+                if 0 >= ang >= -1.57:
+                    y = self.y(x, lib_x[0], max(lib_y)+0.1)
+    
+                elif -3.14 <= ang <= -1.57:
+                    y = self.y(x, lib_x[0], min(lib_y)-0.1)
+
+                else:
+                    y = ball.y
+        
+        y = self.limit_y(x, y)
+
+        return[x, y, theta]
 
     def ball_in_area(self):
         if (self._match.ball.x < 1) and (self._match.ball.y > 2) and (self._match.ball.y < 4):
