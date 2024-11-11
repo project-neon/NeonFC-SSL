@@ -66,6 +66,48 @@ class GoalKeeper(BaseStrategy):
         new_y = max(min(y, y_max, y_goal_max), y_min, y_goal_min)
         return new_y
     
+    def ball_proj(self):
+        ball = self._match.ball
+        x = 0.2
+
+        ang = atan2(-self._robot.y+self._match.ball.y, -self._robot.x+self._match.ball.x)
+
+        # bola quase parada
+        if ball.vx > 0.05:
+            y = self.limit_y(x, ball.y)
+            return [x, y, 0]
+
+        # bola a frente do meio campo
+        elif ball.x > self.field.halfwayLine[0]:
+            return [x, self.field.fieldWidth/2, 0]
+
+        # checa o robo adversario mais próximo
+        closest = 100000
+        for robot in self._match.opposites:
+            dist = distance_between_points([ball.x, ball.y], [robot.x, robot.y])
+            if dist < closest:
+                closest = dist
+                theta = reduce_ang(robot.theta - pi)
+                x_robot = robot.x
+                y_robot = robot.y
+
+        # se o robo adversario mais prox da bola estiver perto (15 cm)
+        if closest < 0.15:
+            y = tan(theta) * (x - x_robot) + y_robot
+
+        # bola quase parada
+        elif abs(ball.vx) < 0.05:
+            y = self.limit_y(x, ball.y)
+            return [x, y, ang]
+
+        # proj da bola (robo adversario longe)
+        else:
+            y = (ball.vy / ball.vx) * (x - ball.x) + ball.y
+
+        y = self.limit_y(x, y)
+
+        return [x, y, ang]
+    
     def y(self, x, x0, y0):
         ball = self._match.ball
         y = ((x-ball.x)*((ball.y - y0)/(ball.x - x0))) + ball.y
@@ -84,17 +126,34 @@ class GoalKeeper(BaseStrategy):
                 lib_y.append(robot.y)
                 lib_x.append(robot.x)
 
-        x_lib = min(lib_x) 
-        if 0 >= ang >= -1.57:
-            y_lib = min(lib_y) - 0.2
+        if len(lib_y) == 1:
+            if 0 >= ang >= -1.57:
+                y = self.y(x, lib_x[0], lib_y[0]-0.1)
     
-        elif -3.14 <= ang <= -1.57:
-            y_lib = max(lib_y) + 0.2
-        
-        else:
-            y_lib = ball.y
+            elif -3.14 <= ang <= -1.57:
+                y = self.y(x, lib_x[0], lib_y[0]+0.1)
+            
+            else:
+                y = ball.y
 
-        y = (x - x_lib)*((self.y(x, x_lib, y_lib)-y_lib)/(x - x_lib)) + y_lib
+        else:
+            lib_y.sort()
+            print(lib_y)
+            dist_between_libs = abs(lib_y[1]-lib_y[0])
+
+            if dist_between_libs > 0.23:
+                y = self.ball_proj()[1]
+
+            else:
+                if 0 >= ang >= -1.57:
+                    y = self.y(x, lib_x[0], max(lib_y)+0.1)
+    
+                elif -3.14 <= ang <= -1.57:
+                    y = self.y(x, lib_x[0], min(lib_y)-0.1)
+
+                else:
+                    y = ball.y
+        
         y = self.limit_y(x, y)
 
         return[x, y, theta]
