@@ -5,7 +5,7 @@ from math import atan2
 
 class BallPlacement(BaseStrategy):
     def __init__(self, name, coach, match):
-        super().__init__('Kickoff', coach, match)
+        super().__init__('BallPlacement', coach, match)
         self.name = name
         self._match = match
         self._coach = coach
