@@ -36,7 +36,7 @@ class SerialComm:
         message = "<"
 
         for robot in self._config['match']['robots_ids']:
-            message += f"{robot},{round(0, 4)},{round(0, 4)},{round(0, 4)}"
+            message += f"{robot},{round(0, 2)},{round(0, 2)},{round(0, 2)}"
 
         message = message[:-1] + '>'
 
@@ -49,9 +49,9 @@ class SerialComm:
             robot.global_speed_to_local_speed()
             message += (
                 f"{robot.robot.robot_id},"
-                f"{round(robot.local_speed[0], 4)},"
-                f"{round(robot.local_speed[1], 4)},"
-                f"{round(robot.local_speed[2], 4)},"
+                f"{round(robot.local_speed[0], 2)},"
+                f"{round(robot.local_speed[1], 2)},"
+                f"{round(robot.local_speed[2], 2)},"
             )
 
         message = message[:-1] + '>'

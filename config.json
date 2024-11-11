@@ -1,10 +1,11 @@
 {
     "network" : {
         "multicast_ip": "224.5.23.2",
-        "host_ip": "localhost",
+        "host_ip": "192.168.15.5",
         "vision_port": 10006,
         "autoref_port": 10010,
-        "command_port": 20011
+        "command_port": 20011,
+        "api_port": 43210
     },
     "serial": {
         "command_port": "/dev/ttyACM0",

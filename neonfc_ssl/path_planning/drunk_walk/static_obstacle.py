@@ -11,10 +11,12 @@ class StaticObstacle(Obstacle):
     length: float = 0
     height: float = 0
     end: np.ndarray = field(init=False)
+      
 
     def __post_init__(self):
         self.end = self.start + np.array([self.length, self.height])
 
+        
     def get_vector(self, origin: np.ndarray) -> np.ndarray:
         dx = max(self.start[0] - origin[0], 0, origin[0] - self.end[0])
         dy = max(self.start[1] - origin[1], 0, origin[1] - self.end[1])
