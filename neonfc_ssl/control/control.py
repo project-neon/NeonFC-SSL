@@ -142,3 +142,6 @@ class Control:
         dt = reduce_ang(command.target_pose[2] - command.robot.theta)
 
         command.move_speed = (dx * self.KP, dy * self.KP, dt * self.KP_ang)
+
+        if self._game.referee.is_stopped():
+            command.limit_speed(1.5)
