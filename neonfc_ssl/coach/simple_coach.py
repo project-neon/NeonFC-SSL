@@ -1,7 +1,7 @@
 import math
 from neonfc_ssl.coach import BaseCoach
 from neonfc_ssl.commons.math import distance_between_points
-from neonfc_ssl.strategies import BaseStrategy, Receiver, BallHolder, GoalKeeper, Libero, Still, LeftBack, RightBack
+from neonfc_ssl.strategies import BaseStrategy, Receiver, BallHolder, GoalKeeper, Libero, Still, LeftBack, RightBack, PrepPenalty, PrepBallPlacement, PrepKickoff
 from scipy.optimize import linear_sum_assignment
 import numpy as np
 
@@ -44,11 +44,40 @@ class Coach(BaseCoach):
         }
         self._secondary_attack_strategies[self._gk_id] = self._strategy_gk
 
+        # Prepare to fouls strategies
+        self.prepare_kickoff = PrepKickoff(self, self._match)
+        self.prepare_penalty = PrepPenalty(self, self._match)
+        self.prepare_freekick = PrepBallPlacement(self, self._match)
+
     def decide(self):
+        # if self._match.game_state.current_state.name != 'Run':
+        #     self._fouls()
+            
+        # else:
         if self.has_possession:
             self._defending()
         else:
             self._defending()
+
+    def _fouls(self):
+        if self._match.game_state.current_state.name == 'PrepareKickoff':
+            for robot in self._active_robots:
+                if robot.strategy.name == 'Ball Holder':
+                    robot.set_strategy(self.prepare_kickoff)
+                    break
+
+        elif self._match.game_state.current_state.name == "PreparePenalty":
+            for robot in self._active_robots:
+                if robot.strategy.name != 'Goalkeeper':
+                    robot.set_strategy(self.prepare_kickoff)
+        
+        elif self._match.game_state.current_state.name == 'BallPlacement':
+            for robot in self._active_robots:
+                if robot.strategy.name == 'Ball Holder':
+                    robot.set_strategy(self.prepare_freekick)
+                    break
+        
+        # n sei oq por no else ou se faz uma condição p todos as outras condições
 
     def _defending(self):
         # when in possession check the ball carrier (smaller time to ball), than it becomes ball carrier
@@ -59,7 +88,7 @@ class Coach(BaseCoach):
             n_liberos -= 1
 
         pos = self._libero_y_positions(n_liberos)
-
+        
         if self._use_left_back():
             pos = np.append(pos, [self._left_back_strategy.expected_position()], axis=0)
             n_liberos += 1
@@ -71,6 +100,7 @@ class Coach(BaseCoach):
         available_robots.sort(key=lambda r: r.y)
 
         liberos = available_robots[:n_liberos]
+        # com dois robos essa lista retorna vazia crasha o codigo
         self.cost_matrix(pos, liberos)
 
         # the carrier receives its strategies and every other receives its secondary strategies
@@ -84,8 +114,8 @@ class Coach(BaseCoach):
             else:
                 robot.set_strategy(self._secondary_attack_strategies[robot.robot_id])
 
-        for robot in self._active_robots:
-            print(robot.robot_id, robot.strategy.name)
+        # for robot in self._active_robots:
+        #     print(robot.robot_id, robot.strategy.name)
 
     def _use_right_back(self):
         field = self._match.field
