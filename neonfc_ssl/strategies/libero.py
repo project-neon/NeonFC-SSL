@@ -30,8 +30,8 @@ class Libero(BaseStrategy):
         return self.active.decide()
       
     def _defense_front(self):
-        x = self._match.field.penaltyAreaDepth + 0.2
-        y = self.defensive_positions[self._robot.robot_id]
+        x = self.defensive_positions[self._robot.robot_id][0]
+        y = self.defensive_positions[self._robot.robot_id][1]
         # print(f"robot_{self._robot.robot_id}: desired_y = {y}")
         theta = atan2(-self._robot.y + self._match.ball.y, -self._robot.x + self._match.ball.x)
         return [x, y, theta]

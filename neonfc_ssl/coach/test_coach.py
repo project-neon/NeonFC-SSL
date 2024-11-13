@@ -131,5 +131,4 @@ class Coach(BaseCoach):
 
         lines, columns = linear_sum_assignment(cost_matrix)
         for robot, pos in zip(lines, columns):
-            y = desired_pos[pos][1]
-            self.defensive_positions[defensive_robots[robot].robot_id] = y
+            self.defensive_positions[defensive_robots[robot].robot_id] = desired_pos[pos]

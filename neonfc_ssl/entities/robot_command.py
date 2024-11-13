@@ -14,6 +14,7 @@ class RobotCommand:
     target_pose: Optional[Tuple[float, float, float]] = None  # x, y, theta
     kick_speed: Tuple[float, float] = (0, 0)  # vx, vz
     spinner: bool = False
+    ignore_area: bool = False
 
     # Control
     move_speed: Optional[Tuple[float, float, float]] = None  # vx, vy, omega

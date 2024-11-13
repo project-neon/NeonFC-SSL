@@ -52,6 +52,7 @@ class SerialComm:
                 f"{round(robot.local_speed[0], 2)},"
                 f"{round(robot.local_speed[1], 2)},"
                 f"{round(robot.local_speed[2], 2)},"
+                f"{0 if abs(robot.kick_speed[0]) < 0.05 else 9},"
             )
 
         message = message[:-1] + '>'

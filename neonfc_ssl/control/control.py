@@ -82,18 +82,19 @@ class Control:
         L = 12
         m = 0
 
-        # # -- Friendly Goalkeeper Area -- #
-        # path_planning.add_static_obstacle(
-        #     (0, self._field.fieldWidth/2 - self._field.penaltyAreaWidth/2),
-        #     self._field.penaltyAreaDepth,
-        #     self._field.penaltyAreaWidth
-        # )
-        # # -- Friendly Goal Posts -- #
-        # path_planning.add_static_obstacle(
-        #     (-r-goal_depht-post_thickness, self._field.fieldWidth/2 - r - goal_height/2),
-        #     2*r + post_thickness + goal_depht,
-        #     2*r + goal_height
-        # )
+        # -- Friendly Goalkeeper Area -- #
+        if not command.ignore_area:
+            path_planning.add_static_obstacle(
+                (0, self._field.fieldWidth/2 - self._field.penaltyAreaWidth/2),
+                self._field.penaltyAreaDepth,
+                self._field.penaltyAreaWidth
+            )
+        # -- Friendly Goal Posts -- #
+        path_planning.add_static_obstacle(
+            (-r-goal_depht-post_thickness, self._field.fieldWidth/2 - r - goal_height/2),
+            2*r + post_thickness + goal_depht,
+            2*r + goal_height
+        )
         # -- Opponent Goalkeeper Area -- #
         path_planning.add_static_obstacle(
             (self._field.fieldLength - self._field.penaltyAreaDepth,

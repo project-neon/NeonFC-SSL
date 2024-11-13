@@ -22,15 +22,15 @@ class Passer(BaseStrategy):
 
             return wrapped
 
-        self.states['go_to_ball'].add_transition(self.states['pass'], self.states['go_to_ball'].complete)
-        # self.states['pass'].add_transition(self.states['go_to_ball'], not_func(self.states['go_to_ball'].complete))
+        self.states['go_to_ball'].add_transition(self.states['pass'], self.states['pass'].start_pass)
+        self.states['pass'].add_transition(self.states['go_to_ball'], self.states['pass'].stop_pass)
 
     def _start(self):
         self.active = self.states['go_to_ball']
         self.active.start(self._robot)
 
     def decide(self):
-        target = self._match.active_opposites[0]
+        target = self._match.active_opposites[-1]
 
         next = self.active.update()
         if next != self.active:

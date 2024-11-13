@@ -46,7 +46,10 @@ class BallHolder(BaseStrategy):
 
             return wrapped
 
-        self.states['pass'].add_transition(self.states['go_to_ball'], not_func(close_to_ball))
+        def wrapped_stop_pass():
+            return SimplePass.stop_pass(robot=self._robot, ball=self._match.ball)
+
+        self.states['pass'].add_transition(self.states['go_to_ball'], wrapped_stop_pass)
         self.states['wait'].add_transition(self.states['go_to_ball'], not_func(close_to_ball))
         self.states['shoot'].add_transition(self.states['go_to_ball'], not_func(close_to_ball))
         self.states['dribble'].add_transition(self.states['wait'], not_func(close_to_ball))

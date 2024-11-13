@@ -112,7 +112,7 @@ class Coach(BaseCoach):
             n_liberos += 1
 
         available_robots = self._clear_robot_list(self._active_robots[:], [self._gk_id, new_carrier])
-        available_robots.sort(key=lambda r: r.y)
+        available_robots.sort(key=lambda r: r.x)
 
         liberos = available_robots[:n_liberos]
         # com dois robos essa lista retorna vazia crasha o codigo
@@ -128,19 +128,16 @@ class Coach(BaseCoach):
                 robot.set_strategy(self._libero_strategies[robot.robot_id])
             else:
                 robot.set_strategy(self._secondary_attack_strategies[robot.robot_id])
-
-        # for robot in self._active_robots:
-        #     print(robot.robot_id, robot.strategy.name)
-
+                
     def _use_right_back(self):
         field = self._match.field
-        limit = (field.fieldWidth - field.penaltyAreaWidth)/2
+        limit = (field.fieldWidth - field.penaltyAreaWidth)/2 + 0.5
 
         return self._match.ball.x < field.fieldLength/2 and self._match.ball.y < limit
 
     def _use_left_back(self):
         field = self._match.field
-        limit = (field.fieldWidth + field.penaltyAreaWidth)/2
+        limit = (field.fieldWidth + field.penaltyAreaWidth)/2 - 0.5
 
         return self._match.ball.x < field.fieldLength/2 and self._match.ball.y > limit
 
@@ -262,8 +259,7 @@ class Coach(BaseCoach):
 
         lines, columns = linear_sum_assignment(cost_matrix)
         for robot, pos in zip(lines, columns):
-            y = desired_pos[pos][1]
-            self.defensive_positions[defensive_robots[robot].robot_id] = y
+            self.defensive_positions[defensive_robots[robot].robot_id] = desired_pos[pos]
 
     @staticmethod
     def _clear_robot_list(robot_list: list, rm_id):
