@@ -185,6 +185,7 @@ class SimplePass(BaseSkill):
 
         self.wait.add_transition(self.step_back, self.wait.check_complete)
         self.step_back.add_transition(self.turn, self.step_back.check_complete)
+        self.step_back.add_transition(self.step_forward, self.turn.check_complete)
         self.turn.add_transition(self.step_forward, self.turn.check_complete)
         self.step_forward.add_transition(self.passing, self.step_forward.check_complete)
 

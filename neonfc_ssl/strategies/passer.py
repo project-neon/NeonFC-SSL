@@ -32,7 +32,7 @@ class Passer(BaseStrategy):
     def decide(self):
         target = self._match.active_opposites[-1]
 
-        next = self.active.update()
+        next = self.active.update(robot=self._robot, ball=self._match.ball)
         if next != self.active:
             self.active = next
             self.active.start(self._robot, target=target)
