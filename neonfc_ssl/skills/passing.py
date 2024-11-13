@@ -1,7 +1,7 @@
 from neonfc_ssl.algorithms.fsm import State
 from neonfc_ssl.skills.base_skill import BaseSkill
 from neonfc_ssl.entities import RobotCommand, OmniRobot
-from neonfc_ssl.commons.math import reduce_ang
+from neonfc_ssl.commons.math import reduce_ang, distance_between_points
 import math
 
 
@@ -199,11 +199,18 @@ class SimplePass(BaseSkill):
         next = self.active.update()
 
         if next != self.active:
-            print(self.active.name)
             self.active = next
             self.active.start(self._robot, self.target)
 
         return self.active.decide()
+
+    @staticmethod
+    def start_pass(robot, ball):
+        return distance_between_points(robot, ball) < 0.1
+
+    @staticmethod
+    def stop_pass(robot, ball):
+        return distance_between_points(robot, ball) > 0.15
 
 
 class ChipPass(State):
