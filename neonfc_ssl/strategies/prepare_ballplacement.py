@@ -3,20 +3,16 @@ from neonfc_ssl.strategies.base_strategy import BaseStrategy
 from math import atan2
 
 
-class BallPlacement(BaseStrategy):
-    def __init__(self, name, coach, match):
+class PrepBallPlacement(BaseStrategy):
+    def __init__(self, coach, match):
         super().__init__('BallPlacement', coach, match)
-        self.name = name
-        self._match = match
-        self._coach = coach
-        self._robot = None
 
         self.states = {
             'wait': Wait(coach, match),
             'move_to_pose': MoveToPose(coach, match)
         }
 
-        self.states['wait'].add_transition(self.states['move_to_pose'])
+        self.states['wait'].add_transition(self.states['move_to_pose'], self.move_to_pose_transition)
 
     def _start(self):
         self.active = self.states['Wait']

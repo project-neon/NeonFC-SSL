@@ -5,20 +5,16 @@ import numpy as np
 from scipy.optimize import linear_sum_assignment
 
 
-class Penalty(BaseStrategy):
-    def __init__(self, name, coach, match):
+class PrepPenalty(BaseStrategy):
+    def __init__(self, coach, match):
         super().__init__('Penalty', coach, match)
-        self.name = name
-        self._match = match
-        self._coach = coach
-        self._robot = None
 
         self.states = {
             'wait': Wait(coach, match),
             'move_to_pose': MoveToPose(coach, match)
         }
 
-        self.states['wait'].add_transition(self.states['move_to_pose'])
+        self.states['wait'].add_transition(self.states['move_to_pose'], self.move_to_pose_transition)
 
         self.defensive_positions = {}
 
