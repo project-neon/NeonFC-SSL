@@ -58,28 +58,28 @@ class GoalKeeper(BaseStrategy):
         ball = self._match.ball
         field = self._match.field
 
-        y_goal_min = (field.fieldWidth/2)-field.goalWidth/2 - 0.1
-        y_goal_max = (field.fieldWidth/2)+field.goalWidth/2 + 0.1
+        y_goal_min = (field.fieldWidth/2)-field.goalWidth/2
+        y_goal_max = (field.fieldWidth/2)+field.goalWidth/2
 
         y_max = ((y_goal_max - ball.y) / (-ball.x)) * (x - ball.x) + ball.y
         y_min = ((y_goal_min - ball.y) / (-ball.x)) * (x - ball.x) + ball.y
+
         new_y = max(min(y, y_max, y_goal_max), y_min, y_goal_min)
         return new_y
     
-    def ball_proj(self):
+    def ball_proj(self, x=0.1):
         ball = self._match.ball
-        x = 0.1
 
         ang = atan2(-self._robot.y+self._match.ball.y, -self._robot.x+self._match.ball.x)
 
         # bola quase parada
         if ball.vx > 0.05:
             y = self.limit_y(x, ball.y)
-            return [x, y, 0]
+            return y
 
         # bola a frente do meio campo
         elif ball.x > self.field.halfwayLine[0]:
-            return [x, self.field.fieldWidth/2, 0]
+            return self.field.fieldWidth/2
 
         # checa o robo adversario mais próximo
         closest = 100000
@@ -98,7 +98,7 @@ class GoalKeeper(BaseStrategy):
         # bola quase parada
         elif abs(ball.vx) < 0.05:
             y = self.limit_y(x, ball.y)
-            return [x, y, ang]
+            return y
 
         # proj da bola (robo adversario longe)
         else:
@@ -106,7 +106,7 @@ class GoalKeeper(BaseStrategy):
 
         y = self.limit_y(x, y)
 
-        return [x, y, ang]
+        return y
     
     def y(self, x, x0, y0):
         ball = self._match.ball
@@ -115,7 +115,7 @@ class GoalKeeper(BaseStrategy):
 
     def defense(self):
         ball = self._match.ball
-        x = 0.2
+        x = 0.1
         theta = atan2(-self._robot.y+self._match.ball.y, -self._robot.x+self._match.ball.x)
         ang = atan2(ball.vx, ball.vy) if abs(ball.vx) > 0.05 else 0
 
@@ -127,22 +127,28 @@ class GoalKeeper(BaseStrategy):
                 lib_x.append(robot.x)
 
         if len(lib_y) == 1:
-            if 0 >= ang >= -1.57:
-                y = self.y(x, lib_x[0], lib_y[0]-0.1)
-    
-            elif -3.14 <= ang <= -1.57:
-                y = self.y(x, lib_x[0], lib_y[0]+0.1)
+            dist_lib_desired = abs(lib_y[0] - self.ball_proj(self._match.field.penaltyAreaDepth + 0.2))
+            
+            if dist_lib_desired > 0.1:
+                y = self.ball_proj()
             
             else:
-                y = ball.y
+                if 0 >= ang >= -1.57:
+                    y = self.y(x, lib_x[0], lib_y[0]-0.1)
+        
+                elif -3.14 <= ang <= -1.57:
+                    y = self.y(x, lib_x[0], lib_y[0]+0.1)
+                
+                else:
+                    y = ball.y
 
-        else:
+        elif len(lib_y) > 1:
             lib_y.sort()
-            print(lib_y)
             dist_between_libs = abs(lib_y[1]-lib_y[0])
-
-            if dist_between_libs > 0.23:
-                y = self.ball_proj()[1]
+            dist_lib_desired = abs(lib_y[1] - self.ball_proj(self._match.field.penaltyAreaDepth + 0.2))
+            
+            if dist_lib_desired > 0.1 or dist_between_libs > 0.23:
+                y = self.ball_proj()
 
             else:
                 if 0 >= ang >= -1.57:
@@ -153,6 +159,9 @@ class GoalKeeper(BaseStrategy):
 
                 else:
                     y = ball.y
+        
+        else:
+            y = self.ball_proj()
         
         y = self.limit_y(x, y)
 
