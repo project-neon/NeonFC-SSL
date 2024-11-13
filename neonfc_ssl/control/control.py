@@ -4,6 +4,7 @@ import time
 import socket
 from neonfc_ssl.entities import Field, RobotCommand
 from neonfc_ssl.match.ssl_match import SSLMatch
+from neonfc_ssl.state_controller import StateController
 from neonfc_ssl.coach import BaseCoach
 from neonfc_ssl.commons.math import reduce_ang
 from neonfc_ssl.path_planning.drunk_walk import DrunkWalk
@@ -18,6 +19,7 @@ class Control:
         self._match: SSLMatch = None
         self._field: Field = None
         self._coach: BaseCoach = None
+        self._game_state: StateController = None
 
         # Control Objects
         self.commands: list[RobotCommand] = None
@@ -45,6 +47,7 @@ class Control:
         # Get Last Layer Classes
         self._match = self._game.match
         self._field = self._match.field
+        self._game_state = self._match.game_state
         self._coach = self._game.coach
 
         self.logger.info("Control module started!")
@@ -143,5 +146,5 @@ class Control:
 
         command.move_speed = (dx * self.KP, dy * self.KP, dt * self.KP_ang)
 
-        if self._game.referee.is_stopped():
+        if self._game_state.is_stopped():
             command.limit_speed(1.5)

@@ -131,6 +131,9 @@ class StateController:
             self.current_state = next_state
             self.current_state.start(self._match, ref['team'], ref['pos'])
 
+    def is_stopped(self):
+        return self.current_state.name in ["Stop", "PrepareKickOff", "BallPlacement", "PreparePenalty"]
+
     def __eq__(self, other):
         return self.current_state.name == other
 
