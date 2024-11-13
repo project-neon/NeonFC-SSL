@@ -114,7 +114,10 @@ class Game:
                     t.append(time.time())
                     self.control.update()
                     t.append(time.time())
-                    self.comm.update()
+                    if self.referee.is_halted():
+                        self.comm.freeze()
+                    else:
+                        self.comm.update()
                     t.append(time.time())
                     if self.config['match'].get('time_logging', False):
                         self.logger.info(f"total:  {1/(t[4]-t[0]):.2f} Hz")

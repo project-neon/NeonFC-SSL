@@ -20,7 +20,7 @@ class Field:
 
     def update(self, frame):
         if frame is None:
-            return 
+            return
         
         self.fieldLength = frame.get('fieldLength')
         self.fieldWidth = frame.get('fieldWidth')
