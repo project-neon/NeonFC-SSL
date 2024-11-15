@@ -34,7 +34,8 @@ class BallHolder(BaseStrategy):
             'go_to_ball': GoToBall(coach, match),
             'wait': Wait(coach, match),
             'shoot': Shoot(coach, match),
-            'dribble': Dribble(coach, match)
+            'dribble': Dribble(coach, match),
+            'wait_outside_area': MoveToPose(coach, match)
         }
 
         def close_to_ball():
@@ -46,19 +47,31 @@ class BallHolder(BaseStrategy):
 
             return wrapped
 
+        def and_func(f1, f2):
+            def wrapped():
+                return f1() and f2()
+
+            return wrapped
+
         def wrapped_stop_pass():
             return SimplePass.stop_pass(robot=self._robot, ball=self._match.ball)
 
-        self.states['pass'].add_transition(self.states['go_to_ball'], wrapped_stop_pass)
-        self.states['wait'].add_transition(self.states['go_to_ball'], not_func(close_to_ball))
-        self.states['shoot'].add_transition(self.states['go_to_ball'], not_func(close_to_ball))
+        self.states['pass'].add_transition(self.states['go_to_ball'], and_func(wrapped_stop_pass, not_func(self.ball_inside_area)))
+        self.states['wait'].add_transition(self.states['go_to_ball'], and_func(not_func(close_to_ball), not_func(self.ball_inside_area)))
+        self.states['shoot'].add_transition(self.states['go_to_ball'], and_func(not_func(close_to_ball), not_func(self.ball_inside_area)))
         self.states['dribble'].add_transition(self.states['wait'], not_func(close_to_ball))
         self.states['go_to_ball'].add_transition(self.states['wait'], close_to_ball)
         self.states['dribble'].add_transition(self.states['pass'], self.pass_transition)
         self.states['dribble'].add_transition(self.states['shoot'], self.shoot_transition)
-        self.states['wait'].add_transition(self.states['pass'], self.pass_transition)
-        self.states['wait'].add_transition(self.states['shoot'], self.shoot_transition)
-        self.states['wait'].add_transition(self.states['dribble'], self.dribble_transition)
+        self.states['wait'].add_transition(self.states['pass'], and_func(self.pass_transition, not_func(self.ball_inside_area)))
+        self.states['wait'].add_transition(self.states['shoot'], and_func(self.shoot_transition, not_func(self.ball_inside_area)))
+        self.states['wait'].add_transition(self.states['dribble'], and_func(self.dribble_transition, not_func(self.ball_inside_area)))
+        self.states['go_to_ball'].add_transition(self.states['wait_outside_area'], self.ball_inside_area)
+        self.states['pass'].add_transition(self.states['wait_outside_area'], self.ball_inside_area)
+        self.states['shoot'].add_transition(self.states['wait_outside_area'], self.ball_inside_area)
+        self.states['dribble'].add_transition(self.states['wait_outside_area'], self.ball_inside_area)
+        self.states['wait'].add_transition(self.states['wait_outside_area'], self.ball_inside_area)
+        self.states['wait_outside_area'].add_transition(self.states['wait'], not_func(self.ball_inside_area))
 
         self.message = None
         self.passing_to = None
@@ -85,6 +98,8 @@ class BallHolder(BaseStrategy):
                 self.active.start(self._robot, target=self._pass_target)
             elif self.active.name == "Dribble":
                 self.active.start(self._robot, target=self._pass_target)
+            elif self.active.name == "MoveToPose":
+                self.active.start(self._robot, target=[self._match.field.fieldLength/2, self._match.field.fieldWidth/2, 0])
             else:
                 self.active.start(self._robot)
 
@@ -97,7 +112,9 @@ class BallHolder(BaseStrategy):
             ]).encode('ascii')
             self.sock.sendto(MESSAGE, (self.UDP_IP, self.UDP_PORT))
 
-        return self.active.decide()
+        com = self.active.decide()
+        com.ignore_friendly_robots = False
+        return com
 
     def update_shooting_value(self):
         if self._robot.x > 9:
@@ -153,6 +170,12 @@ class BallHolder(BaseStrategy):
 
         return False
 
+    def ball_inside_area(self):
+        f = self._match.field
+        b = self._match.ball
+        return (b.x <= f.penaltyAreaDepth and
+                (f.penaltyAreaWidth - f.fieldWidth)/2 <= b.y <= (f.penaltyAreaWidth + f.fieldWidth)/2)
+
     def shoot_transition(self):
         if self._shooting_value >= self._pass_value:
             return True
@@ -160,7 +183,24 @@ class BallHolder(BaseStrategy):
         return False
 
     def _passing_targets(self):
+        return self._close_targets()
+
+    def _close_targets(self):
         dx, dy = 0.1, 0.1
+
+        r = 1.5
+        lwx, upx = min(self._robot.x + r, self._match.field.fieldLength), max(self._robot.x - r, 0)
+        lwy, upy = min(self._robot.y + r, self._match.field.fieldWidth), max(self._robot.y - r, 0)
+
+        x = np.linspace(lwx + dx, upx - dx, 10)
+        y = np.linspace(lwy + dy, upy - dy, 10)
+        xs, ys = np.meshgrid(x, y)
+
+        return np.transpose(np.array([xs.flatten(), ys.flatten()]))
+
+    def _attack_targets(self):
+        dx, dy = 0.1, 0.1
+
         # Area 0
         lwx, upx = 4.5, 9
         lwy, upy = 0, 2

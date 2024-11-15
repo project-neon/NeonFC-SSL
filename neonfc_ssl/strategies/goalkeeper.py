@@ -19,31 +19,31 @@ class GoalKeeper(BaseStrategy):
         }
 
         def not_func(f):
-            def wrapped():
-                return not f()
+            def wrapped(**kwargs):
+                return not f(**kwargs)
 
             return wrapped
 
         self.states["move_to_pose"].add_transition(self.states["go_to_ball"], self.go_to_ball_transition)
-        self.states["go_to_ball"].add_transition(self.states["pass"], self.pass_transition)
+        self.states["go_to_ball"].add_transition(self.states["pass"], SimplePass.start_pass)
         self.states["go_to_ball"].add_transition(self.states["move_to_pose"], not_func(self.go_to_ball_transition))
-        self.states["pass"].add_transition(self.states["move_to_pose"], self.move_to_pose_transition)
+        self.states["pass"].add_transition(self.states["move_to_pose"], SimplePass.stop_pass)
 
     def _start(self):
         self.active = self.states['move_to_pose']
         self.active.start(self._robot, target=self.defense)
 
     def decide(self):
-        next = self.active.update()
-
+        next = self.active.update(robot=self._robot, ball=self._match.ball)
         if next.name != "MoveToPose":
-            self.active = next
 
-            if self.active.name == "Pass":
-                _passing_to = Point(5, 4)
-                self.active.start(self._robot, target=_passing_to)
-
+            if next.name == "Pass":
+                if next.name != self.active.name:
+                    self.active = next
+                    _passing_to = Point(5, 4)
+                    self.active.start(self._robot, target=_passing_to)
             else:
+                self.active = next
                 self.active.start(self._robot)
 
         else:
@@ -170,11 +170,11 @@ class GoalKeeper(BaseStrategy):
         return[x, y, theta]
 
     def ball_in_area(self):
-        if (self._match.ball.x < 1) and (self._match.ball.y > 2) and (self._match.ball.y < 4):
+        if (self._match.ball.x < self.field.penaltyAreaDepth) and (self._match.ball.y > ((self.field.fieldWidth - self.field.penaltyAreaWidth)/2)) and (self._match.ball.y < ((self.field.fieldWidth - self.field.penaltyAreaWidth)/2)+self.field.penaltyAreaWidth):
             return True
         return False
 
-    def move_to_pose_transition(self):
+    def move_to_pose_transition(self, **kwargs):
         is_in_rect = point_in_rect([self._match.ball.x, self._match.ball.y],
                                    [self.field.leftFirstPost[0], self.field.leftFirstPost[1],
                                     self.field.goalWidth, 2 * self.field.fieldLength])
@@ -183,15 +183,19 @@ class GoalKeeper(BaseStrategy):
             return True
         return False
 
-    def go_to_ball_transition(self):
+    def go_to_ball_transition(self, **kwargs):
         area_ymin = (self.field.fieldWidth - self.field.penaltyAreaWidth)/2
         area_ymax = area_ymin + self.field.penaltyAreaWidth
 
-        if (self._match.ball.x < self.field.penaltyAreaDepth) and (self._match.ball.y > area_ymin) and (self._match.ball.y < area_ymax):
-            return True
-        return False
+        ball_inside_area = ((self._match.ball.x < self.field.penaltyAreaDepth) and
+                            (self._match.ball.y > area_ymin) and
+                            (self._match.ball.y < area_ymax))
 
-    def pass_transition(self):
+        ball_slow = self._match.ball.get_speed() < 0.1
+
+        return ball_slow and ball_inside_area
+
+    def pass_transition(self, **kwargs):
         is_in_rect = point_in_rect([self._match.ball.x, self._match.ball.y],
                                    [self._robot.x - 0.15, self._robot.y - 0.15, 0.3, 0.3])
 

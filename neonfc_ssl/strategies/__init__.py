@@ -13,3 +13,4 @@ from neonfc_ssl.strategies.prepare_kickoff import PrepKickoff
 from neonfc_ssl.strategies.prepare_penalty import PrepPenalty
 from neonfc_ssl.strategies.prepare_gk_penalty import PrepGKPenalty
 from neonfc_ssl.strategies.prepare_bh_penalty import PrepBHPenalty
+from neonfc_ssl.strategies.prepare_secondary_kickoff import PrepSecondKickoff

@@ -4,6 +4,7 @@ import struct
 import threading
 import logging
 from google.protobuf.json_format import MessageToJson
+from google.protobuf.message import DecodeError
 from neonfc_ssl.protocols.gc.ssl_gc_referee_message_pb2 import Referee
 
 
@@ -31,8 +32,15 @@ class SSLGameControllerReferee(threading.Thread):
         while self.running:
             c = Referee()
             data = self.referee_sock.recv(1024)
-            c.ParseFromString(data)
-            self._referee_message = json.loads(MessageToJson(c))
+            try:
+                c.ParseFromString(data)
+                self._referee_message = json.loads(MessageToJson(c))
+            except DecodeError as e:
+                self.referee_sock.close()
+                del self.referee_sock
+                self.referee_sock = self._create_socket()
+                self.logger.error(e)
+                self._referee_message = {'command':'HALT'}
         self.stop()
 
     def stop(self):

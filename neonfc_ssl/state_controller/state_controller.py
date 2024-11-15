@@ -1,7 +1,9 @@
 from neonfc_ssl.algorithms.fsm import State
 from neonfc_ssl.commons.math import distance_between_points
 from time import time
+from dataclasses import dataclass
 import logging
+from typing import Optional
 
 
 class GameState(State):
@@ -12,12 +14,20 @@ class GameState(State):
         self.ball_initial_position = None
         self.color = None
         self.position = None
+        self.last_state: Optional[LastStateInfo] = None
 
-    def start(self, match, color, position):
+    def start(self, match, color, position, last_state):
         self.start_time = time()
         self.ball_initial_position = (match.ball.x, match.ball.y)
         self.color = color
         self.position = position
+        self.last_state = last_state
+
+
+@dataclass
+class LastStateInfo:
+    first_touch: bool
+    first_touch_id: int
 
 
 class StateController:
@@ -30,6 +40,8 @@ class StateController:
         self.logger = logging.Logger("StateController")
         console_handler.setFormatter(log_formatter)
         self.logger.addHandler(console_handler)
+
+        self.last_state: Optional[LastStateInfo] = None
 
         # Following appendix B found in: https://robocup-ssl.github.io/ssl-rules/sslrules.pdf
         self.states = {
@@ -51,14 +63,16 @@ class StateController:
             return trig
 
         def after_secs(delay):
+            @self.save_info(False)
             def trig(origin, **kwargs):
                 return time() - origin.start_time >= delay
             return trig
 
         after_10 = after_secs(10)
 
-        def ball_moved(origin, ball, **kwargs):
-            return distance_between_points(ball, origin.ball_initial_position) <= 0.05
+        @self.save_info(True)
+        def ball_moved(ball, **kwargs):
+            return ball.get_speed() >= 0.05
 
         # _ -> Halt
         halt = on_ref_message('HALT')
@@ -122,14 +136,33 @@ class StateController:
         self.states['FreeKick'].add_transition(self.states['Run'], after_10)
 
         self.current_state = self.states['Halt']
-        self.current_state.start(self._match, None, None)
+        self.current_state.start(self._match, None, None, None)
+
+    def save_info(self, touched):
+        def wrapper(f):
+            def wrapped(poss, *args, **kwargs):
+                out = f(*args, **kwargs)
+                if out:
+                    self.last_state = LastStateInfo(touched, poss.current_closest.robot_id if touched else None)
+                return out
+            return wrapped
+        return wrapper
 
     def update(self, ref):
-        next_state = self.current_state.update(origin=self.current_state, cmd=ref['command'], ball=self._match.ball)
+        next_state = self.current_state.update(
+            origin=self.current_state,
+            cmd=ref['command'],
+            ball=self._match.ball,
+            poss=self._match.possession
+        )
+
+        # TODO: This lacks some way to reset the last touch info when the robot that did the initial touch can touch again
+
         if next_state != self.current_state:
             self.logger.info(f"Changing state {self.current_state.name} -> {next_state.name}")
             self.current_state = next_state
-            self.current_state.start(self._match, ref['team'], ref['pos'])
+            self.current_state.start(self._match, ref['team'], ref['pos'], self.last_state)
+            self.last_state = None
 
     def is_stopped(self):
         return self.current_state.name in ["Stop", "PrepareKickOff", "BallPlacement", "PreparePenalty"]
