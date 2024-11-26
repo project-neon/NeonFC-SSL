@@ -17,7 +17,7 @@ class Coach(BaseCoach):
         # Especial cases
         self._strategy_gk = GoalKeeper(self, self._match)
         self._strategy_bh = BallHolder(self, self._match)
-        self._gk_id = 0
+        self._gk_id = 1
 
         # ------ n=6 ------ #
         # 1 fixed keeper
@@ -109,8 +109,7 @@ class Coach(BaseCoach):
         our_team = self._match.game_state.current_state.color == self._match.team_color
 
         # Our kickoff
-        if current_state in ['PrepareKickOff', 'KickOff'] and our_team:
-            print('aaa')
+        if current_state in ['KickOff'] and our_team:
             for robot in self._active_robots:
                 if robot.strategy.name != 'Ball Holder' and robot.robot_id != self._gk_id:
                     robot.set_strategy(self.ec_kickoff_secondary)
@@ -119,6 +118,17 @@ class Coach(BaseCoach):
             for robot in self._active_robots:
                 if robot.strategy.name == 'Ball Holder':
                     robot.set_strategy(self.ec_kickoff)
+                    break
+
+        if current_state in ['PrepareKickOff'] and our_team:
+            for robot in self._active_robots:
+                if robot.strategy.name != 'Ball Holder' and robot.robot_id != self._gk_id:
+                    robot.set_strategy(self.ec_kickoff_secondary)
+                    break
+
+            for robot in self._active_robots:
+                if robot.strategy.name == 'Ball Holder':
+                    robot.set_strategy(self.prepare_freekick)
                     break
 
         # Their kickoff
@@ -205,7 +215,39 @@ class Coach(BaseCoach):
                 robot.set_strategy(self._libero_strategies[robot.robot_id])
             else:
                 robot.set_strategy(self._secondary_attack_strategies[robot.robot_id])
-                
+
+    def _use_shadow_defense(self):
+        closest = min(self._match.active_opposites, key=lambda r: distance_between_points(r, self._match.ball), default=None)
+        keeper = min(self._match.active_opposites, key=lambda r: distance_between_points(r, (self._match.field.fieldLength, self._match.field.fieldWidth/2)), default=None)
+
+        def can_attack(r):
+            if r == closest or r == keeper:
+                return False
+
+            if r.y > 0.75*self._match.field.fieldLength:
+                return False
+
+            return True
+
+        if len(self._match.active_robots) - len(self._match.active_opposites) < 2:
+            return False, None
+
+        opps = self._match.active_opposites[:]
+        opps.sort(key=lambda opp: opp.x)
+        opps = list(filter(can_attack, opps))
+
+        if len(opps) == 0:
+            return False, None
+
+        opp = opps[0]
+        field = self._match.field
+        ang = math.atan2(-opp.y + field.fieldWidth / 2, -opp.x)
+
+        x = opp.x + math.cos(ang) * 0.65
+        y = opp.y + math.sin(ang) * 0.65
+
+        return True, (x, y)
+
     def _use_right_back(self):
         field = self._match.field
         limit = (field.fieldWidth - field.penaltyAreaWidth) / 2 + 0.2

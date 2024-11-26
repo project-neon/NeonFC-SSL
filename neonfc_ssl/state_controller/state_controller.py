@@ -72,7 +72,7 @@ class StateController:
 
         @self.save_info(True)
         def ball_moved(ball, **kwargs):
-            return ball.get_speed() >= 0.05
+            return ball.get_speed() >= 0.07
 
         # _ -> Halt
         halt = on_ref_message('HALT')

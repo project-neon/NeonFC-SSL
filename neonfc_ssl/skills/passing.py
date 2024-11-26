@@ -207,7 +207,7 @@ class SimplePass(BaseSkill):
 
     @staticmethod
     def start_pass(robot, ball):
-        return distance_between_points(robot, ball) < 0.1
+        return distance_between_points(robot, ball) < 0.12
 
     @staticmethod
     def stop_pass(robot, ball):

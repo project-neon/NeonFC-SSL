@@ -167,7 +167,7 @@ class GoalKeeper(BaseStrategy):
         
         y = self.limit_y(x, y)
 
-        return[x, y, theta]
+        return [x, y, theta]
 
     def ball_in_area(self):
         if (self._match.ball.x < self.field.penaltyAreaDepth) and (self._match.ball.y > ((self.field.fieldWidth - self.field.penaltyAreaWidth)/2)) and (self._match.ball.y < ((self.field.fieldWidth - self.field.penaltyAreaWidth)/2)+self.field.penaltyAreaWidth):

@@ -188,7 +188,7 @@ class BallHolder(BaseStrategy):
     def _close_targets(self):
         dx, dy = 0.1, 0.1
 
-        r = 1.5
+        r = .7
         lwx, upx = min(self._robot.x + r, self._match.field.fieldLength), max(self._robot.x - r, 0)
         lwy, upy = min(self._robot.y + r, self._match.field.fieldWidth), max(self._robot.y - r, 0)
 

@@ -55,7 +55,7 @@ class Game:
         self.control = Control(self)
 
         # Output Layer
-        self.comm = GrComm(self)
+        self.comm = SerialComm(self)
 
         # Register exit handler
         atexit.register(self.stop_threads)
