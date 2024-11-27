@@ -55,7 +55,7 @@ class Game:
         self.control = Control(self)
 
         # Output Layer
-        self.comm = GrComm(self)
+        self.comm = SerialComm(self)
 
         # Register exit handler
         atexit.register(self.stop_threads)
@@ -118,6 +118,7 @@ class Game:
                         self.comm.freeze()
                     else:
                         self.comm.update()
+                    # self.comm.update()
                     t.append(time.time())
                     if self.config['match'].get('time_logging', False):
                         self.logger.info(f"total:  {1/(t[4]-t[0]):.2f} Hz")

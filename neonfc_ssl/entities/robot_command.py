@@ -15,6 +15,8 @@ class RobotCommand:
     kick_speed: Tuple[float, float] = (0, 0)  # vx, vz
     spinner: bool = False
     ignore_area: bool = False
+    ignore_ball: bool = True
+    ignore_friendly_robots: bool = True
 
     # Control
     move_speed: Optional[Tuple[float, float, float]] = None  # vx, vy, omega

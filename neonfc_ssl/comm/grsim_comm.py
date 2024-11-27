@@ -68,6 +68,7 @@ class GrComm:
 
         for robot in cmds:
             robot.global_speed_to_wheel_speed()
+            robot.global_speed_to_local_speed()
             command = commands.robot_commands.add()
             command.wheel1 = robot.wheel_speed[0]
             command.wheel2 = robot.wheel_speed[1]
@@ -75,11 +76,11 @@ class GrComm:
             command.wheel4 = robot.wheel_speed[3]
             command.kickspeedx = robot.kick_speed[0]
             command.kickspeedz = robot.kick_speed[1]
-            command.veltangent = 0
-            command.velnormal = 0
-            command.velangular = 0
+            command.veltangent = robot.local_speed[0]
+            command.velnormal = robot.local_speed[1]
+            command.velangular = robot.local_speed[2]
             command.spinner = robot.spinner
-            command.wheelsspeed = True
+            command.wheelsspeed = False
             command.id = robot.robot.robot_id
 
         self.send(commands)
