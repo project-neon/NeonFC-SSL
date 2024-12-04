@@ -135,8 +135,14 @@ class Control:
 
         # -- Opponent Robots -- #
         [path_planning.add_dynamic_obstacle(r, 0.2, np.array((r.vx, r.vy))) for r in self._match.active_opposites]
-        # [path_planning.add_dynamic_obstacle(r, 0.2, np.array((r.vx, r.vy)))
-        #  for r in self._match.active_robots if r != command.robot]
+
+        if not command.ignore_friendly_robots:
+            [path_planning.add_dynamic_obstacle(r, 0.2, np.array((r.vx, r.vy)))
+             for r in self._match.active_robots if r != command.robot]
+
+        # -- Ball -- #
+        if not command.ignore_ball:
+            path_planning.add_dynamic_obstacle(self._match.ball, 0.2, speed=(0,0))
 
         next_point = path_planning.find_path()
 

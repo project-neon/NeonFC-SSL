@@ -17,7 +17,7 @@ class PrepBHPenalty(BaseStrategy):
         return self.active.decide()
 
     def position(self):
-        x = self._match.ball.x - 0.13
+        x = self._match.ball.x - 0.5
         y = self._match.ball.y
         theta = atan2(-self._robot.y + self._match.ball.y, -self._robot.x + self._match.ball.x)
 

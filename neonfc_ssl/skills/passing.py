@@ -21,7 +21,7 @@ class Wait(State):
         return RobotCommand(spinner=True, robot=self.robot, move_speed=(0, 0, 0))
 
     def check_complete(self):
-        return self.robot.match.ball.get_speed() < 0.01
+        return self.robot.match.ball.get_speed() < 0.03
 
 
 class StepBack(State):
@@ -185,6 +185,7 @@ class SimplePass(BaseSkill):
 
         self.wait.add_transition(self.step_back, self.wait.check_complete)
         self.step_back.add_transition(self.turn, self.step_back.check_complete)
+        self.step_back.add_transition(self.step_forward, self.turn.check_complete)
         self.turn.add_transition(self.step_forward, self.turn.check_complete)
         self.step_forward.add_transition(self.passing, self.step_forward.check_complete)
 
@@ -206,11 +207,11 @@ class SimplePass(BaseSkill):
 
     @staticmethod
     def start_pass(robot, ball):
-        return distance_between_points(robot, ball) < 0.1
+        return distance_between_points(robot, ball) < 0.12
 
     @staticmethod
     def stop_pass(robot, ball):
-        return distance_between_points(robot, ball) > 0.15
+        return distance_between_points(robot, ball) > 0.18
 
 
 class ChipPass(State):
