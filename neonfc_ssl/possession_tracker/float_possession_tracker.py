@@ -1,10 +1,14 @@
 import logging
 from collections import deque
 import numpy as np
+from neonfc_ssl.match.match_data import Possession
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from neonfc_ssl.match import SSLMatch
 
 
 class FloatPossessionTracker:
-    def __init__(self, match, state_controller):
+    def __init__(self, match: 'SSLMatch', state_controller):
         self.poss = 0
         self.last_poss = deque([], maxlen=10)
         self.match = match
@@ -39,6 +43,8 @@ class FloatPossessionTracker:
 
         if self.in_ball_contact and not sq_dist_to_ball(my_closest) <= 0.0196: # (robot_radius + 0.05m)^2
             self.in_ball_contact = False
+
+        return Possession(my_closest.id, op_closest.id, self.poss)
 
     def get_possession(self):
         return self.match.team_color if self.poss > 0 else self.match.opponent_color
