@@ -4,46 +4,25 @@ from concurrent import futures
 from neonfc_ssl.strategies import Still
 from neonfc_ssl.match.ssl_match import SSLMatch
 from neonfc_ssl.entities import RobotCommand
+from neonfc_ssl.core import Layer
 
 
-class BaseCoach(ABC):
-    def __init__(self, game):
-        self._game = game
-
-        # Tracking Layer Classes
-        self._match: SSLMatch = None
-
-        # Other Useful Parameters
-        self._active_robots = None
-        self._n_active_robots = None
-        self._robots = None
-
-        self.commands: list[RobotCommand] = []
-        self.new_data = False
-
+class BaseCoach(Layer, ABC):
+    def __init__(self, config, log_q, event_pipe):
+        super().__init__("DecisionLayer", config, log_q, event_pipe)
         self.events = {}
-
-        # Coach Logger
-        self.logger = logging.getLogger("coach")
-
-        # Defensive Positions (desired y to each robot)
-        self.defensive_positions = {}
-
-    def start(self):
-        self.logger.info("Starting coach module starting ...")
-
-        # Last Layer Classes
-        self._match = self._game.match
-        self._robots = self._match.robots
-
-        for r in self._robots:
-            r.set_strategy(Still(self, self._match))
-
-        self._start()
-
-        self.logger.info("Coach module started!")
+        self.strategies = []
 
     def _start(self):
+        self.log(logging.INFO, "Starting coach module starting ...")
+
+        self.strategies = [Still() for _ in self.strategies]
+
+        self._start_coach()
+
+        self.log(logging.INFO, "Coach module started!")
+
+    def _start_coach(self):
         pass
 
     @abstractmethod
