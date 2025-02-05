@@ -6,10 +6,11 @@ import logging
 from google.protobuf.json_format import MessageToJson
 from google.protobuf.message import DecodeError
 from neonfc_ssl.protocols.gc.ssl_gc_referee_message_pb2 import Referee
+from neonfc_ssl.input_l.input_data import GameController
 
 
 class SSLGameControllerReferee(threading.Thread):
-    def __init__(self):
+    def __init__(self, config, log):
         super(SSLGameControllerReferee, self).__init__()
         self.referee_port = 10003
         self.host = '224.5.23.1'
@@ -19,14 +20,14 @@ class SSLGameControllerReferee(threading.Thread):
 
         self._referee_message = {}
 
-        self.logger = logging.getLogger("input")
+        self.logger = log
 
     def run(self):
         """Calls _create_socket() and parses the status message from the Referee."""
-        self.logger.info("Starting referee module...")
-        self.logger.info(f"Creating socket with address: {self.host} and port: {self.referee_port}")
+        self.logger(logging.INFO, "Starting referee module...")
+        self.logger(logging.INFO, f"Creating socket with address: {self.host} and port: {self.referee_port}")
         self.referee_sock = self._create_socket()
-        self.logger.info("Referee module started!")
+        self.logger(logging.INFO, "Referee module started!")
 
         self.running = True
         while self.running:
@@ -43,10 +44,18 @@ class SSLGameControllerReferee(threading.Thread):
                 self._referee_message = {'command':'HALT'}
         self.stop()
 
+    def get_data(self) -> GameController:
+        return GameController(
+            can_play=self.can_play(),
+            state=self.get_command(),
+            designated_position=self.get_designated_position(),
+            team=self.get_team()
+        )
+
     def stop(self):
         self.running = False
         self.referee_sock.close()
-        self.logger.info("Referee module stopped!")
+        self.logger(logging.INFO, "Referee module stopped!")
 
     def can_play(self):
         if not self._referee_message:
