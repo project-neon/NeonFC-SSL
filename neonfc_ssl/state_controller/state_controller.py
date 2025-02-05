@@ -1,7 +1,12 @@
 from neonfc_ssl.algorithms.fsm import State
 from neonfc_ssl.commons.math import distance_between_points
+from neonfc_ssl.match.match_data import States, GameState as StateData
 from time import time
 import logging
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from neonfc_ssl.match import SSLMatch
+    from neonfc_ssl.input_l.input_data import GameController
 
 
 class GameState(State):
@@ -13,7 +18,7 @@ class GameState(State):
         self.color = None
         self.position = None
 
-    def start(self, match, color, position):
+    def start(self, match: 'SSLMatch', color, position):
         self.start_time = time()
         self.ball_initial_position = (match.ball.x, match.ball.y)
         self.color = color
@@ -24,12 +29,6 @@ class StateController:
     def __init__(self, match):
         self._match = match
         self.current_state = None
-
-        console_handler = logging.StreamHandler()
-        log_formatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
-        self.logger = logging.Logger("StateController")
-        console_handler.setFormatter(log_formatter)
-        self.logger.addHandler(console_handler)
 
         # Following appendix B found in: https://robocup-ssl.github.io/ssl-rules/sslrules.pdf
         self.states = {
@@ -124,12 +123,18 @@ class StateController:
         self.current_state = self.states['Halt']
         self.current_state.start(self._match, None, None)
 
-    def update(self, ref):
-        next_state = self.current_state.update(origin=self.current_state, cmd=ref['command'], ball=self._match.ball)
+    def update(self, ref: 'GameController') -> StateData:
+        next_state = self.current_state.update(origin=self.current_state, cmd=ref.state, ball=self._match.ball)
         if next_state != self.current_state:
-            self.logger.info(f"Changing state {self.current_state.name} -> {next_state.name}")
+            self._match.log.info(logging.INFO, f"Changing state {self.current_state.name} -> {next_state.name}")
             self.current_state = next_state
-            self.current_state.start(self._match, ref['team'], ref['pos'])
+            self.current_state.start(self._match, ref.team, ref.designated_position)
+
+        return StateData(
+            state=States(self.current_state.name),
+            color=self.current_state.color,
+            position=self.current_state.position
+        )
 
     def is_stopped(self):
         return self.current_state.name in ["Stop", "PrepareKickOff", "BallPlacement", "PreparePenalty"]
