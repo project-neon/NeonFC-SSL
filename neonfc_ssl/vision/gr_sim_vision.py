@@ -5,15 +5,15 @@ import logging
 import threading
 import math
 from google.protobuf.json_format import MessageToJson
+from neonfc_ssl.input_l.input_data import Ball, Robot, Geometry, Entities
 from neonfc_ssl.protocols.grSim import ssl_vision_wrapper_pb2
 
 
 class GrSimVision(threading.Thread):
-    def __init__(self, game) -> None:
+    def __init__(self, config, log) -> None:
         super(GrSimVision, self).__init__()
 
-        self.game = game
-        self.config = self.game.config
+        self.config = config
         self.daemon = True
 
         self.running = False
@@ -22,77 +22,8 @@ class GrSimVision(threading.Thread):
         self.new_data = False
         self.any_geometry = False
 
-        self.raw_geometry = {
-            'fieldLength': 0,
-            'fieldWidth': 0,
-            'goalWidth': 0,
-            'fieldLines': {
-                'LeftGoalLine':{
-                    'p1': {
-                        'x': 0,
-                        'y': 0
-                    }
-                },
-                'RightGoalLine':{
-                    'p1': {
-                        'x': 0,
-                        'y': 0,
-                    }
-                },
-                'HalfwayLine':{
-                    'p1':{
-                        'x': 0,
-                        'y': 0
-                    }
-                },
-                'LeftPenaltyStretch':{
-                    'p1':{
-                        'x': 0,
-                        'y': 0
-                    }
-                },
-                'RightPenaltyStretch':{
-                    'p1':{
-                        'x': 0,
-                        'y': 0
-                    }
-                },
-                'RightGoalBottomLine':{
-                    'p1':{
-                        'x': 0,
-                        'y': 0
-                    }
-                },
-                'LeftGoalBottomLine':{
-                    'p1':{
-                        'x': 0,
-                        'y': 0
-                    }
-                }
-            }
-        }
-
-        self.raw_detection = {
-            'ball': {
-                'x': 0,
-                'y': 0,
-                'tCapture': -1,
-                'cCapture': -1
-            },
-            'robotsBlue': {
-                i: {'x': None, 'y': None, 'theta': None, 'tCapture': -1} for i in range(0, 16)
-            },
-            'robotsYellow': {
-                i: {'x': None, 'y': None, 'theta': None, 'tCapture': -1} for i in range(0, 16)
-            },
-            'meta': {
-                'has_speed': True,
-                'has_height': True,
-                'cameras': {
-                    i: {'last_capture': -1} for i in range(0, 4)
-                }
-            }
-        }
+        self.raw_detection: Entities = Entities(None, {}, {})
+        self.raw_geometry: Geometry = None
 
         self.side_factor = 1
         self.angle_factor = 0
@@ -100,14 +31,14 @@ class GrSimVision(threading.Thread):
         self.vision_port = self.config['network']['vision_port']
         self.host = self.config['network']['multicast_ip']
 
-        self.logger = logging.getLogger("input")
+        self.logger = log
 
     def run(self):
-        self.logger.info(f"Starting SSL-Vision module...")
-        self.logger.info(f"Creating socket with address: {self.host} and port: {self.vision_port}")
+        self.logger(logging.INFO, f"Starting SSL-Vision module...")
+        self.logger(logging.INFO, f"Creating socket with address: {self.host} and port: {self.vision_port}")
         self.vision_sock = self._create_socket()
         self._wait_to_connect()
-        self.logger.info(f"SSL-Vision module started!")
+        self.logger(logging.INFO, f"SSL-Vision module started!")
 
         self.running = True
         while self.running:
@@ -115,16 +46,15 @@ class GrSimVision(threading.Thread):
             data = self.vision_sock.recv(2048)
 
             env.ParseFromString(data)
-        
+
             last_frame = json.loads(MessageToJson(env))
-            self.new_data = self.update_detection(last_frame)
-            self.new_geometry = self.update_geometry(last_frame)
+            self.new_data = self.update_detection(last_frame) or self.new_data
         self.stop()
 
     def stop(self):
         self.running = False
         self.vision_sock.close()
-        self.logger.info(f"SSL-Vision module stopped!")
+        self.logger(logging.INFO, f"SSL-Vision module stopped!")
 
     def update_detection(self, last_frame):
         frame = last_frame.get('detection')
@@ -134,7 +64,6 @@ class GrSimVision(threading.Thread):
 
         t_capture = frame.get('tCapture')
         camera_id = frame.get('cameraId')
-        self.update_camera_capture_number(camera_id, t_capture)
 
         self.side_factor = 1 if self.config['match']['team_side'] == 'left' else -1
         self.angle_factor = 0 if self.config['match']['team_side'] == 'left' else math.pi
@@ -145,95 +74,85 @@ class GrSimVision(threading.Thread):
         robots_blue = frame.get('robotsBlue')
         if robots_blue:
             for robot in robots_blue:
-                self.update_robot_detection(robot, t_capture, camera_id, color='Blue')
+                self.update_robot_detection(robot, t_capture, camera_id, color='blue')
 
         robots_yellow = frame.get('robotsYellow')
         if robots_yellow:
             for robot in robots_yellow:
-                self.update_robot_detection(robot, t_capture, camera_id, color='Yellow')
+                self.update_robot_detection(robot, t_capture, camera_id, color='yellow')
+
+        geometry = last_frame.get('geometry')
+        self.any_geometry = self.any_geometry or self.update_geometry(geometry)
 
         return True
     
-    def update_geometry(self, last_frame):
-        frame = last_frame.get('geometry')
-
+    def update_geometry(self, frame):
         if not frame:
             # pacote de deteccao sem frame
             return False
-        self.any_geometry = True
         
         frame = frame.get('field')
 
-        self.raw_geometry['fieldLength'] = frame.get('fieldLength')/1000
-        self.raw_geometry['fieldWidth'] = frame.get('fieldWidth')/1000
-        self.raw_geometry['goalWidth'] = frame.get('goalWidth')/1000
-        self.raw_geometry['penaltyAreaDepth'] = frame.get('penaltyAreaDepth', 1000)/1000
-        self.raw_geometry['penaltyAreaWidth'] = frame.get('penaltyAreaWidth', 2000)/1000
-
-        self.raw_geometry['fieldLines']['LeftGoalLine']['p1']['x'] = (frame.get('fieldLines')[2].get('p1').get('x')/1000)
-        self.raw_geometry['fieldLines']['RightGoalLine']['p1']['x'] = (frame.get('fieldLines')[3].get('p1').get('x')/1000)
-        self.raw_geometry['fieldLines']['HalfwayLine']['p1']['x'] = (frame.get('fieldLines')[4].get('p1').get('x')/1000)
-        self.raw_geometry['fieldLines']['LeftPenaltyStretch']['p1']['x'] = (frame.get('fieldLines')[6].get('p1').get('x')/1000)
-        self.raw_geometry['fieldLines']['RightPenaltyStretch']['p1']['x'] = (frame.get('fieldLines')[7].get('p1').get('x')/1000)
-        self.raw_geometry['fieldLines']['RightGoalBottomLine']['p1']['x'] = (frame.get('fieldLines')[9].get('p1').get('x')/1000)
-        # self.raw_geometry['fieldLines']['LeftGoalBottomLine']['p1']['x'] = (frame.get('fieldLines')[12].get('p1').get('x')/1000)
-
-        self.raw_geometry['fieldLines']['LeftGoalLine']['p1']['y'] = (frame.get('fieldLines')[2].get('p1').get('y')/1000)
-        self.raw_geometry['fieldLines']['RightGoalLine']['p1']['y'] = (frame.get('fieldLines')[3].get('p1').get('y')/1000)
-        self.raw_geometry['fieldLines']['HalfwayLine']['p1']['y'] = (frame.get('fieldLines')[4].get('p1').get('y')/1000)
-        self.raw_geometry['fieldLines']['LeftPenaltyStretch']['p1']['y'] = (frame.get('fieldLines')[6].get('p1').get('y')/1000)
-        self.raw_geometry['fieldLines']['RightPenaltyStretch']['p1']['y'] = (frame.get('fieldLines')[7].get('p1').get('y')/1000)
-        self.raw_geometry['fieldLines']['RightGoalBottomLine']['p1']['y'] = (frame.get('fieldLines')[9].get('p1').get('y')/1000)
-        # self.raw_geometry['fieldLines']['LeftGoalBottomLine']['p1']['y'] = (frame.get('fieldLines')[12].get('p1').get('y')/1000)
+        self.raw_geometry = Geometry(
+            field_length=frame.get('fieldLength')/1000,
+            field_width=frame.get('fieldWidth')/1000,
+            goal_width=frame.get('goalWidth')/1000,
+            penalty_depth=frame.get('penaltyAreaDepth', 1000)/1000,
+            penalty_width=frame.get('penaltyAreaWidth', 2000)/1000
+        )
 
         return True
 
-    def update_camera_capture_number(self, camera_id, t_capture):
-        last_camera_data = self.raw_detection['meta']['cameras'][camera_id]
-
-        if last_camera_data['last_capture'] > t_capture:
-            return
-
-        self.raw_detection['meta']['cameras'][camera_id] = {
-            'last_capture': t_capture
-        }
-
     def update_ball_detection(self, balls, camera_id):
-        if len(balls) > 0:
-            ball = balls[0]
-            self.raw_detection['ball'] = {
-                'x': self.side_factor * ball.get('x')/1000,
-                'y': self.side_factor * ball.get('y')/1000,
-                'tCapture': ball.get('tCapture'),
-                'cCapture': camera_id
-            }
-
-    def update_robot_detection(self, robot, _timestamp, camera_id, color='Blue'):
-        robot_id = robot.get('robotId')
-        last_robot_data = self.raw_detection[ 
-            'robots' + color
-         ][robot_id]
-
-        if last_robot_data.get('tCapture') > _timestamp:
+        if len(balls) < 1:
             return
-        
-        self.raw_detection[
-            'robots' + color
-         ][robot_id] = {
-            'x': self.side_factor * robot['x']/1000,
-            'y': self.side_factor * robot['y']/1000,
-            'theta': robot['orientation'] + self.angle_factor,
-            'tCapture': _timestamp,
-            'cCapture': camera_id
-        }
-    
-    def get_geometry(self):
-        self.new_data = False
-        return self.raw_geometry
 
-    def get_last_frame(self):
+        ball = balls[0]
+        self.raw_detection.ball = Ball(
+            x=self.side_factor*ball.get('x')/1000,
+            y=self.side_factor*ball.get('y')/1000,
+            timestamp=ball.get('tCapture'),
+            camera_id=camera_id
+        )
+
+    def update_robot_detection(self, robot, _timestamp, camera_id, color='blue'):
+        robot_id = robot.get('robotId')
+
+        # last_robot_data = self.raw_detection[
+        #     'robots' + color
+        #  ][robot_id]
+        #
+        # if last_robot_data.get('tCapture') > _timestamp:
+        #     return
+
+        if color == 'blue':
+            self.raw_detection.robots_blue[robot_id] = Robot(
+                id=robot_id,
+                team=color,
+                x=self.side_factor*robot['x']/1000,
+                y=self.side_factor*robot['x']/1000,
+                theta=robot['orientation'] + self.angle_factor,
+                timestamp=_timestamp,
+                camera_id=camera_id
+            )
+
+        else:
+            self.raw_detection.robots_yellow[robot_id] = Robot(
+                id=robot_id,
+                team=color,
+                x=self.side_factor*robot['x']/1000,
+                y=self.side_factor*robot['x']/1000,
+                theta=robot['orientation'] + self.angle_factor,
+                timestamp=_timestamp,
+                camera_id=camera_id
+            )
+
+    def get_last_frame(self) -> Entities:
         self.new_data = False
         return self.raw_detection
+
+    def get_geometry(self) -> Geometry:
+        return self.raw_geometry
 
     def _wait_to_connect(self):
         self.vision_sock.recv(1024)

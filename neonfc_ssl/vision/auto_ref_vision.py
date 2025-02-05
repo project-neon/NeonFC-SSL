@@ -5,16 +5,15 @@ import logging
 import threading
 import math
 from google.protobuf.json_format import MessageToJson
-
+from neonfc_ssl.input_l.input_data import Ball, Robot, Entities
 from neonfc_ssl.protocols.gc.ssl_vision_wrapper_tracked_pb2 import TrackerWrapperPacket
 
 
 class AutoRefVision(threading.Thread):
-    def __init__(self, game, config_file=None) -> None:
+    def __init__(self, config, log) -> None:
         super(AutoRefVision, self).__init__()
 
-        self.game = game
-        self.config = self.game.config
+        self.config = config
         self.daemon = True
 
         self.running = False
@@ -22,53 +21,21 @@ class AutoRefVision(threading.Thread):
         self._fps = 60
         self.new_data = False
 
-        self.raw_detection = {
-            'ball': {
-                'x': 0.0,
-                'y': 0.0,
-                'z': 0.0,
-                'vx': 0.0,
-                'vy': 0.0,
-                'vz': 0.0,
-                'tCapture': -1
-            },
-            'robotsBlue': {
-                i: {
-                    'x': None, 'y': None, 'theta': None,
-                    'vx': None, 'vy': None, 'w': None,
-                    'tCapture': -1
-                } for i in range(0, 16)
-            },
-            'robotsYellow': {
-                i: {
-                    'x': None, 'y': None, 'theta': None,
-                    'vx': None, 'vy': None, 'w': None,
-                    'tCapture': -1
-                } for i in range(0, 16)
-            },
-            'meta': {
-                'has_speed': True,
-                'has_height': True,
-                'cameras': {
-                    i: {'last_capture': -1} for i in range(0, 4)
-                }
-            }
-        }
-
+        self.raw_detection: Entities = Entities(None, {}, {})
         self.side_factor = 1
         self.angle_factor = 0
 
         self.vision_port = self.config['network']['autoref_port']
         self.host = self.config['network']['multicast_ip']
 
-        self.logger = logging.getLogger("input")
+        self.logger = log
 
     def run(self):
-        self.logger.info(f"Starting AutoRef-Vision module...")
-        self.logger.info(f"Creating socket with address: {self.host} and port: {self.vision_port}")
+        self.logger(logging.INFO, f"Starting AutoRef-Vision module...")
+        self.logger(logging.INFO, f"Creating socket with address: {self.host} and port: {self.vision_port}")
         self.vision_sock = self._create_socket()
         self._wait_to_connect()
-        self.logger.info(f"AutoRef-Vision module started!")
+        self.logger(logging.INFO, f"AutoRef-Vision module started!")
 
         self.running = True
         while self.running:
@@ -76,13 +43,13 @@ class AutoRefVision(threading.Thread):
             data = self.vision_sock.recv(2048)
             env.ParseFromString(data)
             last_frame = json.loads(MessageToJson(env))
-            self.new_data = self.update_detection(last_frame)
+            self.new_data = self.update_detection(last_frame) or self.new_data
         self.stop()
 
     def stop(self):
         self.running = False
         self.vision_sock.close()
-        self.logger.info(f"AutoRef-Vision module stopped!")
+        self.logger(logging.INFO, f"AutoRef-Vision module stopped!")
 
     def update_detection(self, last_frame):
         frame = last_frame.get('trackedFrame', None)
@@ -109,51 +76,60 @@ class AutoRefVision(threading.Thread):
 
         return True
 
-    def update_camera_capture_number(self, camera_id, t_capture):
-        last_camera_data = self.raw_detection['meta']['cameras'][camera_id]
-
-        if last_camera_data['last_capture'] > t_capture:
+    def update_ball_detection(self, balls, _timestamp):
+        if len(balls) < 1:
             return
 
-        self.raw_detection['meta']['cameras'][camera_id] = {
-            'last_capture': t_capture
-        }
-
-    def update_ball_detection(self, balls, _timestamp):
-        if len(balls) > 0:
-            pos = balls[0]['pos']
-            speed = balls[0]['vel']
-            self.raw_detection['ball'] = {
-                'x': self.side_factor*pos['x'],
-                'y': self.side_factor*pos['y'],
-                'z': pos['z'],
-                'vx': self.side_factor*speed['x'],
-                'vy': self.side_factor*speed['y'],
-                'vz': speed['z'],
-                'tCapture': _timestamp
-            }
+        ball = balls[0]
+        pos = ball['pos']
+        speed = ball['vel']
+        self.raw_detection.ball = Ball(
+            x=self.side_factor*pos['x'],
+            y=self.side_factor*pos['y'],
+            z=pos['z'],
+            vx=self.side_factor*speed['x'],
+            vy=self.side_factor*speed['y'],
+            vz=speed['z'],
+            timestamp=_timestamp
+        )
 
     def update_robot_detection(self, robot, _timestamp):
         robot_id = robot['robotId']['id']
-        color = 'Blue' if robot['robotId']['team'] == 'BLUE' else 'Yellow'
+        color = 'blue' if robot['robotId']['team'] == 'BLUE' else 'yellow'
         pos = robot['pos']
         speed = robot['vel']
-        last_robot_data = self.raw_detection['robots' + color][robot_id]
 
+        # last_robot_data = self.raw_detection[color][robot_id]
         # if last_robot_data.get('tCapture') > _timestamp:
         #     return
 
-        self.raw_detection['robots' + color][robot_id] = {
-            'x': self.side_factor*pos['x'],
-            'y': self.side_factor*pos['y'],
-            'theta': robot['orientation'] + self.angle_factor,
-            'vx': self.side_factor*speed['x'],
-            'vy': self.side_factor*speed['y'],
-            'vt': robot['velAngular'],
-            'tCapture': _timestamp
-        }
+        if color == 'blue':
+            self.raw_detection.robots_blue[robot_id] = Robot(
+                id=robot_id,
+                team=color,
+                x=self.side_factor*pos['x'],
+                y=self.side_factor*pos['y'],
+                theta=robot['orientation'] + self.angle_factor,
+                vx=self.side_factor*speed['x'],
+                vy=self.side_factor*speed['y'],
+                vtheta=robot['velAngular'],
+                timestamp=_timestamp
+            )
 
-    def get_last_frame(self):
+        else:
+            self.raw_detection.robots_yellow[robot_id] = Robot(
+                id=robot_id,
+                team=color,
+                x=self.side_factor*pos['x'],
+                y=self.side_factor*pos['y'],
+                theta=robot['orientation'] + self.angle_factor,
+                vx=self.side_factor*speed['x'],
+                vy=self.side_factor*speed['y'],
+                vtheta=robot['velAngular'],
+                timestamp=_timestamp
+            )
+
+    def get_last_frame(self) -> Entities:
         self.new_data = False
         return self.raw_detection
 
