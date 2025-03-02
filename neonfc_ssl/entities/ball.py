@@ -7,7 +7,7 @@ import math
 from neonfc_ssl.match.match_data import TrackedBall
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from neonfc_ssl.input_l.input_data import Geometry, Ball as InputBall
+    from neonfc_ssl.input_layer.input_data import Geometry, Ball as InputBall
 
 
 class Ball:

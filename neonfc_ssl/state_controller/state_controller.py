@@ -7,7 +7,7 @@ import logging
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from neonfc_ssl.match import SSLMatch
-    from neonfc_ssl.input_l.input_data import GameController
+    from neonfc_ssl.input_layer.input_data import GameController
 
 
 class GameState(State):

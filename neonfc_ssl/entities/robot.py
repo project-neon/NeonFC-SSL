@@ -9,7 +9,7 @@ from neonfc_ssl.match.match_data import TrackedRobot
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from neonfc_ssl.input_l.input_data import Robot, Geometry
+    from neonfc_ssl.input_layer.input_data import Robot, Geometry
 
 
 class OmniRobot:

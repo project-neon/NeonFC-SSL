@@ -1,10 +1,5 @@
-from typing import TYPE_CHECKING, Any
-import time
+from typing import Any
 from neonfc_ssl.core import Layer
-from neonfc_ssl.vision.gr_sim_vision import GrSimVision
-from neonfc_ssl.vision.auto_ref_vision import AutoRefVision
-from neonfc_ssl.referee.ssl_game_controller import SSLGameControllerReferee
-from neonfc_ssl.input_l.input_data import InputData
 
 
 class DebugLayer(Layer):
