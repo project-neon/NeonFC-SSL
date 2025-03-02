@@ -63,20 +63,6 @@ class OmniRobot:
             self.data.vy = r.vy
             self.data.vtheta = r.vtheta
 
-    def time_to_ball(self, ball):
-        avg_speed = .35
-        pos = np.array(ball)
-        last_t = 0
-        for _ in range(50):
-            t = distance_between_points(pos, self) / avg_speed
-            pos = ball.pos_after(t)
-
-            if abs(t - last_t) < 0.01:
-                return t
-
-            last_t = t
-        return last_t
-
     def __getitem__(self, item):
         return self.data[item]
 

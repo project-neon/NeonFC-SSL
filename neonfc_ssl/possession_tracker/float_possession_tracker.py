@@ -44,7 +44,7 @@ class FloatPossessionTracker:
         if self.in_ball_contact and not sq_dist_to_ball(my_closest) <= 0.0196: # (robot_radius + 0.05m)^2
             self.in_ball_contact = False
 
-        return Possession(my_closest.id, op_closest.id, self.poss)
+        return Possession(my_closest.id, op_closest.id, self.poss, self.contact_start_position)
 
     def get_possession(self):
         return self.match.team_color if self.poss > 0 else self.match.opponent_color

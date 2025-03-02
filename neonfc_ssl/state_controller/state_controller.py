@@ -153,7 +153,7 @@ class StateController:
 
         return StateData(
             state=States(self.current_state.name),
-            color=self.current_state.color,
+            friendly=self.current_state.color == self._match.team_color,
             position=self.current_state.position
         )
 

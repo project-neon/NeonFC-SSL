@@ -2,10 +2,10 @@ import logging
 import numpy as np
 import time
 import socket
-from neonfc_ssl.entities import Field, RobotCommand
+# from neonfc_ssl.entities import Field, RobotCommand
 from neonfc_ssl.match.ssl_match import SSLMatch
 from neonfc_ssl.state_controller import StateController
-from neonfc_ssl.coach import BaseCoach
+# from neonfc_ssl.coach import BaseCoach
 from neonfc_ssl.commons.math import reduce_ang
 from neonfc_ssl.path_planning.drunk_walk import DrunkWalk
 
