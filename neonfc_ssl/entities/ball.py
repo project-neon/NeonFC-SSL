@@ -37,34 +37,6 @@ class Ball:
         self.data.vy = b.vy
         self.data.vz = b.vz
 
-    def pos_after(self, dt):
-        # t_max = a/v
-        # pos = initial_pos + initial_v * t_target + 0.5 * a * t_target ^ 2
-        a = 0.8
-
-        t_max_x = abs(self.data.vx/a) if a else 0
-        t_max_y = abs(self.data.vy/a) if a else 0
-
-        dt_x = min(dt, t_max_x)
-        dt_y = min(dt, t_max_y)
-
-        return (self.data.x + self.data.vx * dt_x - math.copysign(0.5 * a * dt_x ** 2, self.data.vx),
-                self.data.y + self.data.vy * dt_y - math.copysign(0.5 * a * dt_y ** 2, self.data.vy))
-
-    def stopping_pos(self):
-        # t_max = a/v
-        # pos = initial_pos + initial_v * t_target + 0.5 * a * t_target ^ 2
-        a = 0.005 * math.pi * 9.81
-        a = 0.3
-
-        t_max_x = abs(self.data.vx/a) if a else 0
-        t_max_y = abs(self.data.vy/a) if a else 0
-
-        dt_x = t_max_x
-        dt_y = t_max_y
-
-        return (self.data.x + self.data.vx * dt_x - math.copysign(0.5 * a * dt_x ** 2, self.data.vx),
-                self.data.y + self.data.vy * dt_y - math.copysign(0.5 * a * dt_y ** 2, self.data.vy))
 
     def __getitem__(self, item):
         return self.data[item]
