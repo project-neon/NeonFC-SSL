@@ -4,7 +4,7 @@ from typing import Optional
 import numpy as np
 import math
 from neonfc_ssl.commons.math import reduce_ang, distance_between_points
-from neonfc_ssl.input_l.input_data import Geometry
+from neonfc_ssl.input_layer.input_data import Geometry
 
 
 @dataclass

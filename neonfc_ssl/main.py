@@ -2,11 +2,8 @@ import json
 import atexit
 import logging.config
 import time
-from vision.gr_sim_vision import GrSimVision
-from vision.auto_ref_vision import AutoRefVision
 from comm.serial_comm import SerialComm
 from comm.grsim_comm import GrComm
-from referee.ssl_game_controller import SSLGameControllerReferee
 from control import Control
 
 from multiprocessing import Pipe, Queue
@@ -14,7 +11,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from neonfc_ssl.core import Layer
 
-from neonfc_ssl.input_l import InputLayer
+from neonfc_ssl.input_layer import InputLayer
 from neonfc_ssl.match import SSLMatch
 from neonfc_ssl.decision_layer import Decision
 from neonfc_ssl.core import DebugLayer

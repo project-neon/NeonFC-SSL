@@ -5,7 +5,7 @@ import threading
 import logging
 from google.protobuf.json_format import MessageToJson
 from neonfc_ssl.protocols.gc.ssl_gc_referee_message_pb2 import Referee
-from neonfc_ssl.input_l.input_data import GameController
+from neonfc_ssl.input_layer.input_data import GameController
 
 
 class SSLGameControllerReferee(threading.Thread):
