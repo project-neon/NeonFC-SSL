@@ -1,1 +1,2 @@
-from neonfc_ssl.control_layer.control import Control
+from .control import Control
+from . import control_data
