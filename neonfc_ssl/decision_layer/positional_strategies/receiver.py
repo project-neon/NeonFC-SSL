@@ -1,15 +1,11 @@
 from NeonPathPlanning.potential_fields import PotentialField, PointField, LineField
-import logging
-from neonfc_ssl.entities import RobotCommand
+from neonfc_ssl.tracking_layer.entities import RobotCommand
 from neonfc_ssl.decision_layer.special_strategies import BaseStrategy
 import math
-from neonfc_ssl.decision_layer.skills import *
-from neonfc_ssl.decision_layer.special_strategies.special_strategy import SpecialStrategy
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from neonfc_ssl.match.match_data import MatchData
-    from neonfc_ssl.decision_layer.skills.base_skill import BaseSkill
+    pass
 
 
 

@@ -1,11 +1,12 @@
-from neonfc_ssl.algorithms.fsm import State
-from neonfc_ssl.commons.math import distance_between_points
-from neonfc_ssl.match.match_data import States, GameState as StateData
 from time import time
 import logging
+from ..tracking_data import States, GameState as StateData
+from neonfc_ssl.algorithms.fsm import State
+from neonfc_ssl.commons.math import distance_between_points
+
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from neonfc_ssl.match import SSLMatch
+    from ..tracking import Tracking
     from neonfc_ssl.input_layer.input_data import GameController
 
 
@@ -18,7 +19,7 @@ class GameState(State):
         self.color = None
         self.position = None
 
-    def start(self, match: 'SSLMatch', color, position):
+    def start(self, match: 'Tracking', color, position):
         self.start_time = time()
         self.ball_initial_position = (match.ball.x, match.ball.y)
         self.color = color

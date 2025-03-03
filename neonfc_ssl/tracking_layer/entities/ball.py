@@ -1,10 +1,7 @@
 import time
-from collections import deque
-import copy
 import numpy as np
-from neonfc_ssl.algorithms.kalman_filter import KalmanFilter
-import math
-from neonfc_ssl.match.match_data import TrackedBall
+from ..tracking_data import TrackedBall
+
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from neonfc_ssl.input_layer.input_data import Geometry, Ball as InputBall

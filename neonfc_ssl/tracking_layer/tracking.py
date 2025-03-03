@@ -1,17 +1,16 @@
 import logging
-from neonfc_ssl.entities import OmniRobot, Ball
-from neonfc_ssl.possession_tracker import FloatPossessionTracker as PossessionTracker
-from neonfc_ssl.state_controller import StateController
-from neonfc_ssl.api import Api
 from neonfc_ssl.core import Layer
-from neonfc_ssl.match.match_data import MatchData
+from .entities import OmniRobot, Ball
+from .possession_tracker import FloatPossessionTracker as PossessionTracker
+from .state_controller import StateController
+from .tracking_data import MatchData
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from neonfc_ssl.input_layer.input_data import InputData
 
 
-class SSLMatch(Layer):
+class Tracking(Layer):
     def __init__(self, config, log_q, event_pipe):
         super().__init__("MatchLayer", config, log_q, event_pipe)
 

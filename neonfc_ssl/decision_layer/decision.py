@@ -6,7 +6,7 @@ from .decision_data import CoachData, RobotCommand
 from neonfc_ssl.core import Layer
 from typing import TYPE_CHECKING, Union, Optional
 if TYPE_CHECKING:
-    from neonfc_ssl.match.match_data import MatchData, TrackedRobot
+    from neonfc_ssl.tracking_layer.tracking_data import MatchData, TrackedRobot
     from neonfc_ssl.decision_layer.special_strategies import BaseStrategy
 
 

@@ -3,7 +3,7 @@ from neonfc_ssl.algorithms.fsm import State
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from ..decision_data import RobotCommand
-    from neonfc_ssl.match.match_data import MatchData, TrackedRobot
+    from neonfc_ssl.tracking_layer.tracking_data import MatchData, TrackedRobot
 
 
 class BaseSkill(State):
