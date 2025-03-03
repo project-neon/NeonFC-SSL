@@ -1,14 +1,12 @@
 import json
-import atexit
 import logging.config
 import time
 from multiprocessing import Pipe, Queue
-from comm.serial_comm import SerialComm
-from comm.grsim_comm import GrComm
 from neonfc_ssl.input_layer import InputLayer
 from neonfc_ssl.tracking_layer import Tracking
 from neonfc_ssl.decision_layer import Decision
 from neonfc_ssl.control_layer import Control
+from neonfc_ssl.output_layer import OutputLayer
 from neonfc_ssl.core import DebugLayer
 
 from typing import TYPE_CHECKING
@@ -45,14 +43,12 @@ class Game:
 
         self.logger = logging.getLogger("game")
 
-        # Output Layer
-        self.comm = GrComm(self)
-
         self.new_layer(InputLayer)
         self.new_layer(Tracking)
         self.new_layer(Decision)
         self.new_layer(Control)
-        self.new_layer(DebugLayer)
+        self.new_layer(OutputLayer)
+        # self.new_layer(DebugLayer)
 
     def start(self):
         self.logger.info("Starting game")
