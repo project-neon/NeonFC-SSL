@@ -2,7 +2,7 @@ from abc import abstractmethod
 from neonfc_ssl.algorithms.fsm import State
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from ..decision_data import RobotCommand
+    from ..decision_data import RobotRubric
     from neonfc_ssl.tracking_layer.tracking_data import MatchData, TrackedRobot
 
 
@@ -19,7 +19,7 @@ class BaseSkill(State):
         pass
 
     @abstractmethod
-    def decide(self, data: 'MatchData') -> 'RobotCommand':
+    def decide(self, data: 'MatchData') -> 'RobotRubric':
         pass
 
     def complete(self, data: 'MatchData') -> bool:

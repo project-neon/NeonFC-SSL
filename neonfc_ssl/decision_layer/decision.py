@@ -2,7 +2,7 @@ import logging
 from abc import ABC, abstractmethod
 from scipy.optimize import linear_sum_assignment
 import numpy as np
-from .decision_data import CoachData, RobotCommand
+from .decision_data import CoachData, RobotRubric
 from neonfc_ssl.core import Layer
 from typing import TYPE_CHECKING, Union, Optional
 if TYPE_CHECKING:
@@ -60,7 +60,7 @@ class Decision(Layer):
         self._n_active_opposites = len(self._active_robots)
 
         if self._check_halt(data):
-            return CoachData([RobotCommand.still(r.id) for r in self._active_robots])
+            return CoachData([RobotRubric.still(r.id) for r in self._active_robots])
 
         self.__commands = []
         self.__hungarian_robots = []
@@ -97,7 +97,7 @@ class Decision(Layer):
 
             self.__hungarian_robots.append(robot.id)
 
-            self.__commands.append(RobotCommand(
+            self.__commands.append(RobotRubric(
                 id=robot.id,
                 halt=False,
                 target_pose=pos

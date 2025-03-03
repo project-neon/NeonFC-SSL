@@ -1,7 +1,7 @@
 import math
 from neonfc_ssl.algorithms.fsm import State
 from neonfc_ssl.commons.math import reduce_ang
-from neonfc_ssl.decision_layer.decision import RobotCommand
+from neonfc_ssl.decision_layer.decision import RobotRubric
 from base_skill import BaseSkill
 
 from typing import TYPE_CHECKING
@@ -23,7 +23,7 @@ class TurnToShoot(State):
 
         desired = reduce_ang(self.target - robot.theta)
         kp = -9
-        # return RobotCommand(spinner=True, move_speed=(0, 0, desired*kp), robot=self.robot)
+        # return RobotRubric(spinner=True, move_speed=(0, 0, desired*kp), robot=self.robot)
 
         return
 
@@ -64,7 +64,7 @@ class PerformShoot(State):
         self.robot = robot
 
     def decide(self):
-        return RobotCommand(move_speed=(0, 0, 0), kick_speed=(6.5, 0), robot=self.robot)
+        return RobotRubric(move_speed=(0, 0, 0), kick_speed=(6.5, 0), robot=self.robot)
 
 
 class Shoot(BaseSkill):

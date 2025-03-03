@@ -1,4 +1,4 @@
-from neonfc_ssl.decision_layer.decision import RobotCommand
+from neonfc_ssl.decision_layer.decision import RobotRubric
 from base_skill import BaseSkill
 
 
@@ -11,7 +11,7 @@ class MoveToPose(BaseSkill):
         self.avoid_opponents = avoid_opponents
 
     def decide(self, data):
-        return RobotCommand(
+        return RobotRubric(
             id=self._robot_id,
             halt=False,
             target_pose=self.target,
