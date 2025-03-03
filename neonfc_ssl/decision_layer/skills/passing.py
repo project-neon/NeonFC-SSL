@@ -1,7 +1,7 @@
 import math
 from neonfc_ssl.algorithms.fsm import State
 from neonfc_ssl.commons.math import reduce_ang, distance_between_points
-from neonfc_ssl.decision_layer.decision import RobotCommand
+from neonfc_ssl.decision_layer.decision import RobotRubric
 from base_skill import BaseSkill
 
 from typing import TYPE_CHECKING
@@ -18,7 +18,7 @@ class Wait(State):
         self.robot_id = robot_id
 
     def decide(self, data: "MatchData"):
-        return RobotCommand(
+        return RobotRubric(
             id=self.robot_id,
             halt=False,
             spinner=True
@@ -42,7 +42,7 @@ class StepBack(State):
 
         target = (ball.x - step_back_dist * math.cos(angle), ball.y - step_back_dist * math.sin(angle), angle)
 
-        return RobotCommand(
+        return RobotRubric(
             id=self.robot_id,
             halt=False,
             target_pose=target
@@ -79,7 +79,7 @@ class TurnToPass(State):
             math.atan2(ball.y - robot.y, ball.x - robot.x)
         )
 
-        return RobotCommand(
+        return RobotRubric(
             id=self.robot_id,
             halt=False,
             target_pose=pos
@@ -121,7 +121,7 @@ class StepForward(State):
             angle
         )
 
-        return RobotCommand(
+        return RobotRubric(
             id=self.robot_id,
             halt=False,
             target_pose=self.final_target
@@ -161,7 +161,7 @@ class PerformSimplePass(State):
 
         vb = min(vb, 6.5)
 
-        return RobotCommand(
+        return RobotRubric(
             id=self.robot_id,
             halt=False,
             kick_speed=(vb, 0)
@@ -186,7 +186,7 @@ class PerformChipPass(State):
         t = 2 * self.vz / self.g
         vb = d / t
 
-        return RobotCommand(
+        return RobotRubric(
             id=self.robot_id,
             halt=False,
             kick_speed=(vb, self.vz)

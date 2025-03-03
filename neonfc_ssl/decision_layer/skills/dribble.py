@@ -1,5 +1,5 @@
 import math
-from neonfc_ssl.decision_layer.decision import RobotCommand
+from neonfc_ssl.decision_layer.decision import RobotRubric
 from base_skill import BaseSkill
 
 
@@ -17,7 +17,7 @@ class Dribble(BaseSkill):
 
         theta = math.atan2(robot.y - ball.y, robot.x - ball.x)
 
-        return RobotCommand(
+        return RobotRubric(
             id=self._robot_id,
             halt=False,
             target_pose=(self.target[0], self.target[1], theta),

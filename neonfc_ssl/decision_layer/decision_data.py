@@ -3,7 +3,7 @@ from typing import Tuple, Optional
 
 
 @dataclass
-class RobotCommand:
+class RobotRubric:
     # General
     id: int
     halt: bool
@@ -25,4 +25,4 @@ class RobotCommand:
 
 @dataclass
 class CoachData:
-    commands: list[RobotCommand]
+    commands: list[RobotRubric]

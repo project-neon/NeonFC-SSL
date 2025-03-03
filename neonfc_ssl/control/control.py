@@ -2,7 +2,7 @@ import logging
 import numpy as np
 import time
 import socket
-# from neonfc_ssl.entities import Field, RobotCommand
+# from neonfc_ssl.entities import Field, RobotRubric
 from neonfc_ssl.tracking_layer.tracking import Tracking
 from neonfc_ssl.tracking_layer.state_controller import StateController
 # from neonfc_ssl.coach import BaseCoach
@@ -22,7 +22,7 @@ class Control:
         self._game_state: StateController = None
 
         # Control Objects
-        self.commands: list[RobotCommand] = None
+        self.commands: list[RobotRubric] = None
 
         # Other Control Parameters
         # from pyvisgraph doc "Number of CPU cores on host computer. If you don't know how many

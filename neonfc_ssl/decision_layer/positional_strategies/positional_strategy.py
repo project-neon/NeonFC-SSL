@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from neonfc_ssl.decision_layer.decision_data import RobotCommand
+from neonfc_ssl.decision_layer.decision_data import RobotRubric
 from typing import Union
 
 from typing import TYPE_CHECKING

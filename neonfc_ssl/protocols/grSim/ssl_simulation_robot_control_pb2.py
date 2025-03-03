@@ -19,49 +19,49 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='',
   syntax='proto2',
   serialized_options=_b('Z6github.com/RoboCup-SSL/ssl-simulation-protocol/pkg/sim'),
-  serialized_pb=_b('\n\"ssl_simulation_robot_control.proto\"\x86\x01\n\x0cRobotCommand\x12\n\n\x02id\x18\x01 \x02(\r\x12\'\n\x0cmove_command\x18\x02 \x01(\x0b\x32\x11.RobotMoveCommand\x12\x12\n\nkick_speed\x18\x03 \x01(\x02\x12\x15\n\nkick_angle\x18\x04 \x01(\x02:\x01\x30\x12\x16\n\x0e\x64ribbler_speed\x18\x05 \x01(\x02\"\xa9\x01\n\x10RobotMoveCommand\x12,\n\x0ewheel_velocity\x18\x01 \x01(\x0b\x32\x12.MoveWheelVelocityH\x00\x12,\n\x0elocal_velocity\x18\x02 \x01(\x0b\x32\x12.MoveLocalVelocityH\x00\x12.\n\x0fglobal_velocity\x18\x03 \x01(\x0b\x32\x13.MoveGlobalVelocityH\x00\x42\t\n\x07\x63ommand\"c\n\x11MoveWheelVelocity\x12\x13\n\x0b\x66ront_right\x18\x01 \x02(\x02\x12\x12\n\nback_right\x18\x02 \x02(\x02\x12\x11\n\tback_left\x18\x03 \x02(\x02\x12\x12\n\nfront_left\x18\x04 \x02(\x02\"C\n\x11MoveLocalVelocity\x12\x0f\n\x07\x66orward\x18\x01 \x02(\x02\x12\x0c\n\x04left\x18\x02 \x02(\x02\x12\x0f\n\x07\x61ngular\x18\x03 \x02(\x02\";\n\x12MoveGlobalVelocity\x12\t\n\x01x\x18\x01 \x02(\x02\x12\t\n\x01y\x18\x02 \x02(\x02\x12\x0f\n\x07\x61ngular\x18\x03 \x02(\x02\"5\n\x0cRobotControl\x12%\n\x0erobot_commands\x18\x01 \x03(\x0b\x32\r.RobotCommandB8Z6github.com/RoboCup-SSL/ssl-simulation-protocol/pkg/sim')
+  serialized_pb=_b('\n\"ssl_simulation_robot_control.proto\"\x86\x01\n\x0cRobotRubric\x12\n\n\x02id\x18\x01 \x02(\r\x12\'\n\x0cmove_command\x18\x02 \x01(\x0b\x32\x11.RobotMoveCommand\x12\x12\n\nkick_speed\x18\x03 \x01(\x02\x12\x15\n\nkick_angle\x18\x04 \x01(\x02:\x01\x30\x12\x16\n\x0e\x64ribbler_speed\x18\x05 \x01(\x02\"\xa9\x01\n\x10RobotMoveCommand\x12,\n\x0ewheel_velocity\x18\x01 \x01(\x0b\x32\x12.MoveWheelVelocityH\x00\x12,\n\x0elocal_velocity\x18\x02 \x01(\x0b\x32\x12.MoveLocalVelocityH\x00\x12.\n\x0fglobal_velocity\x18\x03 \x01(\x0b\x32\x13.MoveGlobalVelocityH\x00\x42\t\n\x07\x63ommand\"c\n\x11MoveWheelVelocity\x12\x13\n\x0b\x66ront_right\x18\x01 \x02(\x02\x12\x12\n\nback_right\x18\x02 \x02(\x02\x12\x11\n\tback_left\x18\x03 \x02(\x02\x12\x12\n\nfront_left\x18\x04 \x02(\x02\"C\n\x11MoveLocalVelocity\x12\x0f\n\x07\x66orward\x18\x01 \x02(\x02\x12\x0c\n\x04left\x18\x02 \x02(\x02\x12\x0f\n\x07\x61ngular\x18\x03 \x02(\x02\";\n\x12MoveGlobalVelocity\x12\t\n\x01x\x18\x01 \x02(\x02\x12\t\n\x01y\x18\x02 \x02(\x02\x12\x0f\n\x07\x61ngular\x18\x03 \x02(\x02\"5\n\x0cRobotControl\x12%\n\x0erobot_commands\x18\x01 \x03(\x0b\x32\r.RobotRubricB8Z6github.com/RoboCup-SSL/ssl-simulation-protocol/pkg/sim')
 )
 
 
 
 
-_ROBOTCOMMAND = _descriptor.Descriptor(
-  name='RobotCommand',
-  full_name='RobotCommand',
+_RobotRubric = _descriptor.Descriptor(
+  name='RobotRubric',
+  full_name='RobotRubric',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='id', full_name='RobotCommand.id', index=0,
+      name='id', full_name='RobotRubric.id', index=0,
       number=1, type=13, cpp_type=3, label=2,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='move_command', full_name='RobotCommand.move_command', index=1,
+      name='move_command', full_name='RobotRubric.move_command', index=1,
       number=2, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='kick_speed', full_name='RobotCommand.kick_speed', index=2,
+      name='kick_speed', full_name='RobotRubric.kick_speed', index=2,
       number=3, type=2, cpp_type=6, label=1,
       has_default_value=False, default_value=float(0),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='kick_angle', full_name='RobotCommand.kick_angle', index=3,
+      name='kick_angle', full_name='RobotRubric.kick_angle', index=3,
       number=4, type=2, cpp_type=6, label=1,
       has_default_value=True, default_value=float(0),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='dribbler_speed', full_name='RobotCommand.dribbler_speed', index=4,
+      name='dribbler_speed', full_name='RobotRubric.dribbler_speed', index=4,
       number=5, type=2, cpp_type=6, label=1,
       has_default_value=False, default_value=float(0),
       message_type=None, enum_type=None, containing_type=None,
@@ -304,7 +304,7 @@ _ROBOTCONTROL = _descriptor.Descriptor(
   serialized_end=631,
 )
 
-_ROBOTCOMMAND.fields_by_name['move_command'].message_type = _ROBOTMOVECOMMAND
+_RobotRubric.fields_by_name['move_command'].message_type = _ROBOTMOVECOMMAND
 _ROBOTMOVECOMMAND.fields_by_name['wheel_velocity'].message_type = _MOVEWHEELVELOCITY
 _ROBOTMOVECOMMAND.fields_by_name['local_velocity'].message_type = _MOVELOCALVELOCITY
 _ROBOTMOVECOMMAND.fields_by_name['global_velocity'].message_type = _MOVEGLOBALVELOCITY
@@ -317,8 +317,8 @@ _ROBOTMOVECOMMAND.fields_by_name['local_velocity'].containing_oneof = _ROBOTMOVE
 _ROBOTMOVECOMMAND.oneofs_by_name['command'].fields.append(
   _ROBOTMOVECOMMAND.fields_by_name['global_velocity'])
 _ROBOTMOVECOMMAND.fields_by_name['global_velocity'].containing_oneof = _ROBOTMOVECOMMAND.oneofs_by_name['command']
-_ROBOTCONTROL.fields_by_name['robot_commands'].message_type = _ROBOTCOMMAND
-DESCRIPTOR.message_types_by_name['RobotCommand'] = _ROBOTCOMMAND
+_ROBOTCONTROL.fields_by_name['robot_commands'].message_type = _RobotRubric
+DESCRIPTOR.message_types_by_name['RobotRubric'] = _RobotRubric
 DESCRIPTOR.message_types_by_name['RobotMoveCommand'] = _ROBOTMOVECOMMAND
 DESCRIPTOR.message_types_by_name['MoveWheelVelocity'] = _MOVEWHEELVELOCITY
 DESCRIPTOR.message_types_by_name['MoveLocalVelocity'] = _MOVELOCALVELOCITY
@@ -326,12 +326,12 @@ DESCRIPTOR.message_types_by_name['MoveGlobalVelocity'] = _MOVEGLOBALVELOCITY
 DESCRIPTOR.message_types_by_name['RobotControl'] = _ROBOTCONTROL
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
-RobotCommand = _reflection.GeneratedProtocolMessageType('RobotCommand', (_message.Message,), dict(
-  DESCRIPTOR = _ROBOTCOMMAND,
+RobotRubric = _reflection.GeneratedProtocolMessageType('RobotRubric', (_message.Message,), dict(
+  DESCRIPTOR = _RobotRubric,
   __module__ = 'ssl_simulation_robot_control_pb2'
-  # @@protoc_insertion_point(class_scope:RobotCommand)
+  # @@protoc_insertion_point(class_scope:RobotRubric)
   ))
-_sym_db.RegisterMessage(RobotCommand)
+_sym_db.RegisterMessage(RobotRubric)
 
 RobotMoveCommand = _reflection.GeneratedProtocolMessageType('RobotMoveCommand', (_message.Message,), dict(
   DESCRIPTOR = _ROBOTMOVECOMMAND,

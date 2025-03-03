@@ -1,5 +1,5 @@
 from NeonPathPlanning.potential_fields import PotentialField, PointField, LineField
-from neonfc_ssl.tracking_layer.entities import RobotCommand
+from neonfc_ssl.tracking_layer.entities import RobotRubric
 from neonfc_ssl.decision_layer.special_strategies import BaseStrategy
 import math
 
@@ -61,4 +61,4 @@ class Receiver(BaseStrategy):
     def decide(self):
         vx, vy = self.field.compute([self._robot.x, self._robot.y])
 
-        return RobotCommand(move_speed=(vx, vy, 0), robot=self._robot)
+        return RobotRubric(move_speed=(vx, vy, 0), robot=self._robot)

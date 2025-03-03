@@ -1,5 +1,5 @@
 import math
-from neonfc_ssl.decision_layer.decision import RobotCommand
+from neonfc_ssl.decision_layer.decision import RobotRubric
 from base_skill import BaseSkill
 
 
@@ -19,7 +19,7 @@ class GoToBall(BaseSkill):
         close_to_ball = ((robot.x - target[0]) ** 2 + (robot.x - target[1]) ** 2) ** .5 < 0.15
         theta = math.atan2(-robot.y+ball.y, -robot.x+ball.x)
 
-        return RobotCommand(
+        return RobotRubric(
             id=self._robot_id,
             halt=False,
             target_pose=(target[0], target[1], theta),
