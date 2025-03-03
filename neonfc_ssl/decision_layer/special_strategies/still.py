@@ -3,7 +3,7 @@ from neonfc_ssl.decision_layer.special_strategies.special_strategy import Specia
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from neonfc_ssl.match.match_data import MatchData
+    from neonfc_ssl.tracking_layer.tracking_data import MatchData
     from ..skills.base_skill import BaseSkill
 
 

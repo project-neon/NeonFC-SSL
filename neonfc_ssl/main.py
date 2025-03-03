@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from neonfc_ssl.core import Layer
 
 from neonfc_ssl.input_layer import InputLayer
-from neonfc_ssl.match import SSLMatch
+from neonfc_ssl.tracking_layer import Tracking
 from neonfc_ssl.decision_layer import Decision
 from neonfc_ssl.core import DebugLayer
 
@@ -71,7 +71,7 @@ class Game:
         atexit.register(self.stop_threads)
 
         self.new_layer(InputLayer)
-        self.new_layer(SSLMatch)
+        self.new_layer(Tracking)
         self.new_layer(Decision)
         self.new_layer(DebugLayer)
         # self.new_layer(SSLMatch)

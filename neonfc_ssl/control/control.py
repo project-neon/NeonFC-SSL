@@ -3,8 +3,8 @@ import numpy as np
 import time
 import socket
 # from neonfc_ssl.entities import Field, RobotCommand
-from neonfc_ssl.match.ssl_match import SSLMatch
-from neonfc_ssl.state_controller import StateController
+from neonfc_ssl.tracking_layer.tracking import Tracking
+from neonfc_ssl.tracking_layer.state_controller import StateController
 # from neonfc_ssl.coach import BaseCoach
 from neonfc_ssl.commons.math import reduce_ang
 from neonfc_ssl.path_planning.drunk_walk import DrunkWalk
@@ -16,7 +16,7 @@ class Control:
         self._game = game
 
         # Previous Layer Classes
-        self._match: SSLMatch = None
+        self._match: Tracking = None
         self._field: Field = None
         self._coach: BaseCoach = None
         self._game_state: StateController = None

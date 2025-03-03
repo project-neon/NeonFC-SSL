@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from ..decision import Decision
-    from neonfc_ssl.match.match_data import MatchData
+    from neonfc_ssl.tracking_layer.tracking_data import MatchData
 
 
 class Coach(ABC):

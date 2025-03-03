@@ -6,7 +6,7 @@ from base_skill import BaseSkill
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from neonfc_ssl.match.match_data import MatchData
+    from neonfc_ssl.tracking_layer.tracking_data import MatchData
 
 
 def angle_between(p1, p2, p3):

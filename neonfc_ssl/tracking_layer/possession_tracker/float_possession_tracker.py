@@ -1,14 +1,15 @@
 import logging
 from collections import deque
 import numpy as np
-from neonfc_ssl.match.match_data import Possession
+from ..tracking_data import Possession
+
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from neonfc_ssl.match import SSLMatch
+    from ..tracking import Tracking
 
 
 class FloatPossessionTracker:
-    def __init__(self, match: 'SSLMatch', state_controller):
+    def __init__(self, match: 'Tracking', state_controller):
         self.poss = 0
         self.last_poss = deque([], maxlen=10)
         self.match = match
