@@ -1,6 +1,6 @@
 import logging
 from serial import Serial
-from neonfc_ssl.control import Control
+from neonfc_ssl.control_layer import Control
 
 
 class SerialComm:

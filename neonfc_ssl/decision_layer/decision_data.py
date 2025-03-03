@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from typing import Tuple, Optional
+from neonfc_ssl.tracking_layer.tracking_data import MatchData
 
 
 @dataclass
@@ -24,5 +25,6 @@ class RobotRubric:
 
 
 @dataclass
-class CoachData:
+class DecisionData:
     commands: list[RobotRubric]
+    world_model: MatchData

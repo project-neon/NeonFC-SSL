@@ -151,15 +151,6 @@ class GameState:
 
 
 @dataclass
-class Field:
-    fieldLength: int
-    fieldWidth: int
-    penaltyAreaDepth: int
-    penaltyAreaWidth: int
-    goalWidth: int
-
-
-@dataclass
 class MatchData:
     ball: TrackedBall
     possession: Possession

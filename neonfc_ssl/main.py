@@ -2,20 +2,18 @@ import json
 import atexit
 import logging.config
 import time
+from multiprocessing import Pipe, Queue
 from comm.serial_comm import SerialComm
 from comm.grsim_comm import GrComm
-from control import Control
-
-from multiprocessing import Pipe, Queue
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from neonfc_ssl.core import Layer
-
 from neonfc_ssl.input_layer import InputLayer
 from neonfc_ssl.tracking_layer import Tracking
 from neonfc_ssl.decision_layer import Decision
+from neonfc_ssl.control_layer import Control
 from neonfc_ssl.core import DebugLayer
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from neonfc_ssl.core import Layer
 
 
 def get_config(config_file=None):
@@ -47,42 +45,17 @@ class Game:
 
         self.logger = logging.getLogger("game")
 
-        # Input Layer
-        # self.ssl_vison = GrSimVision(self.config)
-        # self.auto_ref = AutoRefVision(self.config)
-        # self.referee = SSLGameControllerReferee()
-
-        # self.vision = self.auto_ref
-        # self.geometry = self.ssl_vison
-
-        # Tracking Layer
-        # self.match = SSLMatch(self)
-
-        # Decision Layer
-        # self.coach = COACHES["SimpleCoach"](self)
-
-        # Control Layer
-        self.control = Control(self)
-
         # Output Layer
         self.comm = GrComm(self)
-
-        # Register exit handler
-        atexit.register(self.stop_threads)
 
         self.new_layer(InputLayer)
         self.new_layer(Tracking)
         self.new_layer(Decision)
+        self.new_layer(Control)
         self.new_layer(DebugLayer)
-        # self.new_layer(SSLMatch)
 
     def start(self):
         self.logger.info("Starting game")
-        # info = {"t1": self.t1, "t2": self.t2, "event": self.event, "vision": type(self.vision).__name__}
-        # self.logger.game("game meta", extra={"type": 'ssl'})
-        # self.logger.game("game begin", extra=info)
-        # info["coach"] = "TestCoach"
-        # self.logger.decision("game begin", extra=info)
 
         for prev_layer, layer in zip(self.layers[:-1], self.layers[1:]):
             layer.bind_input_pipe(prev_layer.output_pipe)
@@ -109,12 +82,6 @@ class Game:
         self.config['logger']['handlers']['main_log']['filename'] = f"logs/{self.match_name}.log.jsonl"
         self.config['logger']['handlers']['game_log']['filename'] = f"logs/{self.match_name}.gamelog.jsonl"
         logging.config.dictConfig(self.config['logger'])
-
-    def stop_threads(self):
-        return
-        self.ssl_vison.stop()
-        self.auto_ref.stop()
-        self.referee.stop()
 
     def new_layer(self, layer: type['Layer']):
         pipe_in, pipe_out = Pipe(duplex=False)

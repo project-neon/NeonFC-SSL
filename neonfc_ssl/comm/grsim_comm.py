@@ -2,7 +2,7 @@ import logging
 import socket
 from neonfc_ssl.protocols.grSim.grSim_Commands_pb2 import grSim_Commands
 from neonfc_ssl.protocols.grSim.grSim_Packet_pb2 import grSim_Packet
-from neonfc_ssl.control import Control
+from neonfc_ssl.control_layer import Control
 
 
 class GrComm:
