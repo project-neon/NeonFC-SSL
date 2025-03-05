@@ -47,8 +47,8 @@ class Game:
         self.new_layer(Tracking)
         self.new_layer(Decision)
         self.new_layer(Control)
+        self.new_layer(DebugLayer)
         self.new_layer(OutputLayer)
-        # self.new_layer(DebugLayer)
 
     def start(self):
         self.logger.info("Starting game")
@@ -84,32 +84,6 @@ class Game:
         layer_obj = layer(self.config, self.layers_log_q, pipe_out)
         self.layers.append(layer_obj)
         self.layers_event[layer_obj.name] = pipe_in
-
-    def update(self):
-        while True:
-            try:
-                if self.vision.new_data and self.geometry.any_geometry:
-                    t = [time.time()]
-                    self.match.update()
-                    t.append(time.time())
-                    self.coach.update()
-                    t.append(time.time())
-                    self.control.update()
-                    t.append(time.time())
-                    if self.referee.is_halted():
-                        self.comm.freeze()
-                    else:
-                        self.comm.update()
-                    t.append(time.time())
-                    if self.config['match'].get('time_logging', False):
-                        self.logger.info(f"total:  {1/(t[4]-t[0]):.2f} Hz")
-                        self.logger.info(f"match:  {1/(t[1]-t[0]):.2f} Hz")
-                        self.logger.info(f"coach:  {1/(t[2]-t[1]):.2f} Hz")
-                        self.logger.info(f"control:  {1/(t[3]-t[2]):.2f} Hz")
-                        self.logger.info(f"comm:  {1/(t[4]-t[3]):.2f} Hz")
-
-            except KeyboardInterrupt:
-                break
 
 
 if __name__ == "__main__":

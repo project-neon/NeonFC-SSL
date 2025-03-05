@@ -1,5 +1,5 @@
 from neonfc_ssl.decision_layer.decision import RobotRubric
-from base_skill import BaseSkill
+from .base_skill import BaseSkill
 
 
 class Wait(BaseSkill):

@@ -1,5 +1,5 @@
 from math import atan2
-from positional_strategy import PositionalStrategy
+from .positional_strategy import PositionalStrategy
 
 
 class PrepKickoff(PositionalStrategy):

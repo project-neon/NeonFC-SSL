@@ -83,5 +83,6 @@ class Tracking(Layer):
             ball=self.ball.data,
             possession=poss,
             game_state=state,
-            field=geometry
+            field=geometry,
+            is_yellow=self.team_color=='yellow'
         )

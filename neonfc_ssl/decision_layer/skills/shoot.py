@@ -2,7 +2,7 @@ import math
 from neonfc_ssl.algorithms.fsm import State
 from neonfc_ssl.commons.math import reduce_ang
 from neonfc_ssl.decision_layer.decision import RobotRubric
-from base_skill import BaseSkill
+from .base_skill import BaseSkill
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:

@@ -1,4 +1,4 @@
-from positional_strategy import PositionalStrategy
+from .positional_strategy import PositionalStrategy
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:

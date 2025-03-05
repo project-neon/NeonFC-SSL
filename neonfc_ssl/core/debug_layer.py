@@ -12,6 +12,8 @@ class DebugLayer(Layer):
     def _step(self, data) -> Any:
         if data is not None:
             print(data)
+            print()
+        return data
 
     def _start(self):
         pass
