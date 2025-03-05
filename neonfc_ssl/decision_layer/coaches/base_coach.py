@@ -8,6 +8,7 @@ if TYPE_CHECKING:
 class Coach(ABC):
     def __init__(self, decision: 'Decision'):
         self.decision = decision
+        self._start()
 
     def _start(self):
         pass

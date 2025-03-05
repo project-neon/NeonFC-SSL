@@ -1,4 +1,4 @@
-from neonfc_ssl.skills import *
+from ..skills import *
 from neonfc_ssl.decision_layer.special_strategies import BaseStrategy
 from math import atan2
 

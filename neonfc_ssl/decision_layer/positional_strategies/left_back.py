@@ -1,4 +1,4 @@
-from positional_strategy import PositionalStrategy
+from .positional_strategy import PositionalStrategy
 from math import atan2, tan, pi
 from neonfc_ssl.commons.math import distance_between_points
 

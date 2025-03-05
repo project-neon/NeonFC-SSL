@@ -33,6 +33,11 @@ class TrackedBall:
 
         raise IndexError("Robot only has 3 coordinates")
 
+    def __array__(self, dtype=None, copy=None):
+        if copy is False:
+            raise ValueError("`copy=False` isn't supported")
+        return np.array([self.x, self.y], dtype=dtype)
+
     def pos_after(self, dt):
         # t_max = a/v
         # pos = initial_pos + initial_v * t_target + 0.5 * a * t_target ^ 2
@@ -88,6 +93,11 @@ class TrackedRobot:
             return self.theta
 
         raise IndexError("Robot only has 3 coordinates")
+
+    def __array__(self, dtype=None, copy=None):
+        if copy is False:
+            raise ValueError("`copy=False` isn't supported")
+        return np.array([self.x, self.y], dtype=dtype)
 
     def time_to_ball(self, ball):
         avg_speed = .35
@@ -158,6 +168,7 @@ class MatchData:
     field: Geometry
     robots: RobotList = dc_f()
     opposites: RobotList
+    is_yellow: bool
 
     def __post_init__(self):
         self.robots = RobotList(self.robots)

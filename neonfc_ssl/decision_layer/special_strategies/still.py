@@ -4,10 +4,9 @@ from neonfc_ssl.decision_layer.special_strategies.special_strategy import Specia
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from neonfc_ssl.tracking_layer.tracking_data import MatchData
-    from ..skills.base_skill import BaseSkill
 
 
-class Still(BaseSkill):
+class Still(SpecialStrategy):
     def _start(self):
         self.wait = Wait()
         self.wait.start(self._robot_id)

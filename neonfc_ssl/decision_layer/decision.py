@@ -2,8 +2,10 @@ import logging
 from abc import ABC, abstractmethod
 from scipy.optimize import linear_sum_assignment
 import numpy as np
-from .decision_data import DecisionData, RobotRubric
 from neonfc_ssl.core import Layer
+from .decision_data import DecisionData, RobotRubric
+from .coaches import COACHES
+
 from typing import TYPE_CHECKING, Union, Optional
 if TYPE_CHECKING:
     from neonfc_ssl.tracking_layer.tracking_data import MatchData, TrackedRobot
@@ -25,17 +27,12 @@ class Decision(Layer):
 
         self.__strategies = [None for _ in range(16)]
 
-        self._start_coach()
+        self.__coach = COACHES['TestCoach'](self)
 
         self.log(logging.INFO, "Coach module started!")
 
-    @abstractmethod
-    def _start_coach(self):
-        pass
-
-    @abstractmethod
     def decide(self, data: 'MatchData'):
-        raise NotImplementedError("Coach needs decide implementation!")
+        return self.__coach(data)
 
     @staticmethod
     def _check_halt(data: 'MatchData'):
@@ -50,24 +47,19 @@ class Decision(Layer):
         if self.__strategies[robot.id] == strategy:
             return
 
-        self.__strategies[robot.id] = strategy.start(robot)
+        self.__strategies[robot.id] = strategy
+        self.__strategies[robot.id].start(robot.id)
 
     def _step(self, data: 'MatchData') -> 'DecisionData':
-        self._active_robots = [robot for robot in data.robots if not robot.missing]
-        self._n_active_robots = len(self._active_robots)
-
-        self._active_opposites = [robot for robot in data.opposites if not robot.missing]
-        self._n_active_opposites = len(self._active_robots)
-
         if self._check_halt(data):
-            return DecisionData([RobotRubric.still(r.id) for r in self._active_robots], data)
+            return DecisionData([RobotRubric.still(r.id) for r in data.robots.active], data)
 
         self.__commands = []
         self.__hungarian_robots = []
 
         self.decide(data)
 
-        for robot in self._active_robots:
+        for robot in data.robots.active:
             if robot in self.__hungarian_robots:
                 continue
 
@@ -77,7 +69,10 @@ class Decision(Layer):
                 except KeyboardInterrupt as e:
                     raise e
                 except Exception as e:
+                    raise e
                     self.log(logging.ERROR, e)
+
+        return DecisionData(self.__commands, data)
 
     @property
     def has_possession(self):
