@@ -13,8 +13,8 @@ class SerialComm:
         self.command_serial = None
 
         # Serial Comm Parameters
-        self.command_port = self.config["serial"]["command_port"]
-        self.baud_rate = self.config["serial"]["baud_rate"]
+        self.command_port = self.config["command_port"]
+        self.baud_rate = self.config["baud_rate"]
 
         # Coach Layer Logger
         self.logger = log

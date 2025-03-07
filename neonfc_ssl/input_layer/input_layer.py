@@ -10,11 +10,15 @@ from .input_data import InputData
 class InputLayer(Layer):
     def __init__(self, config, log_q, event_pipe):
         super().__init__("InputLayer", config, log_q, event_pipe)
+
+        if self.config['side'] != 'left' and self.config['side'] != 'right':
+            raise ValueError("side must be either 'left' or 'right'")
+
         self.ssl_vison = GrSimVision(self.config, self.log)
         self.auto_ref = AutoRefVision(self.config, self.log)
         self.referee = SSLGameControllerReferee(self.config, self.log)
 
-        self.use_ref_vision = True
+        self.use_ref_vision = self.config["use_ref_vision"]
 
     def _step(self, data) -> Any:
         if self.use_ref_vision:

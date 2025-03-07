@@ -1,4 +1,5 @@
 import json
+from pip._vendor import tomli
 import logging.config
 import time
 from multiprocessing import Pipe, Queue
@@ -26,20 +27,16 @@ def get_config(config_file=None):
 class Game:
     def __init__(self) -> None:
         # Load Config
-        self.config = get_config()
-        self.match_name = "Test"
-        self.t1 = self.config['match'].get('team_1', None)
-        self.t2 = self.config['match'].get('team_2', None)
-        self.event = self.config['match'].get('event', None)
-
-        self.match_name = f"{self.t1}x{self.t2}@{self.event}" if self.t1 and self.t2 and self.event else "test"
+        with open("config.toml", "rb") as f:
+            self.config = tomli.load(f)
+        # self.config = get_config()
 
         self.layers: list[Layer] = []
         self.layers_event: dict[str, Pipe] = {}
         self.layers_log_q = Queue()
 
         # Config Logger
-        self.setup_logger()
+        # self.setup_logger()
 
         self.logger = logging.getLogger("game")
 
@@ -47,7 +44,6 @@ class Game:
         self.new_layer(Tracking)
         self.new_layer(Decision)
         self.new_layer(Control)
-        self.new_layer(DebugLayer)
         self.new_layer(OutputLayer)
 
     def start(self):
@@ -81,7 +77,8 @@ class Game:
 
     def new_layer(self, layer: type['Layer']):
         pipe_in, pipe_out = Pipe(duplex=False)
-        layer_obj = layer(self.config, self.layers_log_q, pipe_out)
+        print(self.config)
+        layer_obj = layer(self.config[layer.__name__], self.layers_log_q, pipe_out)
         self.layers.append(layer_obj)
         self.layers_event[layer_obj.name] = pipe_in
 

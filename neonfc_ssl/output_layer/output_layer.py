@@ -1,5 +1,3 @@
-from typing import Any
-import time
 from neonfc_ssl.core import Layer
 from .comm import GrComm, SerialComm
 
@@ -14,7 +12,7 @@ class OutputLayer(Layer):
         self.gr_comm = GrComm(self.config, self.log)
         self.serial_comm = SerialComm(self.config, self.log)
 
-        self.use_gr_sim = True
+        self.use_gr_sim = self.config["use_gr_sim"]
 
     def _step(self, data: 'ControlData'):
         if self.use_gr_sim:

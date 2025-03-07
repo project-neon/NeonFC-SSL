@@ -1,20 +1,12 @@
 import logging
 import numpy as np
 from math import sqrt, cos, sin
-import time
-import socket
 from neonfc_ssl.core import Layer
-
-# from neonfc_ssl.entities import Field, RobotRubric
-from neonfc_ssl.tracking_layer.tracking import Tracking
-from neonfc_ssl.tracking_layer.state_controller import StateController
-# from neonfc_ssl.coach import BaseCoach
 from neonfc_ssl.commons.math import reduce_ang
 from neonfc_ssl.path_planning.drunk_walk import DrunkWalk
 from .control_data import ControlData, RobotCommand
 
 from typing import TYPE_CHECKING
-
 if TYPE_CHECKING:
     from neonfc_ssl.decision_layer.decision_data import DecisionData, RobotRubric
     from neonfc_ssl.tracking_layer.tracking_data import MatchData

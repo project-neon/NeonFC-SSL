@@ -5,17 +5,19 @@ import threading
 import logging
 from google.protobuf.json_format import MessageToJson
 from neonfc_ssl.protocols.gc.ssl_gc_referee_message_pb2 import Referee
-from neonfc_ssl.input_layer.input_data import GameController
+from ..input_data import GameController
 
 
 class SSLGameControllerReferee(threading.Thread):
     def __init__(self, config, log):
-        super(SSLGameControllerReferee, self).__init__()
-        self.referee_port = 10003
-        self.host = '224.5.23.1'
+        super(SSLGameControllerReferee, self).__init__(daemon=True)
+
+        self.config = config
 
         self.running = False
-        self.daemon = True
+
+        self.referee_port = self.config["game_controller_port"]
+        self.host = self.config["game_controller_ip"]
 
         self._referee_message = {}
 

@@ -17,8 +17,8 @@ class GrComm:
         self.command_sock = None
 
         # GrSim Comm Parameters
-        self.command_port = self.config['network']['command_port']
-        self.host = self.config['network']['host_ip']
+        self.command_port = self.config['command_port']
+        self.host = self.config['host_ip']
 
     def start(self):
         self.logger(logging.INFO, "Starting GRSim communication...")
@@ -60,5 +60,6 @@ class GrComm:
             (self.host, self.command_port)
         )
 
-    def _create_socket(self):
+    @staticmethod
+    def _create_socket():
         return socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
