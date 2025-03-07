@@ -14,7 +14,8 @@ class Tracking(Layer):
     def __init__(self, config, log_q, event_pipe):
         super().__init__("MatchLayer", config, log_q, event_pipe)
 
-        self._previous_layer = "InputLayer"
+        if self.config['color'] != 'blue' and self.config['color'] != 'yellow':
+            raise ValueError("color must be either 'blue' or 'yellow'")
 
         # Tracking Objects
         self.ball: Ball = None
@@ -26,9 +27,8 @@ class Tracking(Layer):
         self.possession: PossessionTracker = None
 
         # Other Tracking Parameters
-        self.goalkeeper_id = 0
-        self.team_color = self.config['match']['team_color']
-        self.opponent_color = 'yellow' if self.config['match']['team_color'] == 'blue' else 'blue'
+        self.team_color = self.config['color']
+        self.opponent_color = 'yellow' if self.config['color'] == 'blue' else 'blue'
 
         self.logger = logging.getLogger("match")
 

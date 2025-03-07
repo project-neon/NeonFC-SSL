@@ -5,16 +5,15 @@ import logging
 import threading
 import math
 from google.protobuf.json_format import MessageToJson
-from neonfc_ssl.input_layer.input_data import Ball, Robot, Geometry, Entities
 from neonfc_ssl.protocols.grSim import ssl_vision_wrapper_pb2
+from ..input_data import Ball, Robot, Geometry, Entities
 
 
 class GrSimVision(threading.Thread):
     def __init__(self, config, log) -> None:
-        super(GrSimVision, self).__init__()
+        super(GrSimVision, self).__init__(daemon=True)
 
         self.config = config
-        self.daemon = True
 
         self.running = False
 
@@ -28,8 +27,8 @@ class GrSimVision(threading.Thread):
         self.side_factor = 1
         self.angle_factor = 0
 
-        self.vision_port = self.config['network']['vision_port']
-        self.host = self.config['network']['multicast_ip']
+        self.vision_port = self.config['vision_port']
+        self.host = self.config['multicast_ip']
 
         self.logger = log
 
@@ -65,8 +64,9 @@ class GrSimVision(threading.Thread):
         t_capture = frame.get('tCapture')
         camera_id = frame.get('cameraId')
 
-        self.side_factor = 1 if self.config['match']['team_side'] == 'left' else -1
-        self.angle_factor = 0 if self.config['match']['team_side'] == 'left' else math.pi
+        # TODO: this should be done in tracking not in input
+        self.side_factor = 1 if self.config['side'] == 'left' else -1
+        self.angle_factor = 0 if self.config['side'] == 'left' else math.pi
 
         balls = frame.get('balls', [])
         self.update_ball_detection(balls, camera_id)

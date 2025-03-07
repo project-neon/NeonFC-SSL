@@ -1,5 +1,4 @@
 import logging
-from abc import ABC, abstractmethod
 from scipy.optimize import linear_sum_assignment
 import numpy as np
 from neonfc_ssl.core import Layer
@@ -9,7 +8,7 @@ from .coaches import COACHES
 from typing import TYPE_CHECKING, Union, Optional
 if TYPE_CHECKING:
     from neonfc_ssl.tracking_layer.tracking_data import MatchData, TrackedRobot
-    from neonfc_ssl.decision_layer.special_strategies import BaseStrategy
+    from .special_strategies.special_strategy import SpecialStrategy
 
 
 Position = tuple[float, float]
@@ -20,14 +19,14 @@ class Decision(Layer):
     def __init__(self, config, log_q, event_pipe):
         super().__init__("DecisionLayer", config, log_q, event_pipe)
         self.events = {}
-        self.__strategies: list[Optional['BaseStrategy']] = []
+        self.__strategies: list[Optional['SpecialStrategy']] = []
 
     def _start(self):
         self.log(logging.INFO, "Starting coach module starting ...")
 
         self.__strategies = [None for _ in range(16)]
 
-        self.__coach = COACHES['TestCoach'](self)
+        self.__coach = COACHES[self.config['coach']](self)
 
         self.log(logging.INFO, "Coach module started!")
 
@@ -40,7 +39,7 @@ class Decision(Layer):
             return True
         return False
 
-    def set_strategy(self, robot: 'TrackedRobot', strategy: 'BaseStrategy'):
+    def set_strategy(self, robot: 'TrackedRobot', strategy: 'SpecialStrategy'):
         if robot.id > len(self.__strategies):
             self.log(logging.ERROR, "Trying to set strategy for unknown id {}".format(id))
             return
@@ -69,15 +68,9 @@ class Decision(Layer):
                 except KeyboardInterrupt as e:
                     raise e
                 except Exception as e:
-                    raise e
                     self.log(logging.ERROR, e)
 
         return DecisionData(self.__commands, data)
-
-    @property
-    def has_possession(self):
-        # FIXME
-        return self._match.possession.get_possession() == self._match.team_color
 
     def calculate_hungarian(self, targets: list[Union[Position, Pose]], robots: list['TrackedRobot']):
         try:

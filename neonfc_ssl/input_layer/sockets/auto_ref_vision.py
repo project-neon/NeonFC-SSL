@@ -5,16 +5,15 @@ import logging
 import threading
 import math
 from google.protobuf.json_format import MessageToJson
-from neonfc_ssl.input_layer.input_data import Ball, Robot, Entities
 from neonfc_ssl.protocols.gc.ssl_vision_wrapper_tracked_pb2 import TrackerWrapperPacket
+from ..input_data import Ball, Robot, Entities
 
 
 class AutoRefVision(threading.Thread):
     def __init__(self, config, log) -> None:
-        super(AutoRefVision, self).__init__()
+        super(AutoRefVision, self).__init__(daemon=True)
 
         self.config = config
-        self.daemon = True
 
         self.running = False
 
@@ -25,8 +24,8 @@ class AutoRefVision(threading.Thread):
         self.side_factor = 1
         self.angle_factor = 0
 
-        self.vision_port = self.config['network']['autoref_port']
-        self.host = self.config['network']['multicast_ip']
+        self.vision_port = self.config['autoref_port']
+        self.host = self.config['multicast_ip']
 
         self.logger = log
 
@@ -58,8 +57,9 @@ class AutoRefVision(threading.Thread):
             return False
         t_capture = frame.get('timestamp')
 
-        self.side_factor = 1 if self.config['match']['team_side'] == 'left' else -1
-        self.angle_factor = 0 if self.config['match']['team_side'] == 'left' else math.pi
+        # TODO: this should be done in tracking not in input
+        self.side_factor = 1 if self.config['side'] == 'left' else -1
+        self.angle_factor = 0 if self.config['side'] == 'left' else math.pi
 
         balls = frame.get('balls', [])
         self.update_ball_detection(balls, t_capture)
