@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "neonfc-ssl"
+name = "neonfc_ssl"
 version = "0.2.0"
-package-mode = false
+#package-mode = false
 description = "project neon's code for ssl decision making"
 authors = [
     "Alexsandro Santos <alexsandro2134@gmail.com>",
@@ -12,14 +12,16 @@ authors = [
 ]
 readme = "README.md"
 
+[tool.poetry.scripts]
+neonfc = 'neonfc_ssl.main:main'
+
 [tool.poetry.dependencies]
-python = ">=3.9,<3.13"
+python = "3.12.x"
 protobuf = "3.20.x"
-scipy = "^1.11.3"
-numpy = "^1.26.0"
+scipy = "1.15"
+numpy = "2.2"
 neonpathplanning = "^1.0.1"
-matplotlib = "^3.9.2"
-pyvisgraph = "^0.2.1"
+matplotlib = "3.10"
 tqdm = "^4.66.5"
 pyserial = "^3.5"
 

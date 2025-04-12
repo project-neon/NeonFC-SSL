@@ -13,7 +13,7 @@ from google.protobuf import symbol_database as _symbol_database
 _sym_db = _symbol_database.Default()
 
 
-import protocols.gc.ssl_gc_game_event_pb2 as ssl__gc__game__event__pb2
+import neonfc_ssl.protocols.gc.ssl_gc_game_event_pb2 as ssl__gc__game__event__pb2
 
 
 DESCRIPTOR = _descriptor.FileDescriptor(

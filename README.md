@@ -1,6 +1,6 @@
 # SSL Neon FC
 
-This repo contains a pre-alpha version of all the main code needed to run Project Neon's RoboCop SSL intelligence.
+This repo contains the initial version of all the main code needed to run Project Neon's RoboCop SSL intelligence.
 
 ## Communication between modules
 

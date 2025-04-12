@@ -12,8 +12,8 @@ from google.protobuf import symbol_database as _symbol_database
 _sym_db = _symbol_database.Default()
 
 
-import protocols.grSim.ssl_vision_detection_pb2 as ssl__vision__detection__pb2
-import protocols.grSim.ssl_vision_geometry_pb2 as ssl__vision__geometry__pb2
+import neonfc_ssl.protocols.grSim.ssl_vision_detection_pb2 as ssl__vision__detection__pb2
+import neonfc_ssl.protocols.grSim.ssl_vision_geometry_pb2 as ssl__vision__geometry__pb2
 
 
 DESCRIPTOR = _descriptor.FileDescriptor(
