@@ -7,7 +7,7 @@ import numpy as np
 # Static obstacle: will be considered a rectangle, so its vertices will be stored. Collision checking will be simpler
 @dataclass
 class StaticObstacle(Obstacle):
-    start: np.ndarray = np.array((0, 0))
+    start: np.ndarray = field(default_factory=lambda: np.array((0, 0)))
     length: float = 0
     height: float = 0
     end: np.ndarray = field(init=False)

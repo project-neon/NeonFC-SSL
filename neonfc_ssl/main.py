@@ -70,7 +70,7 @@ class Game:
     def read_log_queue(self):
         while True:
             log = self.layers_log_q.get()
-            print(log)
+            self.logger.log(log[1], f"{log[0]}: {log[1]}")
 
     def setup_logger(self):
         if (t1 := self.config['match'].get('team_1', None)) is not None and \
@@ -117,6 +117,10 @@ class Game:
                 break
 
 
-if __name__ == "__main__":
+def main():
     game = Game()
     game.start()
+
+
+if __name__ == "__main__":
+    main()
