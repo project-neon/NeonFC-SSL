@@ -2,6 +2,8 @@ import json
 from pip._vendor import tomli
 import logging.config
 import time
+import socket
+from threading import Thread
 from multiprocessing import Pipe, Queue
 from neonfc_ssl.input_layer import InputLayer
 from neonfc_ssl.tracking_layer import Tracking
@@ -9,6 +11,7 @@ from neonfc_ssl.decision_layer import Decision
 from neonfc_ssl.control_layer import Control
 from neonfc_ssl.output_layer import OutputLayer
 from neonfc_ssl.core import DebugLayer
+from neonfc_ssl.core.logger import setup_logging
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -36,7 +39,7 @@ class Game:
         self.layers_log_q = Queue()
 
         # Config Logger
-        # self.setup_logger()
+        self.setup_logger()
 
         self.logger = logging.getLogger("game")
 
@@ -45,6 +48,33 @@ class Game:
         self.new_layer(Decision)
         self.new_layer(Control)
         self.new_layer(OutputLayer)
+
+        self.output_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.input_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+        self.__input_thread = Thread(target=self.listen_input, daemon=True)
+        self.__input_thread.start()
+
+        self.__intervals = {}
+
+    def listen_input(self):
+        while True:
+            self.input_socket.bind((self.config['Game']['host'], self.config['Game']['input_port']))
+            self.input_socket.listen()
+            conn, addr = self.input_socket.accept()
+            with conn:
+                self.logger.info(f"Input socket connected by {addr}")
+                while True:
+                    data = conn.recv(1024)
+                    if not data:
+                        break
+
+    def send_udp(self, msg):
+        self.output_socket.sendto(msg, (self.config['Game']['host'], self.config['Game']['output_port']))
+
+    def send_architecture(self):
+        msg = {'type': 'architecture', 'data': {'layers': [layer.name for layer in self.layers]}}
+        self.send_udp(json.dumps(msg))
 
     def start(self):
         self.logger.info("Starting game")
@@ -61,23 +91,25 @@ class Game:
 
     def read_log_queue(self):
         while True:
-            log = self.layers_log_q.get()
-            self.logger.log(log[1], f"{log[0]}: {log[1]}")
+            record = self.layers_log_q.get()
+            self.logger.handle(record)
+            # self.logger.log(log["type"], f"{log['source']}: {log}")
 
     def setup_logger(self):
-        if (t1 := self.config['match'].get('team_1', None)) is not None and \
-           (t2 := self.config['match'].get('team_2', None)) is not None and \
-           (event := self.config['match'].get('event', None)) is not None:
-
-            self.match_name = f"{t1}x{t2}@{event}"
-
-        self.config['logger']['handlers']['main_log']['filename'] = f"logs/{self.match_name}.log.jsonl"
-        self.config['logger']['handlers']['game_log']['filename'] = f"logs/{self.match_name}.gamelog.jsonl"
-        logging.config.dictConfig(self.config['logger'])
+        setup_logging()
+        # if (t1 := self.config['match'].get('team_1', None)) is not None and \
+        #    (t2 := self.config['match'].get('team_2', None)) is not None and \
+        #    (event := self.config['match'].get('event', None)) is not None:
+        #
+        #     self.match_name = f"{t1}x{t2}@{event}"
+        #
+        # self.config['logger']['handlers']['main_log']['filename'] = f"logs/{self.match_name}.log.jsonl"
+        # self.config['logger']['handlers']['game_log']['filename'] = f"logs/{self.match_name}.gamelog.jsonl"
+        # logging.config.dictConfig(self.config['logger'])
 
     def new_layer(self, layer: type['Layer']):
         pipe_in, pipe_out = Pipe(duplex=False)
-        print(self.config)
+        # print(self.config)
         layer_obj = layer(self.config[layer.__name__], self.layers_log_q, pipe_out)
         self.layers.append(layer_obj)
         self.layers_event[layer_obj.name] = pipe_in

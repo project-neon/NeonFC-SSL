@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+import "commons.proto";
+
+enum States {
+    HALT = 0;
+    STOP = 1;
+    TIMEOUT = 2;
+    PREPARE_KICKOFF = 3;
+    PREPARE_PENALTY = 4;
+    BALL_PLACEMENT = 5;
+    KICKOFF = 6;
+    FREE_KICK = 7;
+    PENALTY = 8;
+    RUN = 9;
+}
+
+message Geometry {
+  float field_length = 1;
+  float field_width = 2;
+  float goal_width = 3;
+  float penalty_depth = 4;
+  float penalty_width = 5;
+}
+
+message Robot {
+  int32 id = 1;
+  Colors color = 2;
+  Vector pos = 3;
+  Vector vel = 4;
+}
+
+message Ball {
+  Vector pos = 1;
+  Vector vel = 2;
+}
+
+message GameState {
+  States current_state = 1;
+  optional Colors team = 2;
+}
+
+message Possession {
+  float balance = 1;
+}
+
+message Tracking {
+  optional Geometry geometry = 1;
+  Colors team_color = 2;
+  optional Ball ball = 3;
+  repeated Robot robots = 4;
+  repeated Robot opposites = 5;
+  optional GameState game_state = 6;
+  optional Possession possession = 7;
+}

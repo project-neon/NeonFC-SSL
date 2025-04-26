@@ -3,6 +3,7 @@ from enum import Enum
 from typing import Optional
 import numpy as np
 import math
+from neonfc_ssl.protocols.internal import TrackingProtobuf, CommonsProtobuf
 from neonfc_ssl.commons.math import reduce_ang, distance_between_points
 from neonfc_ssl.input_layer.input_data import Geometry
 
@@ -67,6 +68,12 @@ class TrackedBall:
         return (self.x + self.vx * dt_x - math.copysign(0.5 * a * dt_x ** 2, self.vx),
                 self.y + self.vy * dt_y - math.copysign(0.5 * a * dt_y ** 2, self.vy))
 
+    def to_proto(self):
+        return TrackingProtobuf.Ball(
+            pos=CommonsProtobuf.Vector(x=self.x, y=self.y, z=self.z),
+            vel=CommonsProtobuf.Vector(x=self.vx, y=self.vy, z=self.vz),
+        )
+
 
 @dataclass
 class TrackedRobot:
@@ -113,6 +120,14 @@ class TrackedRobot:
             last_t = t
         return last_t
 
+    def to_proto(self):
+        return TrackingProtobuf.Robot(
+            id=self.id,
+            color=CommonsProtobuf.Colors.Value(color),
+            pos=CommonsProtobuf.Vector(x=self.x, y=self.y, z=self.theta),
+            vel=CommonsProtobuf.Vector(x=self.vx, y=self.vy, z=self.vtheta),
+        )
+
 
 @dataclass
 class RobotList:
@@ -129,6 +144,9 @@ class RobotList:
     def actives(self):
         return self.active
 
+    def to_proto(self):
+        return [r.to_proto() for r in self.robots]
+
 
 @dataclass
 class Possession:
@@ -138,6 +156,11 @@ class Possession:
     possession_balance: float
 
     contact_start_position: np.array
+
+    def to_proto(self):
+        return TrackingProtobuf.Possession(
+            balance=self.possession_balance
+        )
 
 
 class States(Enum):
@@ -156,8 +179,17 @@ class States(Enum):
 @dataclass
 class GameState:
     state: States
+    color: Optional[str] = None
     friendly: Optional[bool] = None
     position: Optional[tuple[float, float]] = None
+
+    def to_proto(self):
+        return TrackingProtobuf.GameState(
+            state=TrackingProtobuf.States.Value(self.state),
+            team=CommonsProtobuf.Colors.Value(color),
+            pos=CommonsProtobuf.Vector(x=self.x, y=self.y, z=self.theta),
+            vel=CommonsProtobuf.Vector(x=self.vx, y=self.vy, z=self.vtheta),
+        )
 
 
 @dataclass
@@ -173,3 +205,13 @@ class MatchData:
     def __post_init__(self):
         self.robots = RobotList(self.robots)
         self.opposites = RobotList(self.opposites)
+
+    def to_proto(self):
+        return TrackingProtobuf.Tracking(
+            team_color=CommonsProtobuf.Colors.Value('yellow' if self.is_yellow else 'blue'),
+            ball=self.ball.to_proto(),
+            robots=self.robots.to_proto(),
+            opposites=self.opposites.to_proto(),
+            game_state=self.game_state.to_proto(),
+            possession=self.possession.to_proto()
+        )

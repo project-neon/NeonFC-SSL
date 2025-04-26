@@ -1,0 +1,25 @@
+version: '3'
+services:
+  grSim:
+    image: robocupssl/grsim:latest
+    container_name: grsim
+    network_mode: host
+    environment:
+      - VNC_PASSWORD=vnc
+      - VNC_GEOMETRY=1920x1080
+    command:
+      - vnc
+
+  auto-referee-vnc:
+    image: tigersmannheim/auto-referee-vnc:latest
+    container_name: auto-referee-vnc
+    network_mode: host # Same as --net=host
+    command:
+      - "-visionAddress"
+      - "224.5.23.2:10006"
+      - "-trackerAddress"
+      - "224.5.23.2:10010"
+    environment:
+      - DISPLAY=unix$DISPLAY
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix

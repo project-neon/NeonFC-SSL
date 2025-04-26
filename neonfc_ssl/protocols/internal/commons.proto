@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+enum Colors{
+  yellow = 0;
+  blue = 1;
+}
+
+message Vector{
+  float x = 1;
+  float y = 2;
+  optional float z = 3;
+}

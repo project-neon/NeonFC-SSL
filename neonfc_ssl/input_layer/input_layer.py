@@ -1,6 +1,8 @@
 from typing import Any
 import time
+from dataclasses import asdict
 from neonfc_ssl.core import Layer
+from neonfc_ssl.core.logger import TRACKING
 from .sockets.gr_sim_vision import GrSimVision
 from .sockets.auto_ref_vision import AutoRefVision
 from .sockets.ssl_game_controller import SSLGameControllerReferee
@@ -32,6 +34,10 @@ class InputLayer(Layer):
             vision_data = self.ssl_vison.get_last_frame()
 
         geometry = self.ssl_vison.get_geometry()
+        # self.log(GAME, {
+        #     "type": "geometry",
+        #     "content": asdict(geometry)
+        # })
         gc = self.referee.get_data()
 
         return InputData(
