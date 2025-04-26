@@ -3,26 +3,28 @@ import logging
 # Adds two extra logging levels
 
 # Game Level is the lowest represents game events that the NeonFC caught
-GAME_LVL_NUM = 6
+TRACKING = 6
 # Decision Level is above represent decisions made based on the received information
-DECISION_LVL_NUM = 7
+DECISION = 7
 
-logging.addLevelName(GAME_LVL_NUM, "GAME")
-logging.addLevelName(DECISION_LVL_NUM, "DECISION")
+LEVELS = {TRACKING, DECISION}
+
+logging.addLevelName(TRACKING, "TRACKING")
+logging.addLevelName(DECISION, "DECISION")
 
 
-def game(self, message, *args, **kws):
-    if self.isEnabledFor(GAME_LVL_NUM):
+def tracking(self, message, *args, **kws):
+    if self.isEnabledFor(TRACKING):
         # Yes, logger takes its '*args' as 'args'.
-        self._log(GAME_LVL_NUM, message, args, **kws)
+        self._log(TRACKING, message, args, **kws)
 
 
 def decision(self, message, *args, **kws):
-    if self.isEnabledFor(DECISION_LVL_NUM):
+    if self.isEnabledFor(DECISION):
         # Yes, logger takes its '*args' as 'args'.
-        self._log(DECISION_LVL_NUM, message, args, **kws)
+        self._log(DECISION, message, args, **kws)
 
 
-logging.Logger.game = game
+logging.Logger.tracking = tracking
 logging.Logger.decision = decision
 

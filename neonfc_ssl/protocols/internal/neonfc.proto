@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+import "tracking.proto";
+import "decision.proto";
+
+enum Sources {
+  GAME = 0;
+  INPUTLAYER = 1;
+  TRACKINGLAYER = 2;
+  DECISIONLAYER = 3;
+  CONTROLLAYER = 4;
+  OUTPUTLAYER = 5;
+}
+
+enum LayerStatus {
+  NOT_STARTED = 0;
+  NOT_RUNNING = 1;
+  IDLE = 2;
+  RUNNING = 3;
+}
+
+message LayerInfo {
+  string name = 1;
+  int32 pipeline_position = 2;
+  LayerStatus status = 3;
+  float refresh_rate = 4;
+}
+
+message Game {
+  repeated LayerInfo layer_info = 1;
+}
+
+message LogEntry {
+  google.protobuf.Timestamp timestamp = 1;
+  Sources source = 2;
+  int32 level = 3;
+  optional string message = 4;
+  optional Game game = 5;
+  optional Tracking tracking = 6;
+  optional Decision decision = 7;
+}

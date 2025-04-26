@@ -19,9 +19,7 @@ class FloatPossessionTracker:
         self.in_ball_contact = False
         self.contact_start_position = np.array([0, 0])
 
-        self.logger = logging.getLogger("match")
-
-        self.logger.info(f"{self.get_possession()} team ball possession")
+        self.match.log(logging.INFO, f"{self.get_possession()} team ball possession")
 
     def update(self):
         time_to_ball = lambda r: r.time_to_ball(self.match.ball) if r is not None else float('inf')

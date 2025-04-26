@@ -1,6 +1,7 @@
 import logging
 from neonfc_ssl.core import Layer
-from .entities import OmniRobot, Ball
+from neonfc_ssl.core.logger import TRACKING
+from .entities import OmniRobot, Ball, ball
 from .possession_tracker import FloatPossessionTracker as PossessionTracker
 from .state_controller import StateController
 from .tracking_data import MatchData
@@ -12,7 +13,7 @@ if TYPE_CHECKING:
 
 class Tracking(Layer):
     def __init__(self, config, log_q, event_pipe):
-        super().__init__("MatchLayer", config, log_q, event_pipe)
+        super().__init__("TrackingLayer", config, log_q, event_pipe)
 
         if self.config['color'] != 'blue' and self.config['color'] != 'yellow':
             raise ValueError("color must be either 'blue' or 'yellow'")
@@ -29,8 +30,6 @@ class Tracking(Layer):
         # Other Tracking Parameters
         self.team_color = self.config['color']
         self.opponent_color = 'yellow' if self.config['color'] == 'blue' else 'blue'
-
-        self.logger = logging.getLogger("match")
 
     def _start(self):
         self.log(logging.INFO, "Starting match module starting ...")
@@ -55,7 +54,7 @@ class Tracking(Layer):
 
         self.possession = PossessionTracker(self, self.game_state)
 
-        self.logger.info("Match module started!")
+        self.log(logging.INFO, "Match module started!")
 
     def _step(self, data: 'InputData'):
         geometry = data.geometry
@@ -76,8 +75,7 @@ class Tracking(Layer):
         state = self.game_state.update(data.game_controller)
 
         poss = self.possession.update()
-
-        return MatchData(
+        out_data = MatchData(
             robots=[r.data for r in self.robots],
             opposites=[r.data for r in self.opposites],
             ball=self.ball.data,
@@ -86,3 +84,5 @@ class Tracking(Layer):
             field=geometry,
             is_yellow=self.team_color=='yellow'
         )
+        self.log(TRACKING, out_data)
+        return out_data

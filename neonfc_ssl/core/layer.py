@@ -32,7 +32,21 @@ class Layer(Process):
         self.__last_data = None
 
     def log(self, level, msg):
-        self.__logger.put((self.name, level, msg))
+        self.__logger.put(logging.LogRecord(
+            name=self.name,
+            level=level,
+            pathname='-',
+            lineno=0,
+            msg=msg,
+            args=(),
+            exc_info=None
+        ))
+        # {
+        #     "timestamp": time(),
+        #     "source": self.name,
+        #     "type": level,
+        #     "message": msg
+        # })
 
     def bind_input_pipe(self, pipe):
         self.__input = pipe

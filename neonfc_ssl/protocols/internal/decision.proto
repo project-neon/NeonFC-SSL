@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+import "commons.proto";
+
+message DecisionRobot {
+  int32 id = 1;
+  Vector target_pos = 2;
+  string strategy = 3;
+}
+
+message Decision {
+  optional string coach = 1;
+  repeated DecisionRobot robots = 2;
+}
