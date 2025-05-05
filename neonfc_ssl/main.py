@@ -32,14 +32,13 @@ class Game:
         # Load Config
         with open("config.toml", "rb") as f:
             self.config = tomli.load(f)
-        # self.config = get_config()
 
         self.layers: list[Layer] = []
         self.layers_event: dict[str, Pipe] = {}
         self.layers_log_q = Queue()
 
         # Config Logger
-        self.setup_logger()
+        setup_logging(self.config['Game'])
 
         self.logger = logging.getLogger("game")
 
@@ -94,18 +93,6 @@ class Game:
             record = self.layers_log_q.get()
             self.logger.handle(record)
             # self.logger.log(log["type"], f"{log['source']}: {log}")
-
-    def setup_logger(self):
-        setup_logging()
-        # if (t1 := self.config['match'].get('team_1', None)) is not None and \
-        #    (t2 := self.config['match'].get('team_2', None)) is not None and \
-        #    (event := self.config['match'].get('event', None)) is not None:
-        #
-        #     self.match_name = f"{t1}x{t2}@{event}"
-        #
-        # self.config['logger']['handlers']['main_log']['filename'] = f"logs/{self.match_name}.log.jsonl"
-        # self.config['logger']['handlers']['game_log']['filename'] = f"logs/{self.match_name}.gamelog.jsonl"
-        # logging.config.dictConfig(self.config['logger'])
 
     def new_layer(self, layer: type['Layer']):
         pipe_in, pipe_out = Pipe(duplex=False)
