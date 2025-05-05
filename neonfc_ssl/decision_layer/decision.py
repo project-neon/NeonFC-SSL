@@ -80,15 +80,17 @@ class Decision(Layer):
             return
 
         for robot, pos in zip(rs, ps):
-            if len(pos) == 2:
-                pos.append(robot.theta)
+            if len(targets[pos]) == 2:
+                target = (*targets[pos], robots[robot].theta)
+            else:
+                target = targets[pos]
 
-            self.__hungarian_robots.append(robot.id)
+            self.__hungarian_robots.append(robots[robot].id)
 
             self.__commands.append(RobotRubric(
-                id=robot.id,
+                id=robots[robot].id,
                 halt=False,
-                target_pose=pos
+                target_pose=target
             ))
 
     @staticmethod
