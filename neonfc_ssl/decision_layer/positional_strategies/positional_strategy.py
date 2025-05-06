@@ -14,5 +14,5 @@ POSE = tuple[float, float, float]
 class PositionalStrategy(ABC):
     @staticmethod
     @abstractmethod
-    def decide(data: 'MatchData', ids: list[int]) -> Union[POSITION, POSE]:
+    def decide(data: 'MatchData', ids: list[int]) -> list[Union[POSITION, POSE]]:
         pass

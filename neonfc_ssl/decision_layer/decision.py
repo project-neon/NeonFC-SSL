@@ -110,6 +110,9 @@ class Decision(Layer):
         try:
             for i in range(n_robots):
                 for j in range(n_robots):
+                    # TODO: this is using the a straight line distance to the target as the cost, but it's not always
+                    #  the case (eg. A robot won't pass thru the area, so if the straight line goes thru it the real
+                    #  cost is higher)
                     cost_matrix[i][j] = (robot_pos[i][0]-desired_pos[j][0])**2 + (robot_pos[i][1]-desired_pos[j][1])**2
         except IndexError as e:
             raise Exception(e)
