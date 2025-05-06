@@ -109,6 +109,23 @@ def angle_between(v1, v2):
     return math.acos(dot_product(v1, v2) / (length(v1) * length(v2)))
 
 
+def angle_to_first_quadrant(angle):
+    """
+    Converts any angle in radians to its equivalent angle in the first quadrant (0 to pi/2).
+
+    Args:
+        angle_rad: The angle in radians.
+
+    Returns:
+        The equivalent angle in the first quadrant, in radians.
+    """
+    angle = angle % (2 * math.pi)  # Ensure the angle is within 0 to 2*pi
+    if angle > math.pi:
+        angle = 2 * math.pi - angle
+    if angle > math.pi/2 and angle <= math.pi:
+        angle = math.pi - angle
+    return angle
+
 def angle_between_3_points(a, b, c):
     ba = a - b
     bc = c - b
