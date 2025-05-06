@@ -7,7 +7,6 @@ if TYPE_CHECKING:
     from neonfc_ssl.tracking_layer.tracking_data import MatchData
 
 
-# TODO
 class Libero(PositionalStrategy):
     @staticmethod
     def decide(data: 'MatchData', ids: list[int]):
@@ -57,9 +56,9 @@ class Libero(PositionalStrategy):
             poses = [(x, lower_area_limit + 0.18*i, 0) for i in range(n)]
 
         elif n%2:
-            poses = [(x, y_projection + 0.18/2 + 0.18*i) for i in range(-int(n/2), int(n/2))]
+            poses = [(x, y_projection + 0.18*i, 0) for i in range(-int(n/2), int(n/2)+1)]
 
         else:
-            poses = [(x, y_projection + 0.18*i) for i in range(-int(n/2), int(n/2))]
+            poses = [(x, y_projection + 0.18/2 + 0.18*i, 0) for i in range(-int(n/2), int(n/2))]
 
         return poses

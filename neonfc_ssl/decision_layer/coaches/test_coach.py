@@ -1,6 +1,6 @@
 from .base_coach import Coach
 from ..special_strategies import BallHolder, GoalKeeper
-from ..positional_strategies import Libero
+from ..positional_strategies import Libero, LeftBack, RightBack
 
 
 class TestCoach(Coach):
@@ -9,9 +9,17 @@ class TestCoach(Coach):
         self.ballholder = BallHolder()
 
     def __call__(self, data):
-        liberos = data.robots[0:4]
+        liberos = data.robots[0:3]
+        left_backs = data.robots[3:4]
+        right_backs = data.robots[4:5]
+
+        targets = [
+            Libero.decide(data, [r.id for r in liberos]),
+            LeftBack.decide(data, [r.id for r in left_backs]),
+            RightBack.decide(data, [r.id for r in right_backs])
+        ]
 
         self.decision.calculate_hungarian(
-            targets=Libero.decide(data, [r.id for r in liberos]),
-            robots=liberos
+            targets=[i for j in targets for i in j],
+            robots=[i for j in [liberos, left_backs, right_backs] for i in j]
         )
