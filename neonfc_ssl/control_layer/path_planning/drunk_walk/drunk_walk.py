@@ -1,7 +1,7 @@
 from typing import Tuple
-from neonfc_ssl.path_planning.drunk_walk.obstacle import Obstacle
-from neonfc_ssl.path_planning.drunk_walk.static_obstacle import StaticObstacle
-from neonfc_ssl.path_planning.drunk_walk.dynamic_obstacle import DynamicObstacle
+from neonfc_ssl.control_layer.path_planning.drunk_walk.obstacle import Obstacle
+from neonfc_ssl.control_layer.path_planning.drunk_walk.static_obstacle import StaticObstacle
+from neonfc_ssl.control_layer.path_planning.drunk_walk.dynamic_obstacle import DynamicObstacle
 from random import uniform, choice
 import numpy as np
 

@@ -1,4 +1,4 @@
-from neonfc_ssl.path_planning.drunk_walk.obstacle import Obstacle
+from neonfc_ssl.control_layer.path_planning.drunk_walk.obstacle import Obstacle
 from dataclasses import dataclass, field
 import numpy as np
 
