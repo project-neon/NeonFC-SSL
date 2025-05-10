@@ -1,4 +1,0 @@
-from neonfc_ssl.path_planning.drunk_walk.drunk_walk import DrunkWalk
-from neonfc_ssl.path_planning.drunk_walk.obstacle import Obstacle
-from neonfc_ssl.path_planning.drunk_walk.static_obstacle import StaticObstacle
-from neonfc_ssl.path_planning.drunk_walk.dynamic_obstacle import DynamicObstacle

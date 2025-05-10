@@ -3,7 +3,7 @@ import numpy as np
 from math import sqrt, cos, sin
 from neonfc_ssl.core import Layer
 from neonfc_ssl.commons.math import reduce_ang
-from neonfc_ssl.path_planning.drunk_walk import DrunkWalk
+from neonfc_ssl.control_layer.path_planning.drunk_walk import DrunkWalk
 from .control_data import ControlData, RobotCommand
 
 from typing import TYPE_CHECKING
