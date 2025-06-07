@@ -2,10 +2,15 @@ from dataclasses import dataclass, field as dc_f
 from enum import Enum
 from typing import Optional
 import numpy as np
+from numpy.linalg import norm
 import math
 from neonfc_ssl.protocols.internal import TrackingProtobuf, CommonsProtobuf
 from neonfc_ssl.commons.math import reduce_ang, distance_between_points
 from neonfc_ssl.input_layer.input_data import Geometry
+
+A_SLIDE = 2.5
+A_ROLL = 0.3
+C_SWITCH = 0.6
 
 
 @dataclass
@@ -17,10 +22,42 @@ class TrackedBall:
     vy: float = None
     vz: Optional[float] = None
 
+    v_shoot: np.ndarray = dc_f(init=False)
+    v_switch: float = dc_f(init=False)
+    d_switch: float = dc_f(init=False)
+
     speed: float = dc_f(init=False)
 
-    def __post_init__(self):
+    def update_v_shoot(self):
+        self.v_shoot = np.array((self.vx, self.vy))
+        self.v_switch = norm(self.v_shoot) * C_SWITCH
+        self.d_switch = (self.speed ** 2 - self.v_switch ** 2) / (2 * A_SLIDE)
+
+    def update_speed(self):
         self.speed = math.sqrt(self.vx**2 + self.vy**2)
+
+    def __post_init__(self):
+        self.update_speed()
+        self.update_v_shoot()
+
+    def tb(self, d):
+        if self.speed <= self.v_switch:
+            if (val := self.speed ** 2 - 2 * A_ROLL * d) > 0:
+                return (self.speed - math.sqrt(val)) / A_ROLL
+            else:
+                return math.inf
+
+        else:
+            if d <= self.d_switch:
+                return (self.speed - math.sqrt(self.speed ** 2 - 2 * A_SLIDE * d)) / A_SLIDE
+            else:
+                if (val := self.v_switch ** 2 - 2 * A_ROLL * (d - self.d_switch)) > 0:
+                    return (self.speed - self.v_switch) / A_SLIDE + (self.v_switch - math.sqrt(val)) / A_ROLL
+                else:
+                    return math.inf
+
+    def distance_to_vector(self, d):
+        np.array(self) - d*np.array((self.vx, self.vy))/self.speed
 
     def __getitem__(self, item):
         if item == 0:
@@ -89,6 +126,9 @@ class TrackedRobot:
 
     missing: float
 
+    R = 0.18
+    VM = 0.15
+
     def __getitem__(self, item):
         if item == 0:
             return self.x
@@ -105,6 +145,11 @@ class TrackedRobot:
         if copy is False:
             raise ValueError("`copy=False` isn't supported")
         return np.array([self.x, self.y], dtype=dtype)
+
+    def time_to_target(self, target, displacement=True):
+        if displacement:
+            target = target + TrackedRobot.R
+        return norm(np.array(self)-target)/TrackedRobot.VM
 
     def time_to_ball(self, ball):
         avg_speed = .35
@@ -123,7 +168,7 @@ class TrackedRobot:
     def to_proto(self):
         return TrackingProtobuf.Robot(
             id=self.id,
-            color=CommonsProtobuf.Colors.Value(color),
+            color=CommonsProtobuf.Colors.Value(self.color),
             pos=CommonsProtobuf.Vector(x=self.x, y=self.y, z=self.theta),
             vel=CommonsProtobuf.Vector(x=self.vx, y=self.vy, z=self.vtheta),
         )
@@ -186,7 +231,7 @@ class GameState:
     def to_proto(self):
         return TrackingProtobuf.GameState(
             state=TrackingProtobuf.States.Value(self.state),
-            team=CommonsProtobuf.Colors.Value(color),
+            team=CommonsProtobuf.Colors.Value(self.color),
             pos=CommonsProtobuf.Vector(x=self.x, y=self.y, z=self.theta),
             vel=CommonsProtobuf.Vector(x=self.vx, y=self.vy, z=self.vtheta),
         )
