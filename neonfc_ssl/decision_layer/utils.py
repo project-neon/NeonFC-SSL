@@ -19,8 +19,11 @@ def find_bracket(f, *params, d_start=0.0, d_max=10.0, step=0.05):
 
 def find_first_interception(robot, ball):
     def rooted_interception(d):
-        return ball.tb(d) - robot.tr(ball.distance_to_vector(d))
+        return ball.tb(d) - robot.time_to_target(ball.distance_to_vector(d))
+
     bracket = find_bracket(rooted_interception)
+    if bracket:
+        return ball.distance_to_vector(root_scalar(rooted_interception, bracket=bracket, xtol=0.5, method="brentq").root)
 
-    return ball.distance_to_vector(root_scalar(rooted_interception, bracket=bracket, xtol=0.5, method="brentq").root)
-
+    else:
+        return ball.distance_to_vector(0)

@@ -57,7 +57,8 @@ class TrackedBall:
                     return math.inf
 
     def distance_to_vector(self, d):
-        np.array(self) - d*np.array((self.vx, self.vy))/self.speed
+        speed = self.speed if self.speed else 0.0001
+        return np.array(self) - d*np.array((self.vx, self.vy))/speed
 
     def __getitem__(self, item):
         if item == 0:

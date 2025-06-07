@@ -22,7 +22,6 @@ class Ball:
             vx=0,
             vy=0,
             vz=0,
-            v_shoot=np.array((0, 0))
         )
 
     def get_speed(self):
