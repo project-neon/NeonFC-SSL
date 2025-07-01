@@ -1,6 +1,7 @@
 import math
 from neonfc_ssl.decision_layer.decision import RobotRubric
 from .base_skill import BaseSkill
+from ..utils import find_first_interception
 
 
 class GoToBall(BaseSkill):
@@ -13,17 +14,14 @@ class GoToBall(BaseSkill):
         robot = data.robots[self._robot_id]
         ball = data.ball
 
-        ttb = robot.time_to_ball(ball)
-        target = ball.pos_after(ttb)
+        target = find_first_interception(robot, ball)
 
-        close_to_ball = ((robot.x - target[0]) ** 2 + (robot.x - target[1]) ** 2) ** .5 < 0.15
         theta = math.atan2(-robot.y+ball.y, -robot.x+ball.x)
 
         return RobotRubric(
             id=self._robot_id,
             halt=False,
             target_pose=(target[0], target[1], theta),
-            spinner=close_to_ball,
             avoid_area=self.avoid_area,
             avoid_allies=[r.id for r in data.robots if r.id != self._robot_id] if self.avoid_allies else [],
             avoid_opponents=[r.id for r in data.opposites] if self.avoid_opponents else []

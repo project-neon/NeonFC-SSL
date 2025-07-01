@@ -1,5 +1,6 @@
 import time
 import numpy as np
+from numpy.linalg import norm
 from ..tracking_data import TrackedBall
 
 from typing import TYPE_CHECKING
@@ -20,13 +21,15 @@ class Ball:
             z=0,
             vx=0,
             vy=0,
-            vz=0
+            vz=0,
         )
 
     def get_speed(self):
-        return (self.data.vx ** 2 + self.data.vy ** 2) ** .5
+        return self.data.speed
 
     def update(self, b: 'InputBall', field: 'Geometry'):
+        # TODO: encapsulate all this inside an update function the dataclass
+        last_speed = self.get_speed()
         self.data.x = b.x + field.field_length/2
         self.data.y = b.y + field.field_width/2
         self.data.z = b.z
@@ -34,6 +37,10 @@ class Ball:
         self.data.vy = b.vy
         self.data.vz = b.vz
 
+        self.data.update_speed()
+
+        if self.data.speed > last_speed + 0.01:
+            self.data.update_v_shoot()
 
     def __getitem__(self, item):
         return self.data[item]

@@ -29,6 +29,9 @@ class GrComm:
         self.logger(logging.INFO, "GRSim communication module started!")
     
     def update(self, cmds: 'ControlData'):
+        if not cmds.commands:
+            return
+
         commands = grSim_Commands()
         commands.isteamyellow = cmds.commands[0].is_yellow
         commands.timestamp = 0
