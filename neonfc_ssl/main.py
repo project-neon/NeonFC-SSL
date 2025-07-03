@@ -3,6 +3,8 @@ from pip._vendor import tomli
 import logging.config
 import time
 import socket
+import sys
+import argparse
 from threading import Thread
 from multiprocessing import Pipe, Queue
 from neonfc_ssl.input_layer import InputLayer
@@ -28,10 +30,15 @@ def get_config(config_file=None):
 
 
 class Game:
-    def __init__(self) -> None:
+    def __init__(self, args) -> None:
         # Load Config
-        with open("config.toml", "rb") as f:
+        with args.profile as f:
             self.config = tomli.load(f)
+
+        if args.color:
+            self.config["Tracking"]["Color"] = args.color
+        if args.side:
+            self.config["InputLayer"]["side"] = args.side
 
         self.layers: list[Layer] = []
         self.layers_event: dict[str, Pipe] = {}
@@ -81,8 +88,6 @@ class Game:
         for prev_layer, layer in zip(self.layers[:-1], self.layers[1:]):
             layer.bind_input_pipe(prev_layer.output_pipe)
 
-        print(self.layers)
-
         for layer in self.layers:
             layer.start()
 
@@ -102,8 +107,49 @@ class Game:
         self.layers_event[layer_obj.name] = pipe_in
 
 
-def main():
-    game = Game()
+def main(args=None):
+    if not args:
+        args = sys.argv[1:]
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-p", "--profile",
+        help="the config file",
+        default="config.toml",
+        type=argparse.FileType(mode="rb"),
+    )
+    parser.add_argument(
+        "-c", "--color",
+        help="the team color (will overwrite the config file)",
+        default=None,
+        choices=["yellow", "blue"]
+    )
+    parser.add_argument(
+        "-s", "--side",
+        help="the team goalkeeper side (will overwrite the config file)",
+        default=None,
+        choices=["left", "right"]
+    )
+    print("=" * 60)
+    print(r"""⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀                             
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣠⣄⡀⠀⠀                             
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢰⣦⠀⠀⠀⠀⠀⠀⠀⣾⠋⠙⣷⠀⠀                             
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢰⣦⣀⢀⣿⣿⣇⣀⣀⣀⠀⠀⢸⡟⠀⢰⣿⣦⠀                             
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣶⣼⡇⠀⠈⠻⠋⠀                             
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⢻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣦⠀⠀⠀                              
+⠀⠰⣤⣀⠀⠀⠀⢀⣴⣿⣿⣿⣿⣿⣿⣿⣿⠟⢿⣿⣿⠋⠁⣾⣿⣿⣷⡄⠀                              
+⠀⠀⠘⣿⣿⣶⣴⣿⣿⣿⣿⣿⣿⣿⡏⢹⡟⠀⣿⣿⣿⣄⠀⠈⣡⣿⠟⠀_                  _____ ____  
+⠀⠀⠀⣼⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣀⠘⢷⣄⠉⠻⣿⣿⣿⣿⡿⠃⠀|⠀|⠀___⠀⠀___⠀⠀_⠀__⠀|⠀⠀___/⠀___| 
+⠀⠀⠚⢻⣿⣿⠿⠛⠻⢿⣿⣿⣿⣿⣿⣷⣴⣿⣿⣦⣿⣿⣿⠏⠀⠀\|⠀|/⠀_⠀\/⠀_⠀\|⠀'_⠀\|⠀|_⠀|⠀|     
+⠀⠀⣠⠿⠋⠁⠀⠀⠀⠀⠈⠙⣻⣿⣿⣿⣿⣿⡿⣿⣿⡟⠁|⠀|\⠀⠀|⠀⠀__/⠀(_)⠀|⠀|⠀|⠀|⠀⠀_||⠀|___  
+⠀⠀⠁⠀⠀⠀⠀⠀⠀⠀⠘⣻⣿⣿⣿⣿⠿⢿⣷⣄⡉⠀⠀|_|⠀\_|\___|\___/|_|⠀|_|_|⠀⠀⠀\____| 
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠛⣿⡟⠁⠀⠀⠈⠙⠻⠿⣶⣶⣶⣶⠀⠀                               
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀                              
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀""")
+    print("=" * 60)
+    args = parser.parse_args(args)
+
+    game = Game(args)
     game.start()
 
 
