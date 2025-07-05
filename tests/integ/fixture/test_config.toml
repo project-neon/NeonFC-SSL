@@ -1,0 +1,28 @@
+[Game]
+host = "localhost"
+input_port = 0
+output_port = 0
+
+[InputLayer]
+multicast_ip = "127.0.0.1"
+game_controller_ip = "127.0.0.1"
+vision_port = 10006
+autoref_port = 10010
+game_controller_port = 10003
+use_ref_vision = true
+side = "left"
+
+[Tracking]
+color = "yellow"
+
+[Decision]
+coach = "TestCoach"
+
+[Control]
+
+[OutputLayer]
+host_ip = "127.0.0.1"
+command_port = 20011
+serial_port = "/dev/ttyACM0"
+baud_rate =  115200
+use_gr_sim = true
