@@ -24,8 +24,21 @@ neonpathplanning = "^1.0.1"
 matplotlib = "3.10"
 tqdm = "^4.66.5"
 pyserial = "^3.5"
+toml = "^0.10.2"
 
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.4.1"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+markers = [
+    "integration: mark test as integration test",
+]
+filterwarnings = "ignore::DeprecationWarning"
+testpaths = [
+    "tests"
+]
