@@ -1,14 +1,13 @@
 import math
 import random
 import numpy as np
-from typing import Tuple, List
+from typing import List, Tuple
 from . import Node
 
 class RRT:
-    def __init__(
-            self,
-            start: Tuple[float],
-            goal: Tuple[float],
+    def __init__(self,
+            start: Tuple[float, float],
+            goal: Tuple[float, float],
             obstacles: List[Node],
             map_area: Tuple[float, float] = (9, 6),
             collision_margin: float = 0.18,
@@ -23,58 +22,86 @@ class RRT:
         self.collision_margin = collision_margin
         self.step_size = step_size
         self.max_iter = max_iter
-        self.node_list = [self.start]
+        self.node_list: List[Node] = [self.start]
         self.path = None
 
     def get_random_node(self):
         x = random.uniform(0, self.map_area[0])
         y = random.uniform(0, self.map_area[1])
-
         return Node(x, y)
 
-    def get_nearest_node(self, node: Node):
-        distances = [ (node.x - node_i.x)**2 + (node.y - node_i.y)**2 for node_i in self.node_list ]
-        min_index = np.argmin(distances)
-
+    def get_nearest_node(self, node):
+        distance_list = [(node.x - node_i.x)**2 + (node.y - node_i.y)**2 for node_i in self.node_list]
+        min_index = np.argmin(distance_list)
         return self.node_list[min_index]
 
-    def steer(self, from_node: Node, to_node: Node):
-        theta = math.atan2(to_node.y - from_node.y, to_node.x - from_node.x)
+    def steer(self, start: Node, end: Node):
+        theta = math.atan2(end.y - start.y, end.x - start.x)
 
         new_node = Node(
-            from_node.x + self.step_size * math.cos(theta),
-            from_node.y + self.step_size * math.sin(theta)
+            start.x + self.step_size * math.cos(theta),
+            start.y + self.step_size * math.sin(theta)
         )
 
-        new_node.parent = from_node
-        new_node.cost = from_node.cost + self.step_size
-
+        new_node.parent = start
+        new_node.cost = start.cost + self.step_size
         return new_node
 
-    def is_collision_free(self, p1: Node, p2: Node):
-        a = p2.y - p1.y
-        b = p1.x - p2.x
-        c = - a*p1.x - b*p1.y
+    def is_collision_free(self, start: Node, end: Node):
+        # check bounds first
+        if not (0 <= end.x <= self.map_area[0] and 0 <= end.y <= self.map_area[1]):
+            return False
+
+        a = end.y - start.y
+        b = start.x - end.x
+        c = -a * start.x - b * start.y
+
+        # Handle the case where start and end are the same point
         div = math.sqrt(a**2 + b**2)
+        if div == 0:
+            # Points are identical, check if start point collides with obstacles
+            for obstacle in self.obstacles:
+                dist = math.sqrt((start.x - obstacle.x)**2 + (start.y - obstacle.y)**2)
+                if dist <= self.collision_margin:
+                    return False
+            return True
 
-        sec = lambda o: ( abs( a*o.x + b*o.y + c ) / div ) > self.collision_margin
+        # check line segment collision with obstacles
+        for obstacle in self.obstacles:
+            # Distance from point to line
+            line_dist = abs(a * obstacle.x + b * obstacle.y + c) / div
 
-        return all(sec(obstacle) for obstacle in self.obstacles)
+            if line_dist <= self.collision_margin:
+                # check if the closest point on the line is within the segment
+                t = ((obstacle.x - start.x) * (end.x - start.x) +
+                     (obstacle.y - start.y) * (end.y - start.y)) / (div**2)
+
+                if 0 <= t <= 1:  # closest point is on the segment
+                    return False
+                else:
+                    # check distance to endpoints
+                    dist_to_start = math.sqrt((obstacle.x - start.x)**2 + (obstacle.y - start.y)**2)
+                    dist_to_end = math.sqrt((obstacle.x - end.x)**2 + (obstacle.y - end.y)**2)
+
+                    if min(dist_to_start, dist_to_end) <= self.collision_margin:
+                        return False
+
+        return True
 
     def generate_path(self):
-        final_path = []
-        cur_node = self.goal
+        path = []
+        node = self.goal
 
-        while cur_node is not None:
-            final_path.append([cur_node.x, cur_node.y])
-            cur_node = cur_node.parent
+        while node is not None:
+            path.append([node.x, node.y])
+            node = node.parent
 
-        return final_path[::-1]
+        self.path = path
+        return path[::-1]
 
     def plan(self):
-
-        # for _ in range(self.max_iter):
-        while True:
+        for iteration in range(self.max_iter):
+        # while True:
 
             random_node = self.get_random_node()
             nearest_node = self.get_nearest_node(random_node)
@@ -83,20 +110,16 @@ class RRT:
 
             if self.is_collision_free(nearest_node, new_node):
                 self.node_list.append(new_node)
-            else: continue
 
-            print(new_node, self.goal)
+                # check if we can connect to goal
+                goal_distance = math.sqrt((new_node.x - self.goal.x)**2 + (new_node.y - self.goal.y)**2)
 
-            if d := math.sqrt((new_node.x - self.goal.x)**2 + (new_node.y - self.goal.y)**2) <= self.step_size:
-                if self.is_collision_free(new_node, self.goal):
-                    self.goal.parent = new_node
-                    self.goal.cost = new_node.cost + d
-                    self.node_list.append(self.goal)
+                if goal_distance <= self.step_size:
+                    if self.is_collision_free(new_node, self.goal):
+                        self.goal.parent = new_node
+                        self.goal.cost = new_node.cost + goal_distance
+                        self.node_list.append(self.goal)
+                        return self.generate_path()
 
-                    return self.generate_path()
-
+        # No path found
         return []
-
-
-if __name__ == "__main__":
-    ...
