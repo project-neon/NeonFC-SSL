@@ -10,7 +10,7 @@ class RRT:
             start: Tuple[float],
             goal: Tuple[float],
             obstacles: List[Node],
-            map_area: Tuple[float] = (9, 6),
+            map_area: Tuple[float, float] = (9, 6),
             collision_margin: float = 0.18,
             step_size: float = 0.05,
             max_iter: int = 5000
@@ -73,7 +73,8 @@ class RRT:
 
     def plan(self):
 
-        for _ in range(self.max_iter):
+        # for _ in range(self.max_iter):
+        while True:
 
             random_node = self.get_random_node()
             nearest_node = self.get_nearest_node(random_node)
@@ -83,6 +84,8 @@ class RRT:
             if self.is_collision_free(nearest_node, new_node):
                 self.node_list.append(new_node)
             else: continue
+
+            print(new_node, self.goal)
 
             if d := math.sqrt((new_node.x - self.goal.x)**2 + (new_node.y - self.goal.y)**2) <= self.step_size:
                 if self.is_collision_free(new_node, self.goal):
