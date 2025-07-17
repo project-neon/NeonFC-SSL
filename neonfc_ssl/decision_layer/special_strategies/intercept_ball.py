@@ -18,7 +18,7 @@ class InterceptBall(SpecialStrategy):
         self.skill = GoToBall()
 
     def _start(self):
-        self.skill.start(self._robot_id)
+        self.skill.start(self._robot_id, avoid_allies=True, avoid_opponents=True)
 
     def decide(self, data):
         return self.skill.decide(data)
