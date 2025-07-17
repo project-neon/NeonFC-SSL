@@ -1,5 +1,5 @@
 from .base_coach import Coach
-from ..special_strategies import BallHolder, GoalKeeper,InterceptBall
+from ..special_strategies import BallHolder, GoalKeeper, InterceptBall
 from ..positional_strategies import Libero, LeftBack, RightBack
 
 
@@ -9,7 +9,7 @@ class TestCoach(Coach):
         self.ballholder = InterceptBall()
 
     def __call__(self, data):
-        self.decision.set_strategy(data.robots[0], self.ballholder)
+        self.decision.set_strategy(data.robots[5], self.ballholder)
         # liberos = data.robots[0:3]
         # left_backs = data.robots[3:4]
         # right_backs = data.robots[4:5]
