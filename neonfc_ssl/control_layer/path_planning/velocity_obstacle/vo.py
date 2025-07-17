@@ -44,7 +44,7 @@ class StarVO:
         self.angular_resolution = 0.1
         self.velocity_samples = 5
         self.time_horizon = 3.0
-        self.max_neighbor_distance = 5.0
+        self.max_neighbor_distance = 1.0
 
     def update_static_obstacles(self, obstacles: List[Tuple]):
         """Update static obstacles with spatial filtering"""
@@ -325,7 +325,7 @@ class StarVO:
 
         base_angle = atan2(self.desired_v[1], self.desired_v[0])
 
-        for theta in np.linspace(-pi/2, pi/2 + 0.05, 25):
+        for theta in np.linspace(-pi/2, pi/2 + 0.05, 15):
             angle = base_angle + theta
             direction = np.array([cos(angle), sin(angle)])
             for speed in np.linspace(1e-6, self.max_v, self.velocity_samples + 1):
