@@ -4,6 +4,8 @@ from math import sqrt, cos, sin
 from neonfc_ssl.core import Layer
 from neonfc_ssl.commons.math import reduce_ang
 from neonfc_ssl.control_layer.path_planning.drunk_walk import DrunkWalk
+from neonfc_ssl.control_layer.path_planning.rrt import RRT
+from neonfc_ssl.control_layer.path_planning.velocity_obstacle import StarVO
 from .control_data import ControlData, RobotCommand
 
 from typing import TYPE_CHECKING
@@ -36,71 +38,41 @@ class Control(Layer):
         robot = data.robots[command.id]
         field = data.field
 
-        path_planning = DrunkWalk()
-        path_planning.start((robot.x, robot.y), command.target_pose[:2])
+        field_len = field.field_length
+        field_wid = field.field_width
+        border = 0.3
 
-        post_thickness = 0.02
-        goal_depht = 0.18
-        goal_height = 1
-        r = 0.09
-        L = 12
-        m = 0
+        x_min = -border
+        y_min = -border
+        x_max = field_len + border
+        y_max = field_wid + border
 
-        # -- Friendly Goalkeeper Area -- #
-        if command.avoid_area:
-            path_planning.add_static_obstacle(
-                (0, field.field_width / 2 - field.penalty_width / 2),
-                field.penalty_depth,
-                field.penalty_width
-            )
-        # -- Friendly Goal Posts -- #
-        path_planning.add_static_obstacle(
-            (-r - goal_depht - post_thickness, field.field_width / 2 - r - goal_height / 2),
-            2 * r + post_thickness + goal_depht,
-            2 * r + goal_height
+        obstacles = []
+
+        planner = StarVO(
+            pos = (robot.x, robot.y),
+            goal = command.target_pose[:2],
+            vel = (robot.vx, robot.vy),
+            max_vel = 2.0,
+            radius = robot.R/2
         )
-        # -- Opponent Goalkeeper Area -- #
-        path_planning.add_static_obstacle(
-            (field.field_length - field.penalty_depth,
-             field.field_width / 2 - field.penalty_width / 2),
-            field.penalty_depth,
-            field.penalty_width
-        )
-        # # -- Opponent Goal Posts -- #
-        # path_planning.add_static_obstacle(
-        #     (-1, -1),
-        #     self._field.fieldLength + 2,
-        #     0.7
-        # )
-        # -- Lower Field Limit -- #
-        path_planning.add_static_obstacle(
-            (-L - m, -L - m),
-            field.field_length + 2 * (m + L),
-            L + r
-        )
-        # -- Right Field Limit -- #
-        path_planning.add_static_obstacle(
-            (field.field_length + m - r, -m),
-            L,
-            field.penalty_width + 2 * m
-        )
-        # -- Upper Field Limit -- #
-        path_planning.add_static_obstacle(
-            (-L - m, field.field_width + m - r),
-            field.field_length + 2 * (m + L),
-            L
-        )
-        # -- Left Field Limit -- #
-        path_planning.add_static_obstacle(
-            (-L - m, -m),
-            L + r,
-            field.field_width + 2 * m
-        )
+
+        planner.update_walls([
+            ((x_min, y_min), (x_min, y_max)), # left wall
+            ((x_min, y_max), (x_max, y_max)), # upper wall
+            ((x_max, y_max), (x_max, y_min)), # right wall
+            ((x_max, y_min), (x_min, y_min)) # lower wall
+        ])
 
         # -- Opponent Robots -- #
         for opp in command.avoid_opponents:
             opp = data.opposites[opp]
-            path_planning.add_dynamic_obstacle(opp, 0.2, np.array((opp.vx, opp.vy)))
+            obstacles.append((
+                (opp.x, opp.y),
+                (opp.vx, opp.vy),
+                opp.R / 2,
+                0
+            ))
 
         # -- Friendly Robots -- #
         for rob in command.avoid_allies:
@@ -108,12 +80,21 @@ class Control(Layer):
                 continue
 
             rob = data.robots[rob]
-            path_planning.add_dynamic_obstacle(rob, 0.2, np.array((rob.vx, rob.vy)))
+            obstacles.append((
+                (rob.x, rob.y),
+                (rob.vx, rob.vy),
+                rob.R / 2,
+                0
+            ))
 
-        next_point = path_planning.find_path()
+        planner.update_dynamic_obstacles(obstacles)
 
-        dx = next_point[0] - robot.x
-        dy = next_point[1] - robot.y
+        new_v = planner.update()
+
+        dx = new_v[0] # next_point[0] - robot.x
+        dy = new_v[1] # next_point[1] - robot.y
+
+        print(new_v)
 
         dt = reduce_ang(command.target_pose[2] - robot.theta)
 
