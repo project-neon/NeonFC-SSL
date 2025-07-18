@@ -130,7 +130,7 @@ class StarVO:
                               obs_radius: float, obs_priority: int = 0,
                               is_dynamic: bool = True) -> Optional[Cone]:
         rel_pos = obs_pos - self.pos
-        dist = np.linalg.norm(rel_pos)
+        dist = np.linalg.norm(rel_pos) + 1e-6
 
         combined_radius = self.effective_radius + obs_radius
 
@@ -140,7 +140,7 @@ class StarVO:
             return None
 
         theta_center = atan2(rel_pos[1], rel_pos[0])
-        theta_half = asin(min(combined_radius / dist, 1.0))
+        theta_half = asin(min(max(combined_radius / dist, -1.0), 1.0))
 
         left_angle = (theta_center + theta_half) % (2*pi)
         right_angle = (theta_center - theta_half) % (2*pi)
@@ -363,7 +363,7 @@ class StarVO:
                     small_theta = abs(theta-0.5*(cone.left_angle+cone.right_angle))
                     if abs(cone.dist*sin(small_theta)) >= rad:
                         rad = abs(cone.dist*sin(small_theta))
-                    big_theta = asin(abs(cone.dist*sin(small_theta))/rad)
+                    big_theta = asin(min(1.0, abs(cone.dist*sin(small_theta))/rad))
                     dist_tg = abs(cone.dist*cos(small_theta))-abs(rad*cos(big_theta))
                     if dist_tg < 0:
                         dist_tg = 0
