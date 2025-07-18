@@ -82,9 +82,14 @@ class StarVO:
 
         for w in walls:
             start, end = np.array(w[0]), np.array(w[1])
-            mid_point = (start + end) * 0.5
 
-            if np.linalg.norm(mid_point - self.pos) < self.max_neighbor_distance:
+            line_vec = end - start
+            line_len_sq = np.dot(line_vec, line_vec)
+
+            t = max(0, min(1, np.dot(self.pos - start, line_vec) / line_len_sq))
+            projection = start + t * line_vec
+
+            if np.linalg.norm(self.pos - projection) < self.max_neighbor_distance:
                 filtered_walls.append(Wall(start, end))
 
         self.walls = filtered_walls
