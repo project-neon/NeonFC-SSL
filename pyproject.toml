@@ -29,6 +29,9 @@ toml = "^0.10.2"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.4.1"
+mypy = "^1.17.1"
+flake8 = "^7.3.0"
+flake8-bugbear = "^24.12.12"
 
 [build-system]
 requires = ["poetry-core"]
@@ -42,3 +45,8 @@ filterwarnings = "ignore::DeprecationWarning"
 testpaths = [
     "tests"
 ]
+
+[tool.mypy]
+[[tool.mypy.overrides]]
+module = ["neonfc_ssl.protocols.*", "neonfc_ssl.path_planning.*"]
+ignore_errors = true
