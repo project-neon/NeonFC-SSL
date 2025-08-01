@@ -18,8 +18,40 @@ The following modules are maintained by our team:
 2. [Interface](): Here all the interaction between the decision and the human user are centered
 3. [Firmware](): This is the repo that contains all the embedded software robots and station
 
+## Installation
+This project is managed using poetry, so you need to install it first. You can follow the instructions on the [poetry website](https://python-poetry.org/docs/#installation).
+
+It runs on python 3.12. We recommend using pyenv for managing your python versions.
+```bash
+poetry install
+```
+
 ##  Running
+To run the Neon FC, using the default config you can use the following command:
+```bash
+poetry run neonfc
+```
 
-This project is maneged using poetry and is meant to be run on ubuntu
+If you want to specify a different config file, you can use the `--profile` option:
+```bash
+poetry run neonfc --profile path/to/config.toml
+```
 
-```poetry run python neonfc_ssl/game.py```
+## Development
+To start the full development environment, you can make the docket compose setup and run:
+```bash
+docker compose up
+```
+
+### Testing
+
+Currently, the only obligatory test is layers integration tests. We haven't setup any CI pipeline to check it, so you need to run it manually and add the results to your PR.
+```bash
+poetry run pytest -m integration
+```
+
+Additionally, you can run the following linters/static analysers:
+```bash
+poetry run mypy . # For checking types
+poetry run flake8 # For checking code style
+```

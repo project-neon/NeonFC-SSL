@@ -18,6 +18,7 @@ from neonfc_ssl.core.logger import setup_logging
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from neonfc_ssl.core import Layer
+    from multiprocessing.connection import Connection
 
 
 def get_config(config_file=None):
@@ -41,7 +42,7 @@ class Game:
             self.config["InputLayer"]["side"] = args.side
 
         self.layers: list[Layer] = []
-        self.layers_event: dict[str, Pipe] = {}
+        self.layers_event: dict[str, 'Connection'] = {}
         self.layers_log_q = Queue()
 
         # Config Logger
