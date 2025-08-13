@@ -7,6 +7,8 @@ from neonfc_ssl.control_layer.path_planning.drunk_walk import DrunkWalk
 from neonfc_ssl.control_layer.path_planning.rrt import RRT
 from neonfc_ssl.control_layer.path_planning.velocity_obstacle import StarVO
 from .control_data import ControlData, RobotCommand
+from time import time
+from statistics import fmean, median, mode
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -20,6 +22,9 @@ class Control(Layer):
 
         self.KP = 1.5
         self.KP_ang = 2
+
+        self.elapsed_time = []
+        self.t = 1
 
     def _start(self):
         self.log(logging.INFO, "Starting control module starting ...")
@@ -49,6 +54,8 @@ class Control(Layer):
 
         obstacles = []
 
+        t0 = time()
+
         planner = StarVO(
             pos = (robot.x, robot.y),
             goal = command.target_pose[:2],
@@ -57,12 +64,29 @@ class Control(Layer):
             radius = robot.R/2
         )
 
-        planner.update_walls([
+        walls = [
             ((x_min, y_min), (x_min, y_max)), # left wall
             ((x_min, y_max), (x_max, y_max)), # upper wall
             ((x_max, y_max), (x_max, y_min)), # right wall
             ((x_max, y_min), (x_min, y_min)) # lower wall
-        ])
+        ]
+
+        if command.avoid_area:
+            area_y_start = (field_wid - field.penalty_width) / 2
+
+            walls.extend([
+                ((0, area_y_start), (0, area_y_start + field.penalty_width)),
+                ((0, area_y_start + field.penalty_width), (field.penalty_depth, area_y_start + field.penalty_width)),
+                ((field.penalty_depth, area_y_start + field.penalty_width), (field.penalty_depth, area_y_start)),
+                ((field.penalty_depth, area_y_start), (0, area_y_start)),
+
+                ((field_len - field.penalty_depth, area_y_start), (field_len - field.penalty_depth, area_y_start + field.penalty_width)),
+                ((field_len - field.penalty_depth, area_y_start + field.penalty_width), (field_len, area_y_start + field.penalty_width)),
+                ((field_len, area_y_start + field.penalty_width), (field_len, area_y_start)),
+                ((field_len, area_y_start), (field_len - field.penalty_depth, area_y_start)),
+            ])
+
+        planner.update_walls(walls)
 
         # -- Opponent Robots -- #
         for opp in command.avoid_opponents:
@@ -91,10 +115,20 @@ class Control(Layer):
 
         new_v = planner.update()
 
+        self.elapsed_time.append(time() - t0)
+
+        # if self.t % 100 == 0:
+        #     print(f"Time mean  : {fmean(self.elapsed_time):3f}s")
+        #     print(f"Time median: {median(self.elapsed_time):3f}s")
+        #     print(f"Time mode  : {mode(self.elapsed_time):3f}s")
+        #     print(f"Time min   : {min(self.elapsed_time):3f}s")
+        #     print(f"Time max   : {max(self.elapsed_time):3f}s\n")
+        #     self.elapsed_time = []
+
+        self.t += 1
+
         dx = new_v[0] # next_point[0] - robot.x
         dy = new_v[1] # next_point[1] - robot.y
-
-        print(new_v)
 
         dt = reduce_ang(command.target_pose[2] - robot.theta)
 
