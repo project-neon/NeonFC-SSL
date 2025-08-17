@@ -39,10 +39,10 @@ class GoalKeeper(SpecialStrategy):
     def decide(self, data: "MatchData"):
         next = self.active.update(data)
 
-        if next.name != "MoveToPose":
+        if not isinstance(next, MoveToPose):
             self.active = next
 
-            if self.active.name == "Pass":
+            if isinstance(self.active, SimplePass):
                 _passing_to = Point(5, 4)
                 self.active.start(self._robot_id, target=_passing_to)
 

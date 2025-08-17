@@ -59,14 +59,21 @@ class PerformShoot(State):
         super().__init__()
         self.name = 'PerformShoot'
 
-    def start(self, robot):
-        self.match = robot.match
-        self.robot = robot
+    def start(self, robot_id):
+        self.robot_id = robot_id
 
-    def decide(self):
-        return RobotRubric(move_speed=(0, 0, 0), kick_speed=(6.5, 0), robot=self.robot)
+    def decide(self, data):
+        return RobotRubric(
+            id=self.robot_id,
+            halt=False,
+            kick_speed=(6.5, 0)
+        )
 
 
 class Shoot(BaseSkill):
+    def _start(self, **kwargs):
+        self.skill = PerformShoot()
+        self.skill.start(self._robot_id)
+
     def decide(self, data):
-        pass
+        return self.skill.decide(data)

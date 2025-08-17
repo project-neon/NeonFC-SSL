@@ -1,6 +1,6 @@
 from .circle_coach import CircleCoach
 from .test_coach import TestCoach
-# from .simple_coach import SimpleCoach
+from .simple_coach import SimpleCoach
 
 from typing import TYPE_CHECKING, Type
 if TYPE_CHECKING:
@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 _coach_list: list[Type['Coach']] = [
     # Tournament coaches
     TestCoach,
-    # SimpleCoach,
+    SimpleCoach,
     CircleCoach
 ]
 

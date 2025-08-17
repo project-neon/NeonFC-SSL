@@ -16,7 +16,7 @@ side = "left"
 color = "yellow"
 
 [Decision]
-coach = "TestCoach"
+coach = "SimpleCoach"
 
 [Control]
 
