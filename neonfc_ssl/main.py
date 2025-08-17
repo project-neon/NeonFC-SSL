@@ -1,4 +1,5 @@
 import json
+import os
 from pip._vendor import tomli
 import logging.config
 import time
@@ -19,15 +20,6 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from neonfc_ssl.core import Layer
     from multiprocessing.connection import Connection
-
-
-def get_config(config_file=None):
-    if config_file:
-        config = json.loads(open(config_file, 'r').read())
-    else:
-        config = json.loads(open('config.json', 'r').read())
-
-    return config
 
 
 class Game:
@@ -131,7 +123,8 @@ def main(args=None):
         default=None,
         choices=["left", "right"]
     )
-    print("=" * 60)
+    w = os.get_terminal_size().columns
+    print("=" * w)
     print(r"""⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀                             
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣠⣄⡀⠀⠀                             
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢰⣦⠀⠀⠀⠀⠀⠀⠀⣾⠋⠙⣷⠀⠀                             
@@ -147,7 +140,7 @@ def main(args=None):
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠛⣿⡟⠁⠀⠀⠈⠙⠻⠿⣶⣶⣶⣶⠀⠀                               
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀                              
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀""")
-    print("=" * 60)
+    print("=" * w)
     args = parser.parse_args(args)
 
     game = Game(args)
