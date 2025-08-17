@@ -199,6 +199,7 @@ class Possession:
     my_closest: int
     op_closest: int
 
+    possession_team: str
     possession_balance: float
 
     contact_start_position: np.array
