@@ -43,11 +43,11 @@ class StarVO:
         # Parameters
         self.angular_resolution = 0.1
         self.velocity_samples = 5
-        self.time_horizon = 3.0
+        self.time_horizon = 2.0
         self.max_neighbor_distance = 1.0
 
-    def update_static_obstacles(self, obstacles: List[Tuple]):
-        """Update static obstacles with spatial filtering"""
+    def _filter_obstacles(self, obstacles: List[Tuple]):
+        """Obstacles spatial filtering"""
         filtered_obs = []
 
         for o in obstacles:
@@ -59,22 +59,17 @@ class StarVO:
                     Obstacle(pos, np.array(o[1]), o[2], o[3] if len(o) > 3 else 0)
                 )
 
-        self.static_obstacles = filtered_obs
+        return filtered_obs
 
-    def update_dynamic_obstacles(self, obstacles: List[Tuple]):
-        """Update dynamic obstacles with spatial filtering"""
-        filtered_obs = []
+    def update_static_obstacles(self, static_obstacles: List[Tuple]):
+        """Update static obstacles"""
 
-        for o in obstacles:
-            pos = np.array(o[0])
-            dist = np.linalg.norm(pos - self.pos)
+        self.static_obstacles = self._filter_obstacles(static_obstacles)
 
-            if dist < self.max_neighbor_distance:
-                filtered_obs.append(
-                    Obstacle(pos, np.array(o[1]), o[2], o[3] if len(o) > 3 else 0)
-                )
+    def update_dynamic_obstacles(self, dynamic_obstacles: List[Tuple]):
+        """Update dynamic obstacles"""
 
-        self.dynamic_obstacles = filtered_obs
+        self.dynamic_obstacles = self._filter_obstacles(dynamic_obstacles)
 
     def update_walls(self, walls: List[Tuple]):
         """Update walls with spatial filtering"""
@@ -83,13 +78,14 @@ class StarVO:
         for w in walls:
             start, end = np.array(w[0]), np.array(w[1])
 
-            line_vec = end - start
-            line_len_sq = np.dot(line_vec, line_vec)
+            wall_vec = end - start
+            to_agent = self.pos - start
 
-            t = max(0, min(1, np.dot(self.pos - start, line_vec) / line_len_sq))
-            projection = start + t * line_vec
+            t = np.dot(to_agent, wall_vec) / np.dot(wall_vec, wall_vec)
+            t_clamped = max(0, min(1, t))
+            closest_point = start + t_clamped * wall_vec
 
-            if np.linalg.norm(self.pos - projection) < self.max_neighbor_distance:
+            if np.linalg.norm(closest_point - self.pos) < self.max_neighbor_distance:
                 filtered_walls.append(Wall(start, end))
 
         self.walls = filtered_walls
@@ -101,9 +97,11 @@ class StarVO:
         return np.linalg.norm(a - b) + 1e-6
 
     def reached_goal(self) -> bool:
+        """Check if agent reached goal"""
         return self.distance(self.pos, self.goal) < self.goal_tolerance
 
     def _compute_desired_velocity(self) -> np.ndarray:
+        """Compute desired velocity with speed limiting"""
         if self.reached_goal():
             return np.array([1e-6, 1e-6])
 
@@ -129,6 +127,7 @@ class StarVO:
     def _compute_rvo_cone(self, obs_pos: np.ndarray, obs_vel: np.ndarray,
                               obs_radius: float, obs_priority: int = 0,
                               is_dynamic: bool = True) -> Optional[Cone]:
+        """Cone computation with improved numerical stability"""
         rel_pos = obs_pos - self.pos
         dist = np.linalg.norm(rel_pos) + 1e-6
 
@@ -139,8 +138,22 @@ class StarVO:
         if dist > max_influence_dist:
             return None
 
-        theta_center = atan2(rel_pos[1], rel_pos[0])
-        theta_half = asin(min(max(combined_radius / dist, -1.0), 1.0))
+        # Handle case where agent is inside or very close to obstacle
+        if dist <= combined_radius:
+            # Agent is inside or touching the obstacle
+            if dist < 1e-6:
+                # Agent exactly at obstacle center - create emergency cone
+                theta_center = atan2(self.desired_v[1], self.desired_v[0]) if np.linalg.norm(self.desired_v) > 1e-6 else 0
+                theta_half = pi/4  # Wide emergency cone
+            else:
+                theta_center = atan2(rel_pos[1], rel_pos[0])
+                # For very close obstacles, use maximum half-angle
+                theta_half = pi/2 - 1e-3  # Nearly full cone but avoid numerical issues
+        else:
+            theta_center = atan2(rel_pos[1], rel_pos[0])
+            # Safe division - dist > combined_radius guaranteed here
+            sin_theta_half = min(combined_radius / dist, 1.0)
+            theta_half = asin(sin_theta_half)
 
         left_angle = (theta_center + theta_half) % (2*pi)
         right_angle = (theta_center - theta_half) % (2*pi)
@@ -165,7 +178,7 @@ class StarVO:
                          max_time: float = float('inf')) -> float:
         """
         Solves quadratic equation a*t^2 + b*t + c = 0.
-        Returns smallest non-negative real root <= max_time, or inf if none exists
+        Returns smallest non-negative real root <= max_time, or inf if none exists.
         """
         # Handle linear case
         if abs(a) < 1e-12:
@@ -185,15 +198,15 @@ class StarVO:
         # Numerically stable roots
         if b >= 0:
             root1 = (-b - sqrt_d) / denom
-            root2 = 2*c / (-b - sqrt_d)
+            root2 = 2*c / (-b - sqrt_d) if abs(b + sqrt_d) > 1e-12 else float('inf')
         else:
-            root1 = 2*c / (-b + sqrt_d)
+            root1 = 2*c / (-b + sqrt_d) if abs(-b + sqrt_d) > 1e-12 else float('inf')
             root2 = (-b + sqrt_d) / denom
 
         # Find smallest non-negative root within time horizon
         valid_roots = []
         for root in (root1, root2):
-            if 0 <= root <= max_time:
+            if not (np.isnan(root) or np.isinf(root)) and 0 <= root <= max_time:
                 valid_roots.append(root)
 
         return min(valid_roots) if valid_roots else float('inf')
@@ -210,18 +223,18 @@ class StarVO:
         Returns:
             Time to collision (inf if no collision within time_horizon)
         """
-        a = wall_start
-        b = wall_end
-        p = agent_pos
+        A = wall_start
+        B = wall_end
+        P = agent_pos
         v = velocity
         r = agent_radius
 
         # Vector from wall start to end
-        u = b - a
+        u = B - A
         u_sq = np.dot(u, u)
 
         # Vector from wall start to agent
-        w0 = p - a
+        w0 = P - A
 
         # Check current collision
         if u_sq < 1e-12:  # Degenerate wall (point)
@@ -232,8 +245,8 @@ class StarVO:
             # Compute closest point on segment
             t_val = np.dot(w0, u) / u_sq
             t_clamped = max(0, min(1, t_val))
-            closest_point = a + t_clamped * u
-            dist_sq = np.dot(p - closest_point, p - closest_point)
+            closest_point = A + t_clamped * u
+            dist_sq = np.dot(P - closest_point, P - closest_point)
             if dist_sq <= r*r:
                 return 0.0
 
@@ -245,7 +258,7 @@ class StarVO:
 
         # For degenerate wall (point)
         if u_sq < 1e-12:
-            # Solve: ||p + v*t - a|| = r
+            # Solve: ||P + v*t - A|| = r
             a = v_sq
             b = 2 * np.dot(w0, v)
             c = np.dot(w0, w0) - r*r
@@ -273,7 +286,7 @@ class StarVO:
             if 0 <= proj <= u_sq:
                 t_candidates.append(t1)
 
-        # Case 2: Collision with endpoint a
+        # Case 2: Collision with endpoint A
         a2 = v_sq
         b2 = 2 * np.dot(w0, v)
         c2 = np.dot(w0, w0) - r*r
@@ -281,8 +294,8 @@ class StarVO:
         if t2 < float('inf'):
             t_candidates.append(t2)
 
-        # Case 3: Collision with endpoint b
-        w1 = p - b
+        # Case 3: Collision with endpoint B
+        w1 = P - B
         a3 = v_sq
         b3 = 2 * np.dot(w1, v)
         c3 = np.dot(w1, w1) - r*r
@@ -293,6 +306,7 @@ class StarVO:
         return min(t_candidates) if t_candidates else float('inf')
 
     def _is_velocity_safe(self, velocity: np.ndarray) -> bool:
+        """Optimized collision checking using analytical wall collision detection"""
         vel_mag_sq = np.dot(velocity, velocity)
 
         if vel_mag_sq > self.max_v * self.max_v + 1e-6:
@@ -304,7 +318,8 @@ class StarVO:
                 continue
 
             vec = self.pos + velocity - cone.base
-            if np.dot(vec, vec) < 1e-12:
+            vec_mag_sq = np.dot(vec, vec)
+            if vec_mag_sq < 1e-12:
                 return False
 
             angle = atan2(vec[1], vec[0])
@@ -330,7 +345,7 @@ class StarVO:
 
         base_angle = atan2(self.desired_v[1], self.desired_v[0])
 
-        for theta in np.linspace(-pi/2, pi/2 + 0.05, 15):
+        for theta in np.linspace(-2*pi/3, 2*pi/3 + 0.05, 21): # Theta range makes a lot of difference depending on the obstacle format
             angle = base_angle + theta
             direction = np.array([cos(angle), sin(angle)])
             for speed in np.linspace(1e-6, self.max_v, self.velocity_samples + 1):
@@ -356,6 +371,11 @@ class StarVO:
                     continue
 
                 vec = self.pos + v - cone.base
+                vec_mag = np.linalg.norm(vec)
+                if vec_mag < 1e-12:
+                    tc.append(0.0)
+                    continue
+
                 theta = atan2(vec[1], vec[0])
                 rad = cone.radius
 
@@ -363,11 +383,11 @@ class StarVO:
                     small_theta = abs(theta-0.5*(cone.left_angle+cone.right_angle))
                     if abs(cone.dist*sin(small_theta)) >= rad:
                         rad = abs(cone.dist*sin(small_theta))
-                    big_theta = asin(min(1.0, abs(cone.dist*sin(small_theta))/rad))
+                    big_theta = asin(min(abs(cone.dist*sin(small_theta))/rad, 1.0))
                     dist_tg = abs(cone.dist*cos(small_theta))-abs(rad*cos(big_theta))
                     if dist_tg < 0:
                         dist_tg = 0
-                    ttc = dist_tg/np.linalg.norm(vec)
+                    ttc = (dist_tg/vec_mag) if vec_mag > 1e-12 else 0.0
                     tc.append(ttc)
 
             # Calculate TTC for walls
@@ -380,10 +400,14 @@ class StarVO:
                     tc.append(wall_ttc)
 
             if tc:
-                tc_v[tuple(v)] = min(tc) + 1e-6
+                tc_v[tuple(v)] = max(min(tc), 1e-6)  # Ensure minimum positive value
 
-        wt = 0.2
-        best_v = min(unsuitable_v, key=lambda vel: ((wt/tc_v[tuple(v)])+self.distance(v, self.desired_v)))
+        if not tc_v:
+            # No unsuitable velocities found, return zero velocity as emergency
+            return np.zeros(2)
+
+        WT = 0.2
+        best_v = min(unsuitable_v, key=lambda vel: ((WT/tc_v[tuple(v)])+self.distance(vel, self.desired_v)))
 
         if tc_v[tuple(best_v)] < self.effective_radius:
             return np.array([1e-6, 1e-6])
