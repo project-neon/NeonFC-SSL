@@ -10,7 +10,7 @@ class RRTPlanner(BasePathPlanner):
         self.step_size = step_size
         self.max_iter = max_iter
         self.collision_margin = collision_margin
-        self.obstacle_nodes = []  # Store obstacles as Node objects
+        self.obstacles = []  # Store obstacles as Node objects
 
     def set_start(self, start: Tuple[float, float]):
         self.start = start
@@ -20,7 +20,7 @@ class RRTPlanner(BasePathPlanner):
 
     def set_obstacles(self, obstacles: List):
         # Convert obstacles to Node objects
-        self.obstacle_nodes = [Node(obs[0], obs[1]) for obs in obstacles]
+        self.obstacles = [Node(obs[0], obs[1]) for obs in obstacles]
 
     def set_map_area(self, map_area: Tuple[float, float]):
         self.map_area = map_area
@@ -29,7 +29,7 @@ class RRTPlanner(BasePathPlanner):
         rrt = RRT(
             start=self.start,
             goal=self.goal,
-            obstacles=self.obstacle_nodes,
+            obstacles=self.obstacles,
             map_area=self.map_area,
             collision_margin=self.collision_margin,
             step_size=self.step_size,
@@ -41,6 +41,9 @@ class RRTPlanner(BasePathPlanner):
     def update(self, current_state, *args, **kwargs):
         # RRT is a global planner, so update is not needed
         pass
+
+    def get_path(self):
+        return self.path
 
     @staticmethod
     def create_rectangle_obstacles(center, width, height, density=0.1):
