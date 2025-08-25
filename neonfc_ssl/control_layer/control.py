@@ -3,7 +3,7 @@ import numpy as np
 from math import sqrt, cos, sin
 from neonfc_ssl.core import Layer
 from neonfc_ssl.commons.math import reduce_ang
-from neonfc_ssl.path_planning.drunk_walk import DrunkWalk
+from neonfc_ssl.control_layer.path_planning import RRTPlanner
 from .control_data import ControlData, RobotCommand
 
 from typing import TYPE_CHECKING
@@ -36,81 +36,43 @@ class Control(Layer):
         robot = data.robots[command.id]
         field = data.field
 
-        path_planning = DrunkWalk()
-        path_planning.start((robot.x, robot.y), command.target_pose[:2])
+        # Initialize RRT planner
+        path_planner = RRTPlanner()
+        path_planner.set_start((robot.x, robot.y))
+        path_planner.set_goal(command.target_pose[:2])
+        path_planner.set_map_area((field.field_length, field.field_width))
 
-        post_thickness = 0.02
-        goal_depht = 0.18
-        goal_height = 1
-        r = 0.09
-        L = 12
-        m = 0
+        # Collect obstacles
+        obstacles = []
 
-        # -- Friendly Goalkeeper Area -- #
-        if command.avoid_area:
-            path_planning.add_static_obstacle(
-                (0, field.field_width / 2 - field.penalty_width / 2),
-                field.penalty_depth,
-                field.penalty_width
-            )
-        # -- Friendly Goal Posts -- #
-        path_planning.add_static_obstacle(
-            (-r - goal_depht - post_thickness, field.field_width / 2 - r - goal_height / 2),
-            2 * r + post_thickness + goal_depht,
-            2 * r + goal_height
-        )
-        # -- Opponent Goalkeeper Area -- #
-        path_planning.add_static_obstacle(
-            (field.field_length - field.penalty_depth,
-             field.field_width / 2 - field.penalty_width / 2),
+        # Add friendly goalkeeper area as obstacle points
+        penalty_area_obstacles = RRTPlanner.create_rectangle_obstacles(
+            (0, field.field_width / 2 - field.penalty_width / 2),
             field.penalty_depth,
             field.penalty_width
         )
-        # # -- Opponent Goal Posts -- #
-        # path_planning.add_static_obstacle(
-        #     (-1, -1),
-        #     self._field.fieldLength + 2,
-        #     0.7
-        # )
-        # -- Lower Field Limit -- #
-        path_planning.add_static_obstacle(
-            (-L - m, -L - m),
-            field.field_length + 2 * (m + L),
-            L + r
-        )
-        # -- Right Field Limit -- #
-        path_planning.add_static_obstacle(
-            (field.field_length + m - r, -m),
-            L,
-            field.penalty_width + 2 * m
-        )
-        # -- Upper Field Limit -- #
-        path_planning.add_static_obstacle(
-            (-L - m, field.field_width + m - r),
-            field.field_length + 2 * (m + L),
-            L
-        )
-        # -- Left Field Limit -- #
-        path_planning.add_static_obstacle(
-            (-L - m, -m),
-            L + r,
-            field.field_width + 2 * m
-        )
+        obstacles.extend(penalty_area_obstacles)
 
-        # -- Opponent Robots -- #
+        # Add opponent robots as obstacles
         for opp in command.avoid_opponents:
-            opp = data.opposites[opp]
-            path_planning.add_dynamic_obstacle(opp, 0.2, np.array((opp.vx, opp.vy)))
+            opp_robot = data.opposites[opp]
+            obstacles.append((opp_robot.x, opp_robot.y))
 
-        # -- Friendly Robots -- #
+        # Add friendly robots as obstacles
         for rob in command.avoid_allies:
             if rob == command.id:
                 continue
+            friendly_robot = data.robots[rob]
+            obstacles.append((friendly_robot.x, friendly_robot.y))
 
-            rob = data.robots[rob]
-            path_planning.add_dynamic_obstacle(rob, 0.2, np.array((rob.vx, rob.vy)))
+        path_planner.set_obstacles(obstacles)
+        path = path_planner.plan()
 
-        next_point = path_planning.find_path()
+        # Get next point from path
+        if path and len(path) > 1:
+            next_point = path[1]  # First point is current position
+        else:
+            next_point = command.target_pose[:2]
 
         dx = next_point[0] - robot.x
         dy = next_point[1] - robot.y

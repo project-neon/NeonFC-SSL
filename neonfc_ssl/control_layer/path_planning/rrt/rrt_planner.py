@@ -10,26 +10,26 @@ class RRTPlanner(BasePathPlanner):
         self.step_size = step_size
         self.max_iter = max_iter
         self.collision_margin = collision_margin
-        self.node_list = []
+        self.obstacle_nodes = []  # Store obstacles as Node objects
 
     def set_start(self, start: Tuple[float, float]):
-        self.start = Node(*start)
+        self.start = start
 
     def set_goal(self, goal: Tuple[float, float]):
-        self.goal = Node(*goal)
+        self.goal = goal
 
     def set_obstacles(self, obstacles: List):
-        self.obstacles = obstacles
+        # Convert obstacles to Node objects
+        self.obstacle_nodes = [Node(obs[0], obs[1]) for obs in obstacles]
 
     def set_map_area(self, map_area: Tuple[float, float]):
         self.map_area = map_area
 
     def plan(self) -> List[Tuple[float, float]]:
-        # Implementation using the RRT class from the provided code
         rrt = RRT(
-            start=(self.start.x, self.start.y),
-            goal=(self.goal.x, self.goal.y),
-            obstacles=self.obstacles,
+            start=self.start,
+            goal=self.goal,
+            obstacles=self.obstacle_nodes,
             map_area=self.map_area,
             collision_margin=self.collision_margin,
             step_size=self.step_size,
@@ -39,5 +39,24 @@ class RRTPlanner(BasePathPlanner):
         return self.path
 
     def update(self, current_state, *args, **kwargs):
-        # RRT is a global planner, so update is not be needed
+        # RRT is a global planner, so update is not needed
         pass
+
+    @staticmethod
+    def create_rectangle_obstacles(center, width, height, density=0.1):
+        """Convert rectangular area into discrete obstacle points"""
+        obstacles = []
+        x_start = center[0] - width / 2
+        x_end = center[0] + width / 2
+        y_start = center[1] - height / 2
+        y_end = center[1] + height / 2
+
+        x = x_start
+        while x <= x_end:
+            y = y_start
+            while y <= y_end:
+                obstacles.append((x, y))
+                y += density
+            x += density
+
+        return obstacles

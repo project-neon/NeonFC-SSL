@@ -32,13 +32,13 @@ class RRT:
 
         return Node(x, y)
 
-    def get_nearest_node(self, node):
+    def get_nearest_node(self, node) -> Node:
         distance_list = [ (node.x - node_i.x)**2 + (node.y - node_i.y)**2 for node_i in self.node_list ]
         min_index = np.argmin(distance_list)
 
         return self.node_list[min_index]
 
-    def steer(self, start: Node, end: Node):
+    def steer(self, start: Node, end: Node) -> Node:
 
         theta = math.atan2(end.y - start.y, end.x - start.x)
 
@@ -52,7 +52,7 @@ class RRT:
 
         return new_node
 
-    def is_collision_free(self, start: Node, end: Node):
+    def is_collision_free(self, start: Node, end: Node) -> bool:
         A = end.y - start.y
         B = start.x - end.x
         C = - A*start.x - B*start.y
@@ -62,7 +62,7 @@ class RRT:
 
         return all( sec(obstacle) for obstacle in self.obstacles )
 
-    def generate_final_path(self):
+    def generate_final_path(self) -> List[List[float]]:
         path = []
         node = self.goal
 
@@ -74,7 +74,7 @@ class RRT:
 
         return path[::-1]
 
-    def plan(self):
+    def plan(self) -> List[List[float]]:
 
         for _ in range(self.max_iter):
 
