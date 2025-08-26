@@ -70,7 +70,7 @@ class Decision(Layer):
                 except KeyboardInterrupt as e:
                     raise e
                 except Exception as e:
-                    self.logger.error(e)
+                    self.logger.error(e, exc_info=True)
 
         return DecisionData(self.__commands, data)
 
@@ -78,7 +78,7 @@ class Decision(Layer):
         try:
             rs, ps = self.__cost_matrix(targets, robots)
         except Exception as e:
-            self.logger.error(e)
+            self.logger.error(e, exc_info=True)
             return
 
         for robot, pos in zip(rs, ps):
