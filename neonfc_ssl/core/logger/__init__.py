@@ -2,6 +2,7 @@ from .custom_levels import *
 from .protobuf_formatter import ProtobufFormatter
 from .binary_file_handler import BinaryFileHandler
 from .binary_udp_sender import BinaryUDPSender
+from .layer_handler import LayerHandler
 
 
 def setup_logging(nfc_config):

@@ -4,6 +4,7 @@ from multiprocessing.connection import Connection
 from abc import ABC, abstractmethod
 from time import time
 import logging
+from neonfc_ssl.core.logger import LayerHandler
 
 
 class Layer(Process):
@@ -15,7 +16,7 @@ class Layer(Process):
         self.config = config
 
         # process communication variables
-        self.__logger = log_q  # send logs to the main process and eventually to the interface
+        self.logger = self.__setup_logger(log_q)  # send logs to the main process and eventually to the interface
         self.__events_pipe = event_pipe  # receive events from the main process possibly originating from the interface
         self.__input: Connection = None  # last layer pipe tail in the pipeline
         self.__output_tail, self.__output_head = Pipe(duplex=False)  # output pipe in the pipeline (to the next layer)
@@ -31,22 +32,13 @@ class Layer(Process):
 
         self.__last_data = None
 
-    def log(self, level, msg):
-        self.__logger.put(logging.LogRecord(
-            name=self.name,
-            level=level,
-            pathname='-',
-            lineno=0,
-            msg=msg,
-            args=(),
-            exc_info=None
-        ))
-        # {
-        #     "timestamp": time(),
-        #     "source": self.name,
-        #     "type": level,
-        #     "message": msg
-        # })
+    def __setup_logger(self, log_q: Queue) -> logging.Logger:
+        lgg = logging.getLogger(self.name)
+        lgg.setLevel(logging.DEBUG)
+        lgg.propagate = False  # to avoid double logging
+        lgg.addHandler(LayerHandler(log_q))
+
+        return lgg
 
     def bind_input_pipe(self, pipe):
         self.__input = pipe
@@ -64,10 +56,10 @@ class Layer(Process):
         pass
 
     def run(self):
-        self.log(logging.INFO, "Starting layer {}".format(self.name))
+        self.logger.info("Starting layer {}".format(self.name))
         self._start()
         self.__started = True
-        self.log(logging.INFO, "{} layer started.".format(self.name))
+        self.logger.info("{} layer started.".format(self.name))
         while True:
             self.__fetch_event()
 
@@ -84,7 +76,7 @@ class Layer(Process):
 
             elif time() - self.__last_finished_process >= self.IDLE_LIMIT and self.__last_data is not None:
                 self.__running = True
-                self.log(logging.WARNING, "Exceeded idle limit, forcing start on old data")
+                self.logger.warning("Exceeded idle limit, forcing start on old data")
                 self.__send(self._step(self.__last_data))
                 self.__last_finished_process = time()
 

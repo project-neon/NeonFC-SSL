@@ -21,12 +21,12 @@ class GrComm:
         self.host = self.config['host_ip']
 
     def start(self):
-        self.logger(logging.INFO, "Starting GRSim communication...")
+        self.logger.info("Starting GRSim communication...")
 
-        self.logger(logging.INFO, f"Creating socket with address: {self.host} and port: {self.command_port}")
+        self.logger.info(f"Creating socket with address: {self.host} and port: {self.command_port}")
         self.command_sock = self._create_socket()
 
-        self.logger(logging.INFO, "GRSim communication module started!")
+        self.logger.info("GRSim communication module started!")
     
     def update(self, cmds: 'ControlData'):
         if not cmds.commands:

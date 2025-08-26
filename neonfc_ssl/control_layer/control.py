@@ -20,9 +20,9 @@ class Control(Layer):
         self.KP_ang = 2
 
     def _start(self):
-        self.log(logging.INFO, "Starting control module starting ...")
+        self.logger.info("Starting control module starting ...")
 
-        self.log(logging.INFO, "Control module started!")
+        self.logger.info("Control module started!")
 
     def _step(self, data: 'DecisionData'):
         out = []

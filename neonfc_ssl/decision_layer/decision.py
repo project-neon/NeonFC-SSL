@@ -21,14 +21,16 @@ class Decision(Layer):
         self.events = {}
         self.__strategies: list[Optional['SpecialStrategy']] = []
 
+        self.logger = logging.getLogger('DecisionLayer')
+
     def _start(self):
-        self.log(logging.INFO, "Starting coach module starting ...")
+        self.logger.info("Starting coach module starting ...")
 
         self.__strategies = [None for _ in range(16)]
 
         self.__coach = COACHES[self.config['coach']](self)
 
-        self.log(logging.INFO, "Coach module started!")
+        self.logger.info("Coach module started!")
 
     def decide(self, data: 'MatchData'):
         return self.__coach(data)
@@ -41,7 +43,7 @@ class Decision(Layer):
 
     def set_strategy(self, robot: 'TrackedRobot', strategy: 'SpecialStrategy'):
         if robot.id > len(self.__strategies):
-            self.log(logging.ERROR, "Trying to set strategy for unknown id {}".format(id))
+            self.logger.error("Trying to set strategy for unknown id {}".format(id))
             return
         if self.__strategies[robot.id] == strategy:
             return
@@ -68,7 +70,7 @@ class Decision(Layer):
                 except KeyboardInterrupt as e:
                     raise e
                 except Exception as e:
-                    self.log(logging.ERROR, e)
+                    self.logger.error(e)
 
         return DecisionData(self.__commands, data)
 
@@ -76,7 +78,7 @@ class Decision(Layer):
         try:
             rs, ps = self.__cost_matrix(targets, robots)
         except Exception as e:
-            self.log(logging.ERROR, e)
+            self.logger.error(e)
             return
 
         for robot, pos in zip(rs, ps):

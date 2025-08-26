@@ -32,7 +32,7 @@ class Tracking(Layer):
         self.opponent_color = 'yellow' if self.config['color'] == 'blue' else 'blue'
 
     def _start(self):
-        self.log(logging.INFO, "Starting match module starting ...")
+        self.logger.info("Starting match module starting ...")
 
         # Create Layer
         self.ball = Ball(self)
@@ -54,7 +54,7 @@ class Tracking(Layer):
 
         self.possession = PossessionTracker(self, self.game_state)
 
-        self.log(logging.INFO, "Match module started!")
+        self.logger.info("Match module started!")
 
     def _step(self, data: 'InputData'):
         geometry = data.geometry
@@ -84,5 +84,5 @@ class Tracking(Layer):
             field=geometry,
             is_yellow=self.team_color=='yellow'
         )
-        self.log(TRACKING, out_data)
+        self.logger.log(TRACKING, out_data)
         return out_data

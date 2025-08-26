@@ -33,11 +33,11 @@ class GrSimVision(threading.Thread):
         self.logger = log
 
     def run(self):
-        self.logger(logging.INFO, f"Starting SSL-Vision module...")
-        self.logger(logging.INFO, f"Creating socket with address: {self.host} and port: {self.vision_port}")
+        self.logger.info(f"Starting SSL-Vision module...")
+        self.logger.info(f"Creating socket with address: {self.host} and port: {self.vision_port}")
         self.vision_sock = self._create_socket()
         self._wait_to_connect()
-        self.logger(logging.INFO, f"SSL-Vision module started!")
+        self.logger.info(f"SSL-Vision module started!")
 
         self.running = True
         while self.running:
@@ -53,7 +53,7 @@ class GrSimVision(threading.Thread):
     def stop(self):
         self.running = False
         self.vision_sock.close()
-        self.logger(logging.INFO, f"SSL-Vision module stopped!")
+        self.logger.info(f"SSL-Vision module stopped!")
 
     def update_detection(self, last_frame):
         frame = last_frame.get('detection')

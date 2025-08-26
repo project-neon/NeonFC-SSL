@@ -20,12 +20,12 @@ class SerialComm:
         self.logger = log
 
     def start(self):
-        self.logger(logging.INFO, "Starting serial communication...")
+        self.logger.info("Starting serial communication...")
 
         self.logger.info(f"Creating serial communication port at {self.command_port}")
         self.command_serial = Serial(self.command_port, self.baud_rate)
 
-        self.logger(logging.INFO, f"Serial communication module started!")
+        self.logger.info(f"Serial communication module started!")
 
     def update(self, data: 'ControlData'):
         message = "<"
