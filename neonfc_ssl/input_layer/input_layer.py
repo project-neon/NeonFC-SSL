@@ -16,9 +16,9 @@ class InputLayer(Layer):
         if self.config['side'] != 'left' and self.config['side'] != 'right':
             raise ValueError("side must be either 'left' or 'right'")
 
-        self.ssl_vison = GrSimVision(self.config, self.log)
-        self.auto_ref = AutoRefVision(self.config, self.log)
-        self.referee = SSLGameControllerReferee(self.config, self.log)
+        self.ssl_vison = GrSimVision(self.config, self.logger)
+        self.auto_ref = AutoRefVision(self.config, self.logger)
+        self.referee = SSLGameControllerReferee(self.config, self.logger)
 
         self.use_ref_vision = self.config["use_ref_vision"]
 

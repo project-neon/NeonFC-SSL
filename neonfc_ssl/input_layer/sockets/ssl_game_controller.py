@@ -25,10 +25,10 @@ class SSLGameControllerReferee(threading.Thread):
 
     def run(self):
         """Calls _create_socket() and parses the status message from the Referee."""
-        self.logger(logging.INFO, "Starting referee module...")
-        self.logger(logging.INFO, f"Creating socket with address: {self.host} and port: {self.referee_port}")
+        self.logger.info("Starting referee module...")
+        self.logger.info(f"Creating socket with address: {self.host} and port: {self.referee_port}")
         self.referee_sock = self._create_socket()
-        self.logger(logging.INFO, "Referee module started!")
+        self.logger.info("Referee module started!")
 
         self.running = True
         while self.running:
@@ -49,7 +49,7 @@ class SSLGameControllerReferee(threading.Thread):
     def stop(self):
         self.running = False
         self.referee_sock.close()
-        self.logger(logging.INFO, "Referee module stopped!")
+        self.logger.info("Referee module stopped!")
 
     def can_play(self):
         if not self._referee_message:

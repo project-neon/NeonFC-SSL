@@ -30,11 +30,11 @@ class AutoRefVision(threading.Thread):
         self.logger = log
 
     def run(self):
-        self.logger(logging.INFO, f"Starting AutoRef-Vision module...")
-        self.logger(logging.INFO, f"Creating socket with address: {self.host} and port: {self.vision_port}")
+        self.logger.info(f"Starting AutoRef-Vision module...")
+        self.logger.info(f"Creating socket with address: {self.host} and port: {self.vision_port}")
         self.vision_sock = self._create_socket()
         self._wait_to_connect()
-        self.logger(logging.INFO, f"AutoRef-Vision module started!")
+        self.logger.info(f"AutoRef-Vision module started!")
 
         self.running = True
         while self.running:
@@ -48,7 +48,7 @@ class AutoRefVision(threading.Thread):
     def stop(self):
         self.running = False
         self.vision_sock.close()
-        self.logger(logging.INFO, f"AutoRef-Vision module stopped!")
+        self.logger.info(f"AutoRef-Vision module stopped!")
 
     def update_detection(self, last_frame):
         frame = last_frame.get('trackedFrame', None)

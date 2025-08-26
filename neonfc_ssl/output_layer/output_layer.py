@@ -9,8 +9,8 @@ if TYPE_CHECKING:
 class OutputLayer(Layer):
     def __init__(self, config, log_q, event_pipe):
         super().__init__("OutputLayer", config, log_q, event_pipe)
-        self.gr_comm = GrComm(self.config, self.log)
-        self.serial_comm = SerialComm(self.config, self.log)
+        self.gr_comm = GrComm(self.config, self.logger)
+        self.serial_comm = SerialComm(self.config, self.logger)
 
         self.use_gr_sim = self.config["use_gr_sim"]
 

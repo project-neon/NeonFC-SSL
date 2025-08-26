@@ -1,5 +1,5 @@
 from typing import Any
-from neonfc_ssl.core import Layer
+from . import Layer
 
 
 class DebugLayer(Layer):
