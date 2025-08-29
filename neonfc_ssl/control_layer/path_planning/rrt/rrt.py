@@ -96,3 +96,63 @@ class RRT:
                     return self.generate_final_path()
 
         return []
+
+
+class RRTStar(RRT):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.search_radius = 2.0*self.step_size
+
+    def find_neighbors(self, node):
+        return [n for n in self.node_list if np.linalg.norm([n.x - node.x, n.y - node.y]) <= self.search_radius]
+
+    def choose_parent(self, neighbors, nearest, node):
+        min_cost = nearest.cost + np.linalg.norm([nearest.x - node.x, nearest.y - node.y])
+        best_node = nearest
+
+        for neighbor in neighbors:
+            cost = neighbor.cost + np.linalg.norm([neighbor.x - node.x, neighbor.y - node.y])
+
+            if cost < min_cost and self.is_collision_free(neighbor, node):
+                min_cost = cost
+                best_node = neighbor
+
+        node.cost = min_cost
+        node.parent = best_node
+
+        return node
+
+    def rewire(self, node, neighbors):
+        for neighbor in neighbors:
+            cost = node.cost + np.linalg.norm([neighbor.x - node.x, neighbor.y - node.y])
+
+            if cost < neighbor.cost and self.is_collision_free(neighbor, node):
+                neighbor.parent = node
+                neighbor.cost = cost
+
+    def plan(self):
+
+        for _ in range(self.max_iter):
+
+            random_node = self.get_random_node()
+            nearest_node = self.get_nearest_node(random_node)
+
+            new_node = self.steer(nearest_node, random_node)
+
+            if self.is_collision_free(nearest_node, new_node):
+                neighbors = self.find_neighbors(new_node)
+                self.choose_parent(neighbors, nearest_node, new_node)
+                self.rewire(new_node, neighbors)
+                self.node_list.append(new_node)
+            else: continue
+
+            if d := math.sqrt((new_node.x - self.goal.x)**2 + (new_node.y - self.goal.y)**2) <= self.step_size:
+                if self.is_collision_free(new_node, self.goal):
+                    self.goal.parent = new_node
+                    self.goal.cost = new_node.cost + d
+                    self.node_list.append(self.goal)
+
+                    return self.generate_final_path()
+
+        return []

@@ -3,7 +3,7 @@ import numpy as np
 from math import sqrt, cos, sin
 from neonfc_ssl.core import Layer
 from neonfc_ssl.commons.math import reduce_ang
-from neonfc_ssl.control_layer.path_planning import RRTPlanner
+from neonfc_ssl.control_layer.path_planning import RRTPlanner, RRTStarPlanner
 from .control_data import ControlData, RobotCommand
 
 from typing import TYPE_CHECKING
@@ -37,7 +37,7 @@ class Control(Layer):
         field = data.field
 
         # Initialize RRT planner
-        path_planner = RRTPlanner()
+        path_planner = RRTStarPlanner()
         path_planner.set_start((robot.x, robot.y))
         path_planner.set_goal(command.target_pose[:2])
         path_planner.set_speed((robot.vx, robot.vy))

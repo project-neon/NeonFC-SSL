@@ -1,3 +1,3 @@
 from .node import Node
-from .rrt import RRT
-from .rrt_planner import RRTPlanner
+from .rrt import RRT, RRTStar
+from .rrt_planner import RRTPlanner, RRTStarPlanner
