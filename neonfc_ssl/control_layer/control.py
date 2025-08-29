@@ -62,11 +62,10 @@ class Control(Layer):
         # -- Opponent Goalkeeper Area -- #
         path_planning.add_static_obstacle(
             (field.field_length - field.penalty_depth,
-            field.field_width / 2 - field.penalty_width / 2),
+             field.field_width / 2 - field.penalty_width / 2),
             field.penalty_depth,
             field.penalty_width
         )
-
         # # -- Opponent Goal Posts -- #
         # path_planning.add_static_obstacle(
         #     (-1, -1),
