@@ -5,7 +5,7 @@ from . import RRT
 
 
 class RRTPlanner(BasePathPlanner):
-    def __init__(self, step_size=0.05, max_iter=5000, collision_margin=0.18):
+    def __init__(self, step_size=0.1, max_iter=5000, collision_margin=0.18):
         super().__init__()
         self.step_size = step_size
         self.max_iter = max_iter
@@ -17,6 +17,9 @@ class RRTPlanner(BasePathPlanner):
 
     def set_goal(self, goal: Tuple[float, float]):
         self.goal = goal
+
+    def set_speed(self, speed: Tuple[float, float]):
+        self.speed = speed
 
     def set_obstacles(self, obstacles: List):
         # Convert obstacles to Node objects
@@ -35,7 +38,12 @@ class RRTPlanner(BasePathPlanner):
             step_size=self.step_size,
             max_iter=self.max_iter
         )
-        self.path = rrt.plan()
+
+        path = rrt.plan()
+
+        self.path = path if path else [[self.start[0] + self.step_size * self.speed[0],
+                                       self.start[1] + self.step_size * self.speed[1]]]
+
         return self.path
 
     def update(self, current_state, *args, **kwargs):

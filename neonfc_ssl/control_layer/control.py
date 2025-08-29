@@ -40,6 +40,7 @@ class Control(Layer):
         path_planner = RRTPlanner()
         path_planner.set_start((robot.x, robot.y))
         path_planner.set_goal(command.target_pose[:2])
+        path_planner.set_speed((robot.vx, robot.vy))
         path_planner.set_map_area((field.field_length, field.field_width))
 
         # Collect obstacles

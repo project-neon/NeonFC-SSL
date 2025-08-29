@@ -7,6 +7,7 @@ class BasePathPlanner(ABC):
     def __init__(self):
         self.start = None
         self.goal = None
+        self.speed = None
         self.obstacles = []
         self.map_area = None
         self.path = None
@@ -14,32 +15,37 @@ class BasePathPlanner(ABC):
     @abstractmethod
     def set_start(self, start: Tuple[float, float]):
         """Set the start position"""
-        pass
+        raise Exception("Method not implemented!")
 
     @abstractmethod
     def set_goal(self, goal: Tuple[float, float]):
         """Set the goal position"""
-        pass
+        raise Exception("Method not implemented!")
+
+    @abstractmethod
+    def set_speed(self, speed: Tuple[float, float]):
+        """Set the robot speed"""
+        raise Exception("Method not implemented")
 
     @abstractmethod
     def set_obstacles(self, obstacles: List):
         """Set the obstacles in the environment"""
-        pass
+        raise Exception("Method not implemented!")
 
     @abstractmethod
     def set_map_area(self, map_area: Tuple[float, float]):
         """Set the map boundaries"""
-        pass
+        raise Exception("Method not implemented!")
 
     @abstractmethod
     def plan(self, *args, **kwargs) -> Union[List[Tuple[float, float]], np.ndarray]:
         """Generate a path from start to goal"""
-        pass
+        raise Exception("Method not implemented!")
 
     @abstractmethod
     def update(self, current_state, *args, **kwargs):
         """Update the planner with new information (for reactive planners)"""
-        pass
+        raise Exception("Method not implemented!")
 
     def get_path(self) -> Optional[Union[List[Tuple[float, float]], np.ndarray]]:
         """Return the computed path"""
