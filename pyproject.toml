@@ -40,6 +40,7 @@ build-backend = "poetry.core.masonry.api"
 [tool.pytest.ini_options]
 markers = [
     "integration: mark test as integration test",
+    "unit: mark test as unit test"
 ]
 filterwarnings = "ignore::DeprecationWarning"
 testpaths = [
