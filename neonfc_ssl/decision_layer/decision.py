@@ -66,11 +66,15 @@ class Decision(Layer):
 
             if strat := self.__strategies[robot.id]:
                 try:
-                    self.__commands.append(strat.decide(data))
+                    cmd = strat.decide(data)
+                    if cmd is None:
+                        raise ValueError(f"robot {robot.id} strategy returned None", strat)
+                    self.__commands.append(cmd)
                 except KeyboardInterrupt as e:
                     raise e
                 except Exception as e:
-                    self.logger.error(e, exc_info=True)
+                    self.logger.error(e)
+                    raise e
 
         return DecisionData(self.__commands, data)
 
@@ -78,7 +82,7 @@ class Decision(Layer):
         try:
             rs, ps = self.__cost_matrix(targets, robots)
         except Exception as e:
-            self.logger.error(e, exc_info=True)
+            self.logger.error(e)
             return
 
         for robot, pos in zip(rs, ps):
@@ -113,8 +117,8 @@ class Decision(Layer):
             for i in range(n_robots):
                 for j in range(n_robots):
                     # TODO: this is using the a straight line distance to the target as the cost, but it's not always
-                    #  the case (eg. A robot won't pass thru the area, so if the straight line goes thru it the real
-                    #  cost is higher)
+                    #       the case (eg. A robot won't pass thru the area, so if the straight line goes thru it the
+                    #       real cost is higher)
                     cost_matrix[i][j] = (robot_pos[i][0]-desired_pos[j][0])**2 + (robot_pos[i][1]-desired_pos[j][1])**2
         except IndexError as e:
             raise Exception(e)

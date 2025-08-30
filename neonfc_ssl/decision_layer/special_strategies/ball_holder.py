@@ -80,9 +80,9 @@ class BallHolder(SpecialStrategy):
         next = self.active.update(data)
         if next != self.active:
             self.active = next
-            if self.active.name == "Pass":
+            if isinstance(self.active, SimplePass):
                 self.active.start(self._robot_id, target=self._pass_target)
-            elif self.active.name == "Dribble":
+            elif isinstance(self.active, Dribble):
                 self.active.start(self._robot_id, target=self._pass_target)
             else:
                 self.active.start(self._robot_id)

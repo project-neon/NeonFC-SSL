@@ -19,8 +19,8 @@ def test_control_layer(base_config):
                 x=0.0, y=0.0, z=None, vx=0, vy=0, vz=None,
             ),
             possession=tracking_data.Possession(
-                my_closest=0, op_closest=0, possession_balance=np.float64(0.0),
-                contact_start_position=np.array([0., 0.])
+                my_closest=0, op_closest=0, possession_team='yellow',
+                possession_balance=np.float64(0.0), contact_start_position=np.array([0., 0.])
             ),
             game_state=tracking_data.GameState(
                 state=tracking_data.States.HALT, color=None, friendly=False, position=None

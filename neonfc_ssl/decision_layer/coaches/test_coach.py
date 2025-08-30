@@ -8,16 +8,16 @@ class TestCoach(Coach):
         self.keeper = GoalKeeper()
         self.ballholder = InterceptBall()
 
-    def __call__(self, data):
-        self.decision.set_strategy(data.robots[0], self.ballholder)
-        # liberos = data.robots[0:3]
-        # left_backs = data.robots[3:4]
-        # right_backs = data.robots[4:5]
+    def decide(self):
+        self.decision.set_strategy(self.data.robots[0], self.ballholder)
+        # liberos = self.data.robots[0:3]
+        # left_backs = self.data.robots[3:4]
+        # right_backs = self.data.robots[4:5]
 
         # targets = [
-        #     Libero.decide(data, [r.id for r in liberos]),
-        #     LeftBack.decide(data, [r.id for r in left_backs]),
-        #     RightBack.decide(data, [r.id for r in right_backs])
+        #     Libero.decide(self.data, [r.id for r in liberos]),
+        #     LeftBack.decide(self.data, [r.id for r in left_backs]),
+        #     RightBack.decide(self.data, [r.id for r in right_backs])
         # ]
 
         # self.decision.calculate_hungarian(
