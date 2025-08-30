@@ -19,6 +19,7 @@ color = "yellow"
 coach = "SimpleCoach"
 
 [Control]
+planner = "RRTStarPlanner"
 
 [OutputLayer]
 host_ip = "127.0.0.1"

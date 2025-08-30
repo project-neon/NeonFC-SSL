@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
-from neonfc_ssl.control_layer.path_planning.base_planner import BasePathPlanner
-from neonfc_ssl.control_layer.path_planning.rrt.rrt_planner import RRTPlanner, RRTStarPlanner
+from ..integ.fixture import base_config
+from neonfc_ssl.control_layer.path_planning import *
 
 
 class PlannerTestConfig:
@@ -34,18 +34,16 @@ class PlannerTestConfig:
 
 
 @pytest.fixture
-def planner():
-    return RRTStarPlanner(
-        step_size=0.1,  # Moderate step size for balanced performance
-        max_iter=5000,  # Sufficient iterations for test scenarios
-        collision_margin=0.18  # Standard collision margin
-    )
+def planner(base_config):
+    config = base_config["Control"]
+    _planner = PLANNERS[config["planner"]]
+    return _planner()
 
 @pytest.mark.unit
 def test_planner_implements_base_interface(planner):
-    """Test that the planner correctly implements the BasePathPlanner interface"""
+    """Test that the planner correctly implements the Planner interface"""
     # Verify inheritance
-    assert isinstance(planner, BasePathPlanner), "Planner must inherit from BasePathPlanner"
+    assert isinstance(planner, Planner), "Planner must inherit from Planner"
 
     # Test that all required methods exist and are callable
     required_methods = [

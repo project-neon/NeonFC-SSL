@@ -1,9 +1,9 @@
-from ..base_planner import BasePathPlanner
+from ..base_planner import Planner
 from typing import List, Tuple
 from . import Node, RRT, RRTStar
 
 
-class RRTPlanner(BasePathPlanner):
+class RRTPlanner(Planner):
     def __init__(self, step_size=0.1, max_iter=5000, collision_margin=0.18):
         super().__init__()
         self.step_size = step_size
