@@ -1,15 +1,8 @@
 import numpy as np
 from math import cos, sin, atan2, asin, pi, sqrt
-from collections import namedtuple
 from typing import List, Tuple, Optional
 from enum import Enum
-
-
-# Data structures
-Obstacle = namedtuple('Obstacle', ['pos', 'vel', 'radius', 'priority'])
-Wall = namedtuple('Wall', ['start', 'end'])
-Cone = namedtuple('Cone', ['base', 'left', 'right', 'dist', 'radius', 'left_angle', 'right_angle'])
-
+from .vo_data import Obstacle, Wall, Cone
 
 class VOType(Enum):
     VO = "vo"
@@ -161,9 +154,6 @@ class StarVO:
         left_angle = (theta_center + theta_half) % (2*pi)
         right_angle = (theta_center - theta_half) % (2*pi)
 
-        left = np.array([cos(left_angle), sin(left_angle)])
-        right = np.array([cos(right_angle), sin(right_angle)])
-
         if is_dynamic and self.vo_type == VOType.HRVO:
             if self.priority > obs_priority:
                 base = self.pos + obs_vel
@@ -174,7 +164,7 @@ class StarVO:
         else:
             base = self.pos + obs_vel
 
-        return Cone(base, left, right, dist, combined_radius, left_angle, right_angle)
+        return Cone(base, dist, combined_radius, left_angle, right_angle)
 
     @staticmethod
     def _solve_quadratic(a: float, b: float, c: float,
