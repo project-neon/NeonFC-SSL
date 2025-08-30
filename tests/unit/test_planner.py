@@ -41,7 +41,7 @@ def planner():
         collision_margin=0.18  # Standard collision margin
     )
 
-@pytest.mark.integration
+@pytest.mark.unit
 def test_planner_implements_base_interface(planner):
     """Test that the planner correctly implements the BasePathPlanner interface"""
     # Verify inheritance
@@ -58,7 +58,7 @@ def test_planner_implements_base_interface(planner):
         assert callable(getattr(planner, method_name)), f"{method_name} must be callable"
 
 
-@pytest.mark.integration
+@pytest.mark.unit
 def test_planner_basic_workflow(planner):
     """Test the complete planner workflow using the abstract interface"""
     config = PlannerTestConfig.SIMPLE_SCENARIO
@@ -90,7 +90,7 @@ def test_planner_basic_workflow(planner):
     assert len(retrieved_path) == len(path), "Retrieved path should match planned path length"
 
 
-@pytest.mark.integration
+@pytest.mark.unit
 def test_planner_state_management(planner):
     """Test planner state management and clearing functionality"""
     config = PlannerTestConfig.SIMPLE_SCENARIO
@@ -122,7 +122,7 @@ def test_planner_state_management(planner):
     assert planner.map_area is None, "Map area should be cleared"
 
 
-@pytest.mark.integration
+@pytest.mark.unit
 def test_planner_update_functionality(planner):
     """Test planner update method (for reactive planners)"""
     config = PlannerTestConfig.SIMPLE_SCENARIO
@@ -145,7 +145,7 @@ def test_planner_update_functionality(planner):
         pytest.fail(f"Update method should not raise unexpected exceptions: {e}")
 
 
-@pytest.mark.integration
+@pytest.mark.unit
 @pytest.mark.parametrize("scenario_name,scenario_config", [
     ("no_obstacles", PlannerTestConfig.NO_OBSTACLES_SCENARIO),
     ("dense_obstacles", PlannerTestConfig.DENSE_OBSTACLES_SCENARIO),
@@ -171,7 +171,7 @@ def test_planner_different_scenarios(planner, scenario_name, scenario_config):
         assert len(path) > 0, "Path should not be empty when no obstacles present"
 
 
-@pytest.mark.integration
+@pytest.mark.unit
 def test_planner_input_validation(planner):
     """Test planner behavior with various input types and edge cases"""
     # Test with different input formats
@@ -211,7 +211,7 @@ def test_planner_input_validation(planner):
             pytest.fail(f"Test case {i} raised unexpected exception: {e}")
 
 
-@pytest.mark.integration
+@pytest.mark.unit
 def test_planner_path_properties(planner):
     """Test basic properties of generated paths"""
     config = PlannerTestConfig.NO_OBSTACLES_SCENARIO
