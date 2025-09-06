@@ -2,6 +2,7 @@ import logging
 from serial import Serial
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from neonfc_ssl.control_layer.control_data import ControlData
 
@@ -13,7 +14,7 @@ class SerialComm:
         self.command_serial = None
 
         # Serial Comm Parameters
-        self.command_port = self.config["command_port"]
+        self.command_port = self.config["serial_port"]
         self.baud_rate = self.config["baud_rate"]
 
         # Coach Layer Logger
@@ -27,7 +28,7 @@ class SerialComm:
 
         self.logger.info(f"Serial communication module started!")
 
-    def update(self, data: 'ControlData'):
+    def update(self, data: "ControlData"):
         message = "<"
         for cmd in data.commands:
             message += (
@@ -35,10 +36,10 @@ class SerialComm:
                 f"{round(cmd.vel_tangent, 2)},"
                 f"{round(cmd.vel_normal, 2)},"
                 f"{round(cmd.vel_angular, 2)},"
-                # f"{0 if abs(cmd.kick_x) < 0.05 else 9},"
+                f"{0 if abs(cmd.kick_x) < 0.05 else 9},"
             )
 
-        message = message[:-1] + '>'
+        message = message[:-1] + ">"
 
         self.send(message)
 

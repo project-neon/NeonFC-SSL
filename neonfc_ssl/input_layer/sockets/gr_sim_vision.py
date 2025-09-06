@@ -27,14 +27,16 @@ class GrSimVision(threading.Thread):
         self.side_factor = 1
         self.angle_factor = 0
 
-        self.vision_port = self.config['vision_port']
-        self.host = self.config['multicast_ip']
+        self.vision_port = self.config["vision_port"]
+        self.host = self.config["multicast_ip"]
 
         self.logger = log
 
     def run(self):
         self.logger.info(f"Starting SSL-Vision module...")
-        self.logger.info(f"Creating socket with address: {self.host} and port: {self.vision_port}")
+        self.logger.info(
+            f"Creating socket with address: {self.host} and port: {self.vision_port}"
+        )
         self.vision_sock = self._create_socket()
         self._wait_to_connect()
         self.logger.info(f"SSL-Vision module started!")
@@ -56,49 +58,49 @@ class GrSimVision(threading.Thread):
         self.logger.info(f"SSL-Vision module stopped!")
 
     def update_detection(self, last_frame):
-        frame = last_frame.get('detection')
+        geometry = last_frame.get("geometry")
+        self.any_geometry = self.any_geometry or self.update_geometry(geometry)
+
+        frame = last_frame.get("detection")
         if not frame:
             # pacote de deteccao sem frame
             return False
 
-        t_capture = frame.get('tCapture')
-        camera_id = frame.get('cameraId')
+        t_capture = frame.get("tCapture")
+        camera_id = frame.get("cameraId")
 
         # TODO: this should be done in tracking not in input
-        self.side_factor = 1 if self.config['side'] == 'left' else -1
-        self.angle_factor = 0 if self.config['side'] == 'left' else math.pi
+        self.side_factor = 1 if self.config["side"] == "left" else -1
+        self.angle_factor = 0 if self.config["side"] == "left" else math.pi
 
-        balls = frame.get('balls', [])
+        balls = frame.get("balls", [])
         self.update_ball_detection(balls, camera_id)
 
-        robots_blue = frame.get('robotsBlue')
+        robots_blue = frame.get("robotsBlue")
         if robots_blue:
             for robot in robots_blue:
-                self.update_robot_detection(robot, t_capture, camera_id, color='blue')
+                self.update_robot_detection(robot, t_capture, camera_id, color="blue")
 
-        robots_yellow = frame.get('robotsYellow')
+        robots_yellow = frame.get("robotsYellow")
         if robots_yellow:
             for robot in robots_yellow:
-                self.update_robot_detection(robot, t_capture, camera_id, color='yellow')
-
-        geometry = last_frame.get('geometry')
-        self.any_geometry = self.any_geometry or self.update_geometry(geometry)
+                self.update_robot_detection(robot, t_capture, camera_id, color="yellow")
 
         return True
-    
+
     def update_geometry(self, frame):
         if not frame:
             # pacote de deteccao sem frame
             return False
-        
-        frame = frame.get('field')
+
+        frame = frame.get("field")
 
         self.raw_geometry = Geometry(
-            field_length=frame.get('fieldLength')/1000,
-            field_width=frame.get('fieldWidth')/1000,
-            goal_width=frame.get('goalWidth')/1000,
-            penalty_depth=frame.get('penaltyAreaDepth', 1000)/1000,
-            penalty_width=frame.get('penaltyAreaWidth', 2000)/1000
+            field_length=frame.get("fieldLength") / 1000,
+            field_width=frame.get("fieldWidth") / 1000,
+            goal_width=frame.get("goalWidth") / 1000,
+            penalty_depth=frame.get("penaltyAreaDepth", 1000) / 1000,
+            penalty_width=frame.get("penaltyAreaWidth", 2000) / 1000,
         )
 
         return True
@@ -109,14 +111,14 @@ class GrSimVision(threading.Thread):
 
         ball = balls[0]
         self.raw_detection.ball = Ball(
-            x=self.side_factor*ball.get('x')/1000,
-            y=self.side_factor*ball.get('y')/1000,
-            timestamp=ball.get('tCapture'),
-            camera_id=camera_id
+            x=self.side_factor * ball.get("x") / 1000,
+            y=self.side_factor * ball.get("y") / 1000,
+            timestamp=ball.get("tCapture"),
+            camera_id=camera_id,
         )
 
-    def update_robot_detection(self, robot, _timestamp, camera_id, color='blue'):
-        robot_id = robot.get('robotId')
+    def update_robot_detection(self, robot, _timestamp, camera_id, color="blue"):
+        robot_id = robot.get("robotId")
 
         # last_robot_data = self.raw_detection[
         #     'robots' + color
@@ -125,26 +127,26 @@ class GrSimVision(threading.Thread):
         # if last_robot_data.get('tCapture') > _timestamp:
         #     return
 
-        if color == 'blue':
+        if color == "blue":
             self.raw_detection.robots_blue[robot_id] = Robot(
                 id=robot_id,
                 team=color,
-                x=self.side_factor*robot['x']/1000,
-                y=self.side_factor*robot['x']/1000,
-                theta=robot['orientation'] + self.angle_factor,
+                x=self.side_factor * robot["x"] / 1000,
+                y=self.side_factor * robot["x"] / 1000,
+                theta=robot["orientation"] + self.angle_factor,
                 timestamp=_timestamp,
-                camera_id=camera_id
+                camera_id=camera_id,
             )
 
         else:
             self.raw_detection.robots_yellow[robot_id] = Robot(
                 id=robot_id,
                 team=color,
-                x=self.side_factor*robot['x']/1000,
-                y=self.side_factor*robot['x']/1000,
-                theta=robot['orientation'] + self.angle_factor,
+                x=self.side_factor * robot["x"] / 1000,
+                y=self.side_factor * robot["x"] / 1000,
+                theta=robot["orientation"] + self.angle_factor,
                 timestamp=_timestamp,
-                camera_id=camera_id
+                camera_id=camera_id,
             )
 
     def get_last_frame(self) -> Entities:
@@ -158,22 +160,14 @@ class GrSimVision(threading.Thread):
         self.vision_sock.recv(1024)
 
     def _create_socket(self):
-        sock = socket.socket(
-            socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP
-        )
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
 
-        sock.setsockopt(
-            socket.SOL_SOCKET, socket.SO_REUSEADDR, 1
-        )
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
         sock.bind((self.host, self.vision_port))
 
-        mreq = struct.pack(
-            "4sl", socket.inet_aton(self.host), socket.INADDR_ANY
-        )
+        mreq = struct.pack("4sl", socket.inet_aton(self.host), socket.INADDR_ANY)
 
-        sock.setsockopt(
-            socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq
-        )
+        sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
 
         return sock
