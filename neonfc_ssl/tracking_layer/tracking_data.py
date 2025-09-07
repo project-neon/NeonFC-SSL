@@ -41,22 +41,36 @@ class TrackedBall:
         self.update_v_shoot()
 
     def tb(self, d):
+        """ Time it takes for the ball to travel a distance d """
         if self.speed <= self.v_switch:
-            if (val := self.speed ** 2 - 2 * A_ROLL * d) > 0:
-                return (self.speed - math.sqrt(val)) / A_ROLL
-            else:
-                return math.inf
+            return self.__tb_switched(d)
 
         else:
-            if d <= self.d_switch:
-                return (self.speed - math.sqrt(self.speed ** 2 - 2 * A_SLIDE * d)) / A_SLIDE
-            else:
-                if (val := self.v_switch ** 2 - 2 * A_ROLL * (d - self.d_switch)) > 0:
-                    return (self.speed - self.v_switch) / A_SLIDE + (self.v_switch - math.sqrt(val)) / A_ROLL
-                else:
-                    return math.inf
+            return self.__tb_unswitched(d)
+
+    def __tb_switched(self, d):
+        exp_speed_sq = self.speed ** 2 - 2 * A_ROLL * d
+        if exp_speed_sq < 0:
+            return math.inf
+
+        return (self.speed - math.sqrt(exp_speed_sq)) / A_ROLL
+
+    def __tb_unswitched(self, d):
+        if d <= self.d_switch:
+            exp_speed_sq = self.speed ** 2 - 2 * A_SLIDE * d
+            if exp_speed_sq < 0:
+                return math.inf
+
+            return (self.speed - math.sqrt(exp_speed_sq)) / A_SLIDE
+
+        exp_speed_sq = self.v_switch ** 2 - 2 * A_ROLL * (d - self.d_switch)
+        if exp_speed_sq < 0:
+            return math.inf
+
+        return (self.speed - self.v_switch) / A_SLIDE + (self.v_switch - math.sqrt(exp_speed_sq)) / A_ROLL
 
     def distance_to_vector(self, d):
+        """ Position of the ball after traveling distance d along its velocity vector """
         speed = self.speed if self.speed else 0.0001
         return np.array(self) - d*np.array((self.vx, self.vy))/speed
 
