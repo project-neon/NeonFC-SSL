@@ -4,6 +4,7 @@ from typing import List, Tuple, Optional
 from enum import Enum
 from .vo_data import Obstacle, Wall, Cone
 
+
 class VOType(Enum):
     VO = "vo"
     RVO = "rvo"
@@ -12,13 +13,13 @@ class VOType(Enum):
 
 class StarVO:
     def __init__(self, pos: Tuple[float, float], goal: Tuple[float, float],
-                 vel: Tuple[float, float], max_vel: float, radius: float,
-                 priority: int = 0, goal_tolerance: float = 0.1,
+                 vel: Tuple[float, float], max_vel: float = 2.0, radius: float = 0.09,
+                 priority: int = 0, goal_tolerance: float = 0.05,
                  safety_margin: float = 0.05, vo_type: VOType = VOType.HRVO):
 
-        self.pos = np.array(pos, dtype=np.float32)
-        self.goal = np.array(goal, dtype=np.float32)
-        self.v = np.array(vel, dtype=np.float32)
+        self.pos = np.array(pos, dtype=np.float64)
+        self.goal = np.array(goal, dtype=np.float64)
+        self.v = np.array(vel, dtype=np.float64)
         self.max_v = max_vel
         self.radius = radius
         self.priority = priority
@@ -82,9 +83,9 @@ class StarVO:
             closest_point = start + t_clamped * wall_vec
 
             if np.linalg.norm(closest_point - self.pos) < self.max_neighbor_distance:
-                filtered_walls.append(Wall(start, end))
+                filtered_walls.append([closest_point, np.zeros(2), 0, 0])
 
-        self.walls = filtered_walls
+        self.update_static_obstacles(filtered_walls)
 
     @staticmethod
     def distance(a: np.ndarray, b: np.ndarray = None) -> float:
@@ -166,138 +167,6 @@ class StarVO:
 
         return Cone(base, dist, combined_radius, left_angle, right_angle)
 
-    @staticmethod
-    def _solve_quadratic(a: float, b: float, c: float,
-                         max_time: float = float('inf')) -> float:
-        """
-        Solves quadratic equation a*t^2 + b*t + c = 0.
-        Returns smallest non-negative real root <= max_time, or inf if none exists.
-        """
-        # Handle linear case
-        if abs(a) < 1e-12:
-            if abs(b) < 1e-12:
-                return float('inf')
-            t = -c / b
-            return t if 0 <= t <= max_time else float('inf')
-
-        # Quadratic case
-        discriminant = b*b - 4*a*c
-        if discriminant < 0:
-            return float('inf')
-
-        sqrt_d = sqrt(discriminant)
-        denom = 2*a
-
-        # Numerically stable roots
-        if b >= 0:
-            root1 = (-b - sqrt_d) / denom
-            root2 = 2*c / (-b - sqrt_d) if abs(b + sqrt_d) > 1e-12 else float('inf')
-        else:
-            root1 = 2*c / (-b + sqrt_d) if abs(-b + sqrt_d) > 1e-12 else float('inf')
-            root2 = (-b + sqrt_d) / denom
-
-        # Find smallest non-negative root within time horizon
-        valid_roots = []
-        for root in (root1, root2):
-            if not (np.isnan(root) or np.isinf(root)) and 0 <= root <= max_time:
-                valid_roots.append(root)
-
-        return min(valid_roots) if valid_roots else float('inf')
-
-    def _calculate_wall_ttc(self, agent_pos: np.ndarray,
-                                    velocity: np.ndarray,
-                                    wall_start: np.ndarray,
-                                    wall_end: np.ndarray,
-                                    agent_radius: float,
-                                    time_horizon: float = float('inf')) -> float:
-        """
-        Calculates time to collision with wall using geometry
-
-        Returns:
-            Time to collision (inf if no collision within time_horizon)
-        """
-        A = wall_start
-        B = wall_end
-        P = agent_pos
-        v = velocity
-        r = agent_radius
-
-        # Vector from wall start to end
-        u = B - A
-        u_sq = np.dot(u, u)
-
-        # Vector from wall start to agent
-        w0 = P - A
-
-        # Check current collision
-        if u_sq < 1e-12:  # Degenerate wall (point)
-            dist_sq = np.dot(w0, w0)
-            if dist_sq <= r*r:
-                return 0.0
-        else:
-            # Compute closest point on segment
-            t_val = np.dot(w0, u) / u_sq
-            t_clamped = max(0, min(1, t_val))
-            closest_point = A + t_clamped * u
-            dist_sq = np.dot(P - closest_point, P - closest_point)
-            if dist_sq <= r*r:
-                return 0.0
-
-        # For stationary agent, only current collision matters
-        v_sq = np.dot(v, v)
-
-        if v_sq < 1e-12:
-            return float('inf')
-
-        # For degenerate wall (point)
-        if u_sq < 1e-12:
-            # Solve: ||P + v*t - A|| = r
-            a = v_sq
-            b = 2 * np.dot(w0, v)
-            c = np.dot(w0, w0) - r*r
-
-            return self._solve_quadratic(a, b, c, time_horizon)
-
-        # General case: moving circle vs line segment
-        # We'll solve for three cases and take minimum valid t
-        t_candidates = []
-
-        # Case 1: Collision with infinite line
-        # Equation: (w0 + v*t) × u / |u| = r (squared)
-        u_norm_sq = u_sq
-        cross_w0u = w0[0]*u[1] - w0[1]*u[0]
-        cross_vu = v[0]*u[1] - v[1]*u[0]
-
-        a1 = cross_vu*cross_vu
-        b1 = 2 * cross_vu * cross_w0u
-        c1 = cross_w0u*cross_w0u - r*r * u_norm_sq
-
-        t1 = self._solve_quadratic(a1, b1, c1, time_horizon)
-        if t1 < float('inf'):
-            # Verify projection is on segment
-            proj = np.dot(w0, u) + np.dot(v, u)*t1
-            if 0 <= proj <= u_sq:
-                t_candidates.append(t1)
-
-        # Case 2: Collision with endpoint A
-        a2 = v_sq
-        b2 = 2 * np.dot(w0, v)
-        c2 = np.dot(w0, w0) - r*r
-        t2 = self._solve_quadratic(a2, b2, c2, time_horizon)
-        if t2 < float('inf'):
-            t_candidates.append(t2)
-
-        # Case 3: Collision with endpoint B
-        w1 = P - B
-        a3 = v_sq
-        b3 = 2 * np.dot(w1, v)
-        c3 = np.dot(w1, w1) - r*r
-        t3 = self._solve_quadratic(a3, b3, c3, time_horizon)
-        if t3 < float('inf'):
-            t_candidates.append(t3)
-
-        return min(t_candidates) if t_candidates else float('inf')
-
     def _is_velocity_safe(self, velocity: np.ndarray) -> bool:
         """Optimized collision checking using analytical wall collision detection"""
         vel_mag_sq = np.dot(velocity, velocity)
@@ -317,14 +186,6 @@ class StarVO:
 
             angle = atan2(vec[1], vec[0])
             if self._is_angle_between(angle, cone.right_angle, cone.left_angle):
-                return False
-
-        # Check walls using analytical method
-        for wall in self.walls:
-            if self._calculate_wall_ttc(
-                self.pos, velocity, wall.start, wall.end,
-                self.effective_radius, self.time_horizon
-            ) <= self.time_horizon:
                 return False
 
         return True
@@ -382,15 +243,6 @@ class StarVO:
                         dist_tg = 0
                     ttc = (dist_tg/vec_mag) if vec_mag > 1e-12 else 0.0
                     tc.append(ttc)
-
-            # Calculate TTC for walls
-            for wall in self.walls:
-                wall_ttc = self._calculate_wall_ttc(
-                    self.pos, v, wall.start, wall.end, self.effective_radius, self.time_horizon
-                )
-
-                if wall_ttc < float('inf'):
-                    tc.append(wall_ttc)
 
             if tc:
                 tc_v[tuple(v)] = max(min(tc), 1e-6)  # Ensure minimum positive value
