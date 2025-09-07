@@ -17,13 +17,20 @@ def find_bracket(f, *params, d_start=0.0, d_max=10.0, step=0.05):
     return None
 
 
-def find_first_interception(robot, ball):
+def interception_function(robot, ball):
     def rooted_interception(d):
         return ball.tb(d) - robot.time_to_target(ball.distance_to_vector(d))
+    return rooted_interception
 
-    bracket = find_bracket(rooted_interception)
+
+def interception_distance(ball, bracket, interception):
     if bracket:
-        return ball.distance_to_vector(root_scalar(rooted_interception, bracket=bracket, xtol=0.5, method="brentq").root)
-
+        return ball.distance_to_vector(root_scalar(interception, bracket=bracket, xtol=0.5, method="brentq").root)
     else:
         return ball.distance_to_vector(0)
+
+
+def find_first_interception(robot, ball):
+    interception = interception_function(robot, ball)
+    bracket = find_bracket(interception)
+    return interception_distance(ball, bracket, interception)
