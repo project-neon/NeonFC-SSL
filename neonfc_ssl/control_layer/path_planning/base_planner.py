@@ -33,12 +33,17 @@ class BasePathPlanner(ABC):
         raise Exception("Method not implemented!")
 
     @abstractmethod
+    def set_walls(self, walls: List):
+        """Set the walls in the environment"""
+        raise Exception("Method not implemented!")
+
+    @abstractmethod
     def set_map_area(self, map_area: Tuple[float, float]):
         """Set the map boundaries"""
         raise Exception("Method not implemented!")
 
     @abstractmethod
-    def plan(self, *args, **kwargs) -> Union[List[Tuple[float, float]], np.ndarray]:
+    def plan(self, *args, **kwargs) -> Union[List[float], np.ndarray]:
         """Generate a path from start to goal"""
         raise Exception("Method not implemented!")
 
