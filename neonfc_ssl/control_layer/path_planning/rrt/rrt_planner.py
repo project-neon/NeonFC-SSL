@@ -22,12 +22,17 @@ class RRTPlanner(Planner):
 
     def set_obstacles(self, obstacles: List):
         # Convert obstacles to Node objects
-        self.obstacles = [Node(obs[0], obs[1]) for obs in obstacles]
+        for obs in obstacles:
+            self.obstacles.append(Node(obs[0], obs[1]))
+
+    def set_walls(self, walls: List):
+        # Convert walls into Node objects
+        pass # TODO: implement rsrs
 
     def set_map_area(self, map_area: Tuple[float, float]):
         self.map_area = map_area
 
-    def plan(self) -> List[Tuple[float, float]]:
+    def plan(self) -> List[float]:
         rrt = RRT(
             start=self.start,
             goal=self.goal,
@@ -40,8 +45,8 @@ class RRTPlanner(Planner):
 
         path = rrt.plan()
 
-        self.path = path if path else [[self.start[0] + self.step_size * self.speed[0],
-                                       self.start[1] + self.step_size * self.speed[1]]]
+        self.path = path[1] if path else [self.start[0] + self.step_size * self.speed[0],
+                                       self.start[1] + self.step_size * self.speed[1]]
 
         return self.path
 
@@ -76,7 +81,7 @@ class RRTStarPlanner(RRTPlanner):
     def __init__(self, step_size=0.1, max_iter=5000, collision_margin=0.18):
         super().__init__(step_size, max_iter, collision_margin)
 
-    def plan(self) -> List[Tuple[float, float]]:
+    def plan(self) -> List[float]:
         rrt_star = RRTStar(
             start=self.start,
             goal=self.goal,
@@ -88,7 +93,7 @@ class RRTStarPlanner(RRTPlanner):
         )
         path = rrt_star.plan()
 
-        self.path = path if len(path) > 0 else [[self.start[0] + self.step_size * self.speed[0],
-                                                 self.start[1] + self.step_size * self.speed[1]]]
+        self.path = path[1] if len(path) > 0 else [self.start[0] + self.step_size * self.speed[0],
+                                                   self.start[1] + self.step_size * self.speed[1]]
 
         return self.path
