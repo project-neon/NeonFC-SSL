@@ -105,7 +105,10 @@ class SimpleCoach(Coach):
         if new_carrier is not None:
             self.decision.set_strategy(new_carrier, self._strategy_bh)
 
-        available_robots = self._clear_robot_list(self.data.robots.actives, [self._gk_id, new_carrier.id])
+        if new_carrier is None:
+            available_robots = self._clear_robot_list(self.data.robots.actives, [self._gk_id])
+        else:
+            available_robots = self._clear_robot_list(self.data.robots.actives, [self._gk_id, new_carrier.id])
 
         if not available_robots:
             return
