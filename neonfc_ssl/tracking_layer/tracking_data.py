@@ -210,8 +210,8 @@ class RobotList:
 
 @dataclass
 class Possession:
-    my_closest: int
-    op_closest: int
+    my_closest: Optional[int]
+    op_closest: Optional[int]
 
     possession_team: str
     possession_balance: float
