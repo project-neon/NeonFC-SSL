@@ -43,10 +43,10 @@ class ProtobufFormatter(logging.Formatter):
 
     def format(self, record: logging.LogRecord) -> str:
         entry = NeonFCProtobuf.LogEntry(
-            timestamp=Timestamp().FromDatetime(dt.datetime.fromtimestamp(record.created)),
             source=NeonFCProtobuf.Sources.Value(record.name.upper()),
             level=record.levelno,
         )
+        entry.timestamp.FromDatetime(dt.datetime.fromtimestamp(record.created))
 
         if record.levelno in LEVELS:
             getattr(entry, record.levelname.lower()).CopyFrom(record.msg.to_proto())
