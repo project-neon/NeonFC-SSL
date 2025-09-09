@@ -1,7 +1,7 @@
 [Game]
 host = "localhost"
 input_port = 0
-output_port = 0
+output_port = 43210
 
 [InputLayer]
 multicast_ip = "224.5.23.2"

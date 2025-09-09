@@ -245,12 +245,17 @@ class GameState:
     position: Optional[tuple[float, float]] = None
 
     def to_proto(self):
-        return TrackingProtobuf.GameState(
-            state=TrackingProtobuf.States.Value(self.state),
-            team=CommonsProtobuf.Colors.Value(self.color),
-            pos=CommonsProtobuf.Vector(x=self.x, y=self.y, z=self.theta),
-            vel=CommonsProtobuf.Vector(x=self.vx, y=self.vy, z=self.vtheta),
-        )
+        if self.color:
+            return TrackingProtobuf.GameState(
+                current_state=TrackingProtobuf.States.Value(self.state.name),
+                team=CommonsProtobuf.Colors.Value(self.color),
+                # pos=CommonsProtobuf.Vector(x=self.x, y=self.y, z=self.theta),
+                # vel=CommonsProtobuf.Vector(x=self.vx, y=self.vy, z=self.vtheta),
+            )
+        else:
+            return TrackingProtobuf.GameState(
+                current_state=TrackingProtobuf.States.Value(self.state.name),
+            )
 
 
 @dataclass
