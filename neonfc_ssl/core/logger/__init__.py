@@ -58,6 +58,7 @@ def setup_logging(nfc_config):
                 "level": "NOTSET",
                 "handlers": [
                     "stdout",
+                    "interface_sender",
                     # "stderr",
                     "game_log"
                 ],

@@ -48,11 +48,8 @@ class ProtobufFormatter(logging.Formatter):
             level=record.levelno,
         )
 
-        if isinstance(record.msg, Message):
-            if record.levelno in LEVELS:
-                setattr(entry, record.levelname.upper(), record.msg)
-            else:
-                raise ValueError(f"Unknow level {record.levelname}, with value {record.levelno}")
+        if record.levelno in LEVELS:
+            getattr(entry, record.levelname.lower()).CopyFrom(record.msg.to_proto())
 
         if isinstance(record.msg, str):
             entry.message = record.msg

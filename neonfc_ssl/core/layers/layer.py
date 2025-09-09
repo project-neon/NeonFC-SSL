@@ -34,7 +34,7 @@ class Layer(Process):
 
     def __setup_logger(self, log_q: Queue) -> logging.Logger:
         lgg = logging.getLogger(self.name)
-        lgg.setLevel(logging.DEBUG)
+        lgg.setLevel(logging.NOTSET)
         lgg.propagate = False  # to avoid double logging
         lgg.addHandler(LayerHandler(log_q))
 
