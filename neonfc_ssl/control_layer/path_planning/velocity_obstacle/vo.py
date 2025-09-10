@@ -2,7 +2,7 @@ import numpy as np
 from math import cos, sin, atan2, asin, pi, sqrt
 from typing import List, Tuple, Optional
 from enum import Enum
-from .vo_data import Obstacle, Wall, Cone
+from .vo_data import Obstacle, Cone
 
 
 class VOType(Enum):
@@ -31,7 +31,6 @@ class StarVO:
         # Environment
         self.static_obstacles: List[Obstacle] = []
         self.dynamic_obstacles: List[Obstacle] = []
-        self.walls: List[Wall] = []
 
         # Computed values
         self.desired_v = self._compute_desired_velocity()
@@ -168,7 +167,7 @@ class StarVO:
         return Cone(base, dist, combined_radius, left_angle, right_angle)
 
     def _is_velocity_safe(self, velocity: np.ndarray) -> bool:
-        """Optimized collision checking using analytical wall collision detection"""
+        """Check if given velocity might generate a collision"""
         vel_mag_sq = np.dot(velocity, velocity)
 
         if vel_mag_sq > self.max_v * self.max_v + 1e-6:
