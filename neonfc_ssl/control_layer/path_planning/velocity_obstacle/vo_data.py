@@ -10,13 +10,6 @@ class Obstacle:
     radius: float
     priority: int
 
-
-@dataclass
-class Wall:
-    start: NDArray[np.float64]
-    end: NDArray[np.float64]
-
-
 @dataclass
 class Cone:
     base: NDArray[np.float64]
