@@ -39,12 +39,25 @@ class VOPlanner(Planner):
     def set_map_area(self, map_area: Tuple[float, float]):
         self.map_area = [6.0, 9.0]
 
-    def plan(self) -> np.ndarray:
-        self.path = self.star_vo.update()
-        return self.path
+    def plan(self) -> List[float]:
+        self.path = self.star_vo.pos + self.star_vo.update()
+        return self.path.tolist()
 
     def update(self, current_state, *args, **kwargs):
         pass
 
     def get_path(self):
         return self.path
+
+    def add_field_walls(self, origin, length, width, border=0.3):
+        x_min = origin - border
+        y_min = origin - border
+        x_max = origin + length + border
+        y_max = origin + width + border
+
+        self.set_walls([
+            [(x_min, y_min), (x_min, y_max)],
+            [(x_min, y_max), (x_max, y_max)],
+            [(x_max, y_max), (x_max, y_min)],
+            [(x_max, y_min), (x_min, y_min)]
+        ])
