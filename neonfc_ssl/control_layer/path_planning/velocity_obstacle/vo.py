@@ -1,8 +1,10 @@
 import numpy as np
-from math import cos, sin, atan2, asin, pi, sqrt
+from math import cos, sin, atan2, asin, pi
 from typing import List, Tuple, Optional
 from enum import Enum
 from .vo_data import Obstacle, Cone
+from neonfc_ssl.commons.math import is_angle_between, length
+from neonfc_ssl.commons.math import distance_between_points as distance
 
 
 class VOType(Enum):
@@ -48,7 +50,7 @@ class StarVO:
 
         for o in obstacles:
             pos = np.array(o[0])
-            dist = self.distance(pos, self.pos)
+            dist = distance(pos, self.pos)
 
             if dist < self.max_neighbor_distance:
                 filtered_obs.append(
@@ -68,7 +70,7 @@ class StarVO:
         self.dynamic_obstacles = self._filter_obstacles(dynamic_obstacles)
 
     def update_walls(self, walls: List[Tuple]):
-        """Update walls with spatial filtering"""
+        """Update walls with spatial filtering and treat them as static obstacles"""
         filtered_walls = []
 
         for w in walls:
@@ -81,20 +83,14 @@ class StarVO:
             t_clamped = max(0, min(1, t))
             closest_point = start + t_clamped * wall_vec
 
-            if np.linalg.norm(closest_point - self.pos) < self.max_neighbor_distance:
+            if length(closest_point - self.pos) < self.max_neighbor_distance:
                 filtered_walls.append([closest_point, np.zeros(2), 0, 0])
 
         self.update_static_obstacles(filtered_walls)
 
-    @staticmethod
-    def distance(a: np.ndarray, b: np.ndarray = None) -> float:
-        if b is None:
-            b = np.zeros(2)
-        return np.linalg.norm(a - b) + 1e-6
-
     def reached_goal(self) -> bool:
         """Check if agent reached goal"""
-        return self.distance(self.pos, self.goal) < self.goal_tolerance
+        return distance(self.pos, self.goal) < self.goal_tolerance
 
     def _compute_desired_velocity(self) -> np.ndarray:
         """Compute desired velocity with speed limiting"""
@@ -102,35 +98,24 @@ class StarVO:
             return np.array([1e-6, 1e-6])
 
         goal_vec = self.goal - self.pos
-        goal_dist = np.linalg.norm(goal_vec)
+        goal_dist = length(goal_vec)
 
         if goal_dist < 1e-6:
             return np.array([1e-6, 1e-6])
 
         return (goal_vec / goal_dist) * self.max_v
 
-    @staticmethod
-    def _is_angle_between(angle: float, start: float, end: float) -> bool:
-        angle = angle % (2*pi)
-        start = start % (2*pi)
-        end = end % (2*pi)
-
-        if start <= end:
-            return start <= angle <= end
-        else:
-            return angle >= start or angle <= end
-
     def _compute_rvo_cone(self, obs_pos: np.ndarray, obs_vel: np.ndarray,
                               obs_radius: float, obs_priority: int = 0,
                               is_dynamic: bool = True) -> Optional[Cone]:
         """Cone computation with improved numerical stability"""
         rel_pos = obs_pos - self.pos
-        dist = np.linalg.norm(rel_pos) + 1e-6
+        dist = length(rel_pos) + 1e-6
 
         combined_radius = self.effective_radius + obs_radius
 
         # Early exit for distant obstacles
-        max_influence_dist = self.time_horizon * (self.max_v + np.linalg.norm(obs_vel))
+        max_influence_dist = self.time_horizon * (self.max_v + length(obs_vel))
         if dist > max_influence_dist:
             return None
 
@@ -139,7 +124,7 @@ class StarVO:
             # Agent is inside or touching the obstacle
             if dist < 1e-6:
                 # Agent exactly at obstacle center - create emergency cone
-                theta_center = atan2(self.desired_v[1], self.desired_v[0]) if np.linalg.norm(self.desired_v) > 1e-6 else 0
+                theta_center = atan2(self.desired_v[1], self.desired_v[0]) if length(self.desired_v) > 1e-6 else 0
                 theta_half = pi/4  # Wide emergency cone
             else:
                 theta_center = atan2(rel_pos[1], rel_pos[0])
@@ -184,7 +169,7 @@ class StarVO:
                 return False
 
             angle = atan2(vec[1], vec[0])
-            if self._is_angle_between(angle, cone.right_angle, cone.left_angle):
+            if is_angle_between(angle, cone.right_angle, cone.left_angle):
                 return False
 
         return True
@@ -210,7 +195,7 @@ class StarVO:
                     unsuitable_v.append(candidate)
 
         if suitable_v:
-            return min(suitable_v, key=lambda vel: self.distance(vel, self.desired_v))
+            return min(suitable_v, key=lambda vel: distance(vel, self.desired_v))
 
         tc_v = dict()
 
@@ -224,7 +209,7 @@ class StarVO:
                     continue
 
                 vec = self.pos + v - cone.base
-                vec_mag = np.linalg.norm(vec)
+                vec_mag = length(vec)
                 if vec_mag < 1e-12:
                     tc.append(0.0)
                     continue
@@ -232,7 +217,7 @@ class StarVO:
                 theta = atan2(vec[1], vec[0])
                 rad = cone.radius
 
-                if self._is_angle_between(theta, cone.right_angle, cone.left_angle):
+                if is_angle_between(theta, cone.right_angle, cone.left_angle):
                     small_theta = abs(theta-0.5*(cone.left_angle+cone.right_angle))
                     if abs(cone.dist*sin(small_theta)) >= rad:
                         rad = abs(cone.dist*sin(small_theta))
@@ -251,7 +236,7 @@ class StarVO:
             return np.zeros(2)
 
         WT = 0.2
-        best_v = min(unsuitable_v, key=lambda vel: ((WT/tc_v[tuple(v)])+self.distance(vel, self.desired_v)))
+        best_v = min(unsuitable_v, key=lambda vel: ((WT/tc_v[tuple(v)])+distance(vel, self.desired_v)))
 
         if tc_v[tuple(best_v)] < self.effective_radius:
             return np.array([1e-6, 1e-6])
