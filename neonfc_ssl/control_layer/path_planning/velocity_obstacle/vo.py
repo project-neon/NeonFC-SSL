@@ -281,4 +281,4 @@ class StarVO:
 
         selected_velocity = self._find_best_velocity()
 
-        return selected_velocity.tolist()
+        return selected_velocity
