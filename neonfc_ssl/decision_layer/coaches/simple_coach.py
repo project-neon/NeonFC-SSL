@@ -17,8 +17,8 @@ class SimpleCoach(Coach):
         # Create strategies objects
 
         # Especial cases
-        self._strategy_gk = GoalKeeper()
-        self._strategy_bh = BallHolder()
+        self._strategy_gk = GoalKeeper(self.decision.logger)
+        self._strategy_bh = BallHolder(self.decision.logger)
         self._gk_id = 0
 
         # ------ n=6 ------ #

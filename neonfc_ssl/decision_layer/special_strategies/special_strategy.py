@@ -3,11 +3,13 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from neonfc_ssl.decision_layer.decision_data import RobotRubric
     from neonfc_ssl.tracking_layer.tracking_data import MatchData, TrackedRobot
+    from logging import Logger
 
 
 class SpecialStrategy(ABC):
-    def __init__(self):
+    def __init__(self, logger: "Logger"):
         self._robot_id = None
+        self.logger = logger
 
     def start(self, robot_id: int, *args, **kwargs):
         self._robot_id = robot_id

@@ -9,13 +9,13 @@ if TYPE_CHECKING:
 
 
 class SpecialTest(SpecialStrategy):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, logger):
+        super().__init__(logger)
         self.target = None
 
         self.states: dict[str, 'BaseSkill'] = {
-            'move_to_pose_1': MoveToPose(),
-            'move_to_pose_2': MoveToPose()
+            'move_to_pose_1': MoveToPose(self.logger, SpecialTest.__name__),
+            'move_to_pose_2': MoveToPose(self.logger, SpecialTest.__name__)
         }
 
         self.states['move_to_pose_1'].add_transition(self.states['move_to_pose_2'],

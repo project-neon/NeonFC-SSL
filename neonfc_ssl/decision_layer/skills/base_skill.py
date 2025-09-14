@@ -4,11 +4,14 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from ..decision_data import RobotRubric
     from neonfc_ssl.tracking_layer.tracking_data import MatchData, TrackedRobot
+    from logging import Logger
 
 
 class BaseSkill(State):
-    def __init__(self):
+    def __init__(self, logger: "Logger", strategy_name: str):
         super().__init__()
+        self.logger = logger
+        self.strategy_name = strategy_name
         self._robot_id: int = None
 
     def start(self, robot_id: int, **kwargs):

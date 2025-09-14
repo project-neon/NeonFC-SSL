@@ -13,9 +13,9 @@ def angle_between(p1, p2, p3):
 
 
 class InterceptBall(SpecialStrategy):
-    def __init__(self):
-        super().__init__()
-        self.skill = GoToBall()
+    def __init__(self, logger):
+        super().__init__(logger)
+        self.skill = GoToBall(self.logger, InterceptBall.__name__)
 
     def _start(self):
         self.skill.start(self._robot_id)

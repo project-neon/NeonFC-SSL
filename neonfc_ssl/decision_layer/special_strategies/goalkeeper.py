@@ -11,14 +11,14 @@ if TYPE_CHECKING:
 
 
 class GoalKeeper(SpecialStrategy):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, logger):
+        super().__init__(logger)
         self.target = None
 
         self.states: dict[str, 'BaseSkill'] = {
-            'pass': SimplePass(),
-            'go_to_ball': GoToBall(),
-            'move_to_pose': MoveToPose()
+            'pass': SimplePass(self.logger, GoalKeeper.__name__),
+            'go_to_ball': GoToBall(self.logger, GoalKeeper.__name__),
+            'move_to_pose': MoveToPose(self.logger, GoalKeeper.__name__)
         }
 
         def not_func(f):

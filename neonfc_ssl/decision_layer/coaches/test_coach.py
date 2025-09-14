@@ -1,15 +1,16 @@
 from .base_coach import Coach
-from ..special_strategies import BallHolder, GoalKeeper,InterceptBall
+from ..special_strategies import BallHolder, GoalKeeper,InterceptBall, Passer
 from ..positional_strategies import Libero, LeftBack, RightBack
 
 
 class TestCoach(Coach):
     def _start(self):
-        self.keeper = GoalKeeper()
-        self.ballholder = InterceptBall()
+        self.keeper = GoalKeeper(self.decision.logger)
+        self.ballholder = InterceptBall(self.decision.logger)
+        self.passer = Passer(self.decision.logger)
 
     def decide(self):
-        self.decision.set_strategy(self.data.robots[0], self.ballholder)
+        self.decision.set_strategy(self.data.robots[0], self.passer)
         # liberos = self.data.robots[0:3]
         # left_backs = self.data.robots[3:4]
         # right_backs = self.data.robots[4:5]

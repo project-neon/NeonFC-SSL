@@ -8,12 +8,12 @@ if TYPE_CHECKING:
 
 
 class Passer(SpecialStrategy):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, logger):
+        super().__init__(logger)
         self.target = None
         self.states: dict[str, 'BaseSkill'] = {
-            'go_to_ball': GoToBall(),
-            'pass': SimplePass()
+            'go_to_ball': GoToBall(self.logger, Passer.__name__),
+            'pass': SimplePass(self.logger, Passer.__name__)
         }
 
         self.states['go_to_ball'].add_transition(self.states['pass'], SimplePass.start_pass)
@@ -24,9 +24,9 @@ class Passer(SpecialStrategy):
         self.active.start(self._robot_id)
 
     def decide(self, data):
-        target = data.opposites.active
+        target = data.opposites.active[0]
 
-        next = self.active.update(data)
+        next = self.active.update(robot=data.robots[self._robot_id], ball=data.ball)
         if next != self.active:
             self.active = next
             self.active.start(self._robot_id, target=target)

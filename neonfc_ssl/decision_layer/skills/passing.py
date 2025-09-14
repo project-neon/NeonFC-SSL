@@ -6,8 +6,19 @@ from .base_skill import BaseSkill
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from neonfc_ssl.tracking_layer.tracking_data import MatchData
+    from neonfc_ssl.tracking_layer.tracking_data import MatchData, TrackedBall, TrackedRobot
 
+STEP_BACK_DIST = 0.2
+MAX_ANGLE_STEP = math.pi/3
+STEP_FORWARD_DIST = 0.03
+MIN_ANGLE_TOLERANCE = 0.1
+MAX_ANGLE_TOLERANCE = 0.3
+DIST_MAX_TOLERANCE = 0.15
+DIST_MIN_TOLERANCE = 0
+MIN_KICK_DIST = .08
+MAX_KICK_DIST = .1
+
+STATE_CHANGE_LOG_MSG = "[{}] {} -> {}"
 
 def angle_between(p1, p2, p3):
     return math.atan2(p3[1] - p1[1], p3[0] - p1[0]) - math.atan2(p2[1] - p1[1], p2[0] - p1[0])
@@ -37,10 +48,9 @@ class StepBack(State):
         robot = data.robots[self.robot_id]
         ball = data.ball
 
-        step_back_dist = 0.17
         angle = math.atan2(ball.y - robot.y, ball.x - robot.x)
 
-        target = (ball.x - step_back_dist * math.cos(angle), ball.y - step_back_dist * math.sin(angle), angle)
+        target = (ball.x - STEP_BACK_DIST * math.cos(angle), ball.y - STEP_BACK_DIST * math.sin(angle), angle)
 
         return RobotRubric(
             id=self.robot_id,
@@ -56,28 +66,13 @@ class StepBack(State):
 
 
 class TurnToPass(State):
-    def start(self, robot_id, target):
+    def start(self, robot_id: int, target: tuple[float, float]):
         self.robot_id = robot_id
-        self.ot = target
+        self.target = target
         self.target_angle = 0
 
     def decide(self, data: "MatchData"):
-        robot = data.robots[self.robot_id]
-        ball = data.ball
-
-        step_back_dist = 0.15
-        self.target_angle = math.atan2(self.ot[1] - ball.y, self.ot[0] - ball.x)
-        current_angle = math.atan2(ball.y - robot.y, ball.x - robot.x)
-
-        diff = reduce_ang(self.target_angle - current_angle)
-        limit_dif = math.copysign(min(abs(diff), math.pi / 3), diff)
-        actual_angle = current_angle + limit_dif
-
-        pos = (
-            ball.x - step_back_dist * math.cos(actual_angle),
-            ball.y - step_back_dist * math.sin(actual_angle),
-            math.atan2(ball.y - robot.y, ball.x - robot.x)
-        )
+        pos = self.get_next_target(data)
 
         return RobotRubric(
             id=self.robot_id,
@@ -85,22 +80,45 @@ class TurnToPass(State):
             target_pose=pos
         )
 
-    def check_complete(self, data: "MatchData"):
-        # check in the robot is inside a cone behind the ball facing the target
+    def get_expected_angle(self, data):
+        ball = data.ball
+        return math.atan2(self.target[1] - ball.y, self.target[0] - ball.x)
+
+    def get_current_angle(self, data):
+        robot = data.robots[self.robot_id]
+        ball = data.ball
+        return math.atan2(ball.y - robot.y, ball.x - robot.x)
+
+    def get_next_target(self, data):
         robot = data.robots[self.robot_id]
         ball = data.ball
 
-        max_r = 0.15
-        min_r = 0
-        max_a = math.pi/24
+        crt_angle = self.get_current_angle(data)
+        target_angle = self.get_expected_angle(data)
 
-        # angle check
-        v1 = abs(reduce_ang(math.atan2(ball.y - robot.y, ball.x - robot.x) - self.target_angle)) < max_a
+        diff = reduce_ang(target_angle - crt_angle)
+        limit_dif = math.copysign(min(abs(diff), MAX_ANGLE_STEP), diff)
+        netx_angle = crt_angle + limit_dif
 
-        # distance check
-        v2 = min_r <= ((robot.x - ball.x) ** 2 + (robot.y - ball.y) ** 2) ** .5 <= max_r
+        pos = (
+            ball.x - STEP_BACK_DIST * math.cos(netx_angle),
+            ball.y - STEP_BACK_DIST * math.sin(netx_angle),
+            math.atan2(ball.y - robot.y, ball.x - robot.x)
+        )
 
-        return v1 and v2
+        return pos
+
+    def check_complete(self, data: "MatchData"):
+        """Check if the robot is inside a cine behind the ball and the target."""
+        in_angel = abs(reduce_ang(self.get_current_angle(data) - self.get_expected_angle(data))) < MIN_ANGLE_TOLERANCE
+
+        return in_angel
+
+    def check_fallback(self, data: "MatchData"):
+        """Check if the robot is inside a cine behind the ball and the target."""
+        in_angel = abs(reduce_ang(self.get_current_angle(data) - self.get_expected_angle(data))) > MAX_ANGLE_TOLERANCE
+
+        return in_angel
 
 
 class StepForward(State):
@@ -112,12 +130,11 @@ class StepForward(State):
     def decide(self, data: "MatchData"):
         ball = data.ball
 
-        step_forward_dist = 0.03
         angle = math.atan2(self.target[1] - ball.y, self.target[0] - ball.x)
 
         self.final_target = (
-            ball.x - step_forward_dist * math.cos(angle),
-            ball.y - step_forward_dist * math.sin(angle),
+            ball.x - STEP_FORWARD_DIST * math.cos(angle),
+            ball.y - STEP_FORWARD_DIST * math.sin(angle),
             angle
         )
 
@@ -129,7 +146,11 @@ class StepForward(State):
 
     def check_complete(self, data: "MatchData"):
         robot = data.robots[self.robot_id]
-        return (robot.x - self.final_target[0]) ** 2 + (robot.y - self.final_target[1]) ** 2 < 0.08 ** 2
+        return (robot.x - self.final_target[0]) ** 2 + (robot.y - self.final_target[1]) ** 2 < MIN_KICK_DIST ** 2
+
+    def check_fallback(self, data: "MatchData"):
+        robot = data.robots[self.robot_id]
+        return (robot.x - self.final_target[0]) ** 2 + (robot.y - self.final_target[1]) ** 2 > MAX_KICK_DIST ** 2
 
 
 class PerformSimplePass(State):
@@ -194,8 +215,8 @@ class PerformChipPass(State):
 
 
 class SimplePass(BaseSkill):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, logger, strategy):
+        super().__init__(logger, strategy)
 
         self.wait = Wait()
         self.step_back = StepBack()
@@ -205,8 +226,12 @@ class SimplePass(BaseSkill):
 
         self.wait.add_transition(self.step_back, self.wait.check_complete)
         self.step_back.add_transition(self.turn, self.step_back.check_complete)
+
         self.turn.add_transition(self.step_forward, self.turn.check_complete)
+        self.step_forward.add_transition(self.turn, self.step_forward.check_fallback)
+
         self.step_forward.add_transition(self.passing, self.step_forward.check_complete)
+        self.passing.add_transition(self.wait, self.step_forward.check_fallback)
 
         self.active = self.wait
 
@@ -219,23 +244,28 @@ class SimplePass(BaseSkill):
         next = self.active.update(data)
 
         if next != self.active:
+            self.logger.debug(STATE_CHANGE_LOG_MSG.format(
+                self.strategy_name,
+                self.active.__class__.__name__,
+                next.__class__.__name__
+            ))
             self.active = next
             self.active.start(self._robot_id, self.target)
 
         return self.active.decide(data)
 
     @staticmethod
-    def start_pass(robot, ball):
-        return distance_between_points(robot, ball) < 0.1
+    def start_pass(robot: "TrackedRobot", ball: "TrackedBall", **kwargs):
+        return ball.speed < 0.01 or distance_between_points(robot, ball) < 0.1
 
     @staticmethod
-    def stop_pass(robot, ball):
-        return distance_between_points(robot, ball) > 0.15
+    def stop_pass(robot: "TrackedRobot", ball: "TrackedBall", **kwargs):
+        return ball.speed > 0.03 and distance_between_points(robot, ball) > 0.15
 
 
 class ChipPass(BaseSkill):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, logger, strategy):
+        super().__init__(logger, strategy)
         self.turn = TurnToPass()
         self.passing = PerformSimplePass()
         self.turn.add_transition(self.passing, self.turn.check_complete)
