@@ -58,8 +58,15 @@ class GameController:
 
 
 @dataclass
+class RobotFeedback:
+    robot_id: int
+    rssi: int
+    battery: float
+
+
+@dataclass
 class InputData:
     entities: Entities
     geometry: Geometry
     game_controller: GameController
-
+    feedback: Optional[list[RobotFeedback]]

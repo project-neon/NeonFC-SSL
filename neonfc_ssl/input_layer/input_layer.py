@@ -6,6 +6,7 @@ from neonfc_ssl.core.logger import TRACKING
 from .sockets.gr_sim_vision import GrSimVision
 from .sockets.auto_ref_vision import AutoRefVision
 from .sockets.ssl_game_controller import SSLGameControllerReferee
+from .sockets.serial_input import SerialInput
 from .input_data import InputData
 
 
@@ -13,12 +14,13 @@ class InputLayer(Layer):
     def __init__(self, config, log_q, event_pipe):
         super().__init__("InputLayer", config, log_q, event_pipe)
 
-        if self.config['side'] != 'left' and self.config['side'] != 'right':
+        if self.config["side"] != "left" and self.config["side"] != "right":
             raise ValueError("side must be either 'left' or 'right'")
 
         self.ssl_vison = GrSimVision(self.config, self.logger)
         self.auto_ref = AutoRefVision(self.config, self.logger)
         self.referee = SSLGameControllerReferee(self.config, self.logger)
+        self.feedback = SerialInput(self.config, self.logger)
 
         self.use_ref_vision = self.config["use_ref_vision"]
 
@@ -43,13 +45,15 @@ class InputLayer(Layer):
         return InputData(
             entities=vision_data,
             geometry=geometry,
-            game_controller=gc
+            game_controller=gc,
+            feedback=self.feedback.get_data() if self.feedback.running else None,
         )
 
     def _start(self):
         self.ssl_vison.start()
         self.auto_ref.start()
         self.referee.start()
+        self.feedback.start()
 
         while not self.ssl_vison.any_geometry:
             time.sleep(0.1)

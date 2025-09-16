@@ -11,6 +11,8 @@ autoref_port = 10010
 game_controller_port = 10003
 use_ref_vision = true
 side = "left"
+serial_port = "/dev/ttyACM0"
+baud_rate =  115200
 
 [Tracking]
 color = "yellow"
