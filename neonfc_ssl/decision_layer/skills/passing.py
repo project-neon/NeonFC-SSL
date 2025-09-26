@@ -5,20 +5,22 @@ from neonfc_ssl.decision_layer.decision import RobotRubric
 from .base_skill import BaseSkill
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from neonfc_ssl.tracking_layer.tracking_data import MatchData, TrackedBall, TrackedRobot
 
 STEP_BACK_DIST = 0.2
-MAX_ANGLE_STEP = math.pi/3
+MAX_ANGLE_STEP = math.pi / 3
 STEP_FORWARD_DIST = 0.03
 MIN_ANGLE_TOLERANCE = 0.1
 MAX_ANGLE_TOLERANCE = 0.3
 DIST_MAX_TOLERANCE = 0.15
 DIST_MIN_TOLERANCE = 0
-MIN_KICK_DIST = .08
-MAX_KICK_DIST = .1
+MIN_KICK_DIST = 0.08
+MAX_KICK_DIST = 0.1
 
 STATE_CHANGE_LOG_MSG = "[{}] {} -> {}"
+
 
 def angle_between(p1, p2, p3):
     return math.atan2(p3[1] - p1[1], p3[0] - p1[0]) - math.atan2(p2[1] - p1[1], p2[0] - p1[0])
@@ -50,7 +52,11 @@ class StepBack(State):
 
         angle = math.atan2(ball.y - robot.y, ball.x - robot.x)
 
-        target = (ball.x - STEP_BACK_DIST * math.cos(angle), ball.y - STEP_BACK_DIST * math.sin(angle), angle)
+        target = (
+            ball.x - STEP_BACK_DIST * math.cos(angle),
+            ball.y - STEP_BACK_DIST * math.sin(angle),
+            angle,
+        )
 
         return RobotRubric(
             id=self.robot_id,
@@ -62,7 +68,7 @@ class StepBack(State):
         robot = data.robots[self.robot_id]
         ball = data.ball
 
-        return ((robot.x - ball.x) ** 2 + (robot.x - ball.x) ** 2) ** .5 > 0.012
+        return ((robot.x - ball.x) ** 2 + (robot.x - ball.x) ** 2) ** 0.5 > 0.012
 
 
 class TurnToPass(State):
@@ -103,7 +109,7 @@ class TurnToPass(State):
         pos = (
             ball.x - STEP_BACK_DIST * math.cos(netx_angle),
             ball.y - STEP_BACK_DIST * math.sin(netx_angle),
-            math.atan2(ball.y - robot.y, ball.x - robot.x)
+            math.atan2(ball.y - robot.y, ball.x - robot.x),
         )
 
         return pos
@@ -135,7 +141,7 @@ class StepForward(State):
         self.final_target = (
             ball.x - STEP_FORWARD_DIST * math.cos(angle),
             ball.y - STEP_FORWARD_DIST * math.sin(angle),
-            angle
+            angle,
         )
 
         return RobotRubric(
@@ -154,7 +160,7 @@ class StepForward(State):
 
 
 class PerformSimplePass(State):
-    def __init__(self):
+    def __init__(self, override_kick=None):
         super().__init__()
         self.reach_speed = 0
         self.g = 9.81
@@ -162,6 +168,7 @@ class PerformSimplePass(State):
         self.c = 0.7
         self.a_s = -14
         self.a_r = -0.7
+        self.override_kick = override_kick
 
     def start(self, robot_id, target):
         self.robot_id = robot_id
@@ -176,8 +183,8 @@ class PerformSimplePass(State):
         # vb = math.sqrt(self.reach_speed ** 2 + 2 * self.g * self.miu * d)
 
         # using two 2 state ball model
-        s_f = (self.c ** 2 - 1) / self.a_s
-        r_f = -self.c ** 2 / self.a_r
+        s_f = (self.c**2 - 1) / self.a_s
+        r_f = -self.c**2 / self.a_r
         vb = math.sqrt(2 * d / (s_f + r_f))
 
         vb = min(vb, 6.5)
@@ -185,7 +192,7 @@ class PerformSimplePass(State):
         return RobotRubric(
             id=self.robot_id,
             halt=False,
-            kick_speed=(vb, 0)
+            kick_speed=(self.override_kick, 0) if self.override_kick else (vb, 0),
         )
 
 
@@ -215,14 +222,14 @@ class PerformChipPass(State):
 
 
 class SimplePass(BaseSkill):
-    def __init__(self, logger, strategy):
+    def __init__(self, logger, strategy, override_kick=None):
         super().__init__(logger, strategy)
 
         self.wait = Wait()
         self.step_back = StepBack()
         self.turn = TurnToPass()
         self.step_forward = StepForward()
-        self.passing = PerformSimplePass()
+        self.passing = PerformSimplePass(override_kick)
 
         self.wait.add_transition(self.step_back, self.wait.check_complete)
         self.step_back.add_transition(self.turn, self.step_back.check_complete)
@@ -247,7 +254,7 @@ class SimplePass(BaseSkill):
             self.logger.debug(STATE_CHANGE_LOG_MSG.format(
                 self.strategy_name,
                 self.active.__class__.__name__,
-                next.__class__.__name__
+                next.__class__.__name__,
             ))
             self.active = next
             self.active.start(self._robot_id, self.target)

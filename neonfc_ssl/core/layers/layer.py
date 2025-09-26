@@ -7,8 +7,11 @@ import logging
 from neonfc_ssl.core.logger import LayerHandler
 
 
+LAYER_START_ERROR_LOG = "Exception during layer {} start"
+
+
 class Layer(Process):
-    IDLE_LIMIT = 1/60  # s (60 Hz)
+    IDLE_LIMIT = 1 / 60  # s (60 Hz)
 
     def __init__(self, name: str, config: dict, log_q: Queue, event_pipe: Pipe):
         super().__init__(daemon=True)
@@ -16,10 +19,14 @@ class Layer(Process):
         self.config = config
 
         # process communication variables
-        self.logger = self.__setup_logger(log_q)  # send logs to the main process and eventually to the interface
+        self.logger = self.__setup_logger(
+            log_q
+        )  # send logs to the main process and eventually to the interface
         self.__events_pipe = event_pipe  # receive events from the main process possibly originating from the interface
         self.__input: Connection = None  # last layer pipe tail in the pipeline
-        self.__output_tail, self.__output_head = Pipe(duplex=False)  # output pipe in the pipeline (to the next layer)
+        self.__output_tail, self.__output_head = Pipe(
+            duplex=False
+        )  # output pipe in the pipeline (to the next layer)
 
         # layer state variables
         self.__running = False
@@ -57,7 +64,11 @@ class Layer(Process):
 
     def run(self):
         self.logger.info("Starting layer {}".format(self.name))
-        self._start()
+        try:
+            self._start()
+        except Exception as e:
+            self.logger.error(LAYER_START_ERROR_LOG.format(self.name))
+            raise e
         self.__started = True
         self.logger.info("{} layer started.".format(self.name))
         while True:

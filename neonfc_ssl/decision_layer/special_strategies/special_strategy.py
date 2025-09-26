@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
+
 if TYPE_CHECKING:
     from neonfc_ssl.decision_layer.decision_data import RobotRubric
     from neonfc_ssl.tracking_layer.tracking_data import MatchData, TrackedRobot
@@ -8,7 +9,7 @@ if TYPE_CHECKING:
 
 class SpecialStrategy(ABC):
     def __init__(self, logger: "Logger"):
-        self._robot_id = None
+        self._robot_id: Optional[int] = None
         self.logger = logger
 
     def start(self, robot_id: int, *args, **kwargs):
@@ -19,5 +20,5 @@ class SpecialStrategy(ABC):
         pass
 
     @abstractmethod
-    def decide(self, data: 'MatchData') -> 'RobotRubric':
+    def decide(self, data: "MatchData") -> "RobotRubric":
         pass

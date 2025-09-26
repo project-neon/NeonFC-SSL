@@ -1,5 +1,5 @@
 from .base_coach import Coach
-from ..special_strategies import BallHolder, GoalKeeper,InterceptBall, Passer
+from ..special_strategies import BallHolder, GoalKeeper, InterceptBall, Passer, Shooter
 from ..positional_strategies import Libero, LeftBack, RightBack
 
 
@@ -8,9 +8,10 @@ class TestCoach(Coach):
         self.keeper = GoalKeeper(self.decision.logger)
         self.ballholder = InterceptBall(self.decision.logger)
         self.passer = Passer(self.decision.logger)
+        self.shooter = Shooter(self.decision.logger)
 
     def decide(self):
-        self.decision.set_strategy(self.data.robots[0], self.passer)
+        self.decision.set_strategy(self.data.robots[2], self.shooter)
         # liberos = self.data.robots[0:3]
         # left_backs = self.data.robots[3:4]
         # right_backs = self.data.robots[4:5]

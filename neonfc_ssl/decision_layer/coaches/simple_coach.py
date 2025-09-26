@@ -7,8 +7,8 @@ from scipy.optimize import linear_sum_assignment
 import numpy as np
 
 from typing import TYPE_CHECKING, Optional
+
 if TYPE_CHECKING:
-    from ..special_strategies import BaseStrategy
     from neonfc_ssl.tracking_layer.tracking_data import TrackedRobot
 
 
@@ -65,9 +65,9 @@ class SimpleCoach(Coach):
         #     self._fouls()
 
     def _fouls(self):
-        if self._match.game_state.current_state.name == 'PrepareKickOff':
+        if self._match.game_state.current_state.name == "PrepareKickOff":
             for robot in self._active_robots:
-                if robot.strategy.name == 'Ball Holder':
+                if robot.strategy.name == "Ball Holder":
                     robot.set_strategy(self.prepare_kickoff)
                     break
 
@@ -88,13 +88,13 @@ class SimpleCoach(Coach):
                 for robot in self._active_robots:
                     if robot.robot_id != self._gk_id:
                         robot.set_strategy(self.prepare_penalty[robot.robot_id])
-        
+
         elif self._match.game_state.current_state.name == 'BallPlacement' or self._match.game_state.current_state.name == 'FreeKick':
             for robot in self._active_robots:
                 if robot.strategy.name == 'Ball Holder':
                     robot.set_strategy(self.prepare_freekick)
                     break
-        
+
         # n sei oq por no else ou se faz uma condição p todos as outras condições
 
     def _defending(self):
@@ -121,18 +121,18 @@ class SimpleCoach(Coach):
              targets=targets,
              robots=available_robots
         )
-                
+
     def _use_right_back(self):
         field = self.data.field
-        limit = (field.field_width - field.penalty_width)/2 + 0.5
+        limit = (field.field_width - field.penalty_width) / 2 + 0.5
 
-        return self.data.ball.x < field.field_length/2 and self.data.ball.y < limit
+        return self.data.ball.x < field.field_length / 2 and self.data.ball.y < limit
 
     def _use_left_back(self):
         field = self.data.field
-        limit = (field.field_width + field.penalty_width)/2 - 0.5
+        limit = (field.field_width + field.penalty_width) / 2 - 0.5
 
-        return self.data.ball.x < field.field_length/2 and self.data.ball.y > limit
+        return self.data.ball.x < field.field_length / 2 and self.data.ball.y > limit
 
     def _closest_non_keeper(self) -> Optional['TrackedRobot']:
         sq_dist_to_ball = lambda r: np.sum(np.square(np.array(r)-self.data.ball)) \
@@ -170,7 +170,7 @@ class SimpleCoach(Coach):
             else:
                 robot.set_strategy(self._secondary_attack_strategies[robot.robot_id])
 
-    def _closest_to_ball(self) -> int:
+    def _closest_to_ball(self) -> Optional[int]:
         return self.data.possession.my_closest
 
     @staticmethod
