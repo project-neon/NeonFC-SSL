@@ -1,16 +1,16 @@
 import numpy as np
 from math import cos, sin, atan2, asin, pi
 from typing import List, Tuple, Optional
-from enum import Enum
+from enum import Enum, auto
 from .vo_data import Obstacle, Cone
 from neonfc_ssl.commons.math import is_angle_between, length
 from neonfc_ssl.commons.math import distance_between_points as distance
 
 
 class VOType(Enum):
-    VO = "vo"
-    RVO = "rvo"
-    HRVO = "hrvo"
+    VO = auto()
+    RVO = auto()
+    HRVO = auto()
 
 
 class StarVO:
@@ -39,10 +39,9 @@ class StarVO:
         self.collision_cones: List[Cone] = []
 
         # Parameters
-        self.angular_resolution = 0.1
+        self.angular_samples = 21
         self.velocity_samples = 5
         self.max_neighbor_distance = 1.0
-        self.min_safe_ttc = 0.5
 
     def _filter_obstacles(self, obstacles: List[Tuple]):
         """Obstacles spatial filtering"""
@@ -83,7 +82,7 @@ class StarVO:
             closest_point = start + t_clamped * wall_vec
 
             if length(closest_point - self.pos) < self.max_neighbor_distance:
-                filtered_walls.append([closest_point, np.zeros(2), 0, 0])
+                filtered_walls.append([closest_point, np.zeros(2), 0.1, 0])
 
         self.update_static_obstacles(filtered_walls)
 
@@ -133,12 +132,12 @@ class StarVO:
         if not is_dynamic:
             return self.pos + obs_vel
 
-        if self.vo_type == "HRVO":
+        if self.vo_type == VOType.HRVO:
             if self.priority > obs_priority:
                 return self.pos + obs_vel
             else:
                 return self.pos + 0.5 * (self.v + obs_vel)
-        elif self.vo_type == "RVO":
+        elif self.vo_type == VOType.RVO:
             return self.pos + 0.5 * (self.v + obs_vel)
         else:
             return self.pos + obs_vel
@@ -174,7 +173,7 @@ class StarVO:
         """Check if given velocity might generate a collision"""
         vel_mag_sq = np.dot(velocity, velocity)
 
-        if vel_mag_sq > self.max_v * self.max_v:
+        if vel_mag_sq > self.max_v * self.max_v + 1e-6:
             return False
 
         # Check cones
@@ -193,7 +192,7 @@ class StarVO:
     def _generate_candidate_velocities(self, base_angle: float) -> tuple:
         suitable_v = []
         unsuitable_v = []
-        for theta in np.linspace(-2 * pi / 3, 2 * pi / 3 + 0.05, 21):
+        for theta in np.linspace(-pi / 4, pi / 4 + 0.05, self.angular_samples):
             angle = base_angle + theta
             direction = np.array([cos(angle), sin(angle)])
             for speed in np.linspace(1e-6, self.max_v, self.velocity_samples + 1):
@@ -203,45 +202,6 @@ class StarVO:
                 else:
                     unsuitable_v.append(candidate)
         return suitable_v, unsuitable_v
-
-    def _calculate_ttc_for_velocities(self, velocities: list) -> dict:
-        tc_v = {}
-        for v in velocities:
-            tc_v[tuple(v)] = self._calculate_single_velocity_ttc(v)
-        return tc_v
-
-    def _calculate_single_velocity_ttc(self, v: np.ndarray) -> float:
-        tc = []
-        for cone in self.collision_cones:
-            ttc_val = self._calculate_cone_ttc(v, cone)
-            if ttc_val is not None:
-                tc.append(ttc_val)
-        return max(min(tc), 1e-6) if tc else 1e-6
-
-    def _calculate_cone_ttc(self, v: np.ndarray, cone) -> float:
-        vec = self.pos + v - cone.base
-        vec_mag = length(vec)
-        if vec_mag < 1e-12:
-            return 0.0
-
-        theta = atan2(vec[1], vec[0])
-        if not is_angle_between(theta, cone.right_angle, cone.left_angle):
-            return 0.0
-
-        rad = cone.radius
-        small_theta = abs(theta - 0.5 * (cone.left_angle + cone.right_angle))
-        if abs(cone.dist * sin(small_theta)) >= rad:
-            rad = abs(cone.dist * sin(small_theta))
-
-        big_theta = asin(min(abs(cone.dist * sin(small_theta)) / rad, 1.0))
-        dist_tg = abs(cone.dist * cos(small_theta)) - abs(rad * cos(big_theta))
-        dist_tg = max(dist_tg, 0)
-        return dist_tg / vec_mag if vec_mag > 1e-12 else 0.0
-
-    def _select_fallback_velocity(self, velocities: list, tc_v: dict, desired_v: np.ndarray) -> np.ndarray:
-        WT = 0.2
-        best_v = min(velocities, key=lambda vel: (WT / tc_v[tuple(vel)]) + distance(vel, desired_v))
-        return np.array([1e-6, 1e-6]) if tc_v[tuple(best_v)] < self.min_safe_ttc else best_v
 
     def _find_best_velocity(self) -> np.ndarray:
         if self._is_velocity_safe(self.desired_v):
@@ -253,11 +213,7 @@ class StarVO:
         if suitable_v:
             return min(suitable_v, key=lambda vel: distance(vel, self.desired_v))
 
-        if not unsuitable_v:
-            return np.zeros(2)
-
-        tc_v = self._calculate_ttc_for_velocities(unsuitable_v)
-        return self._select_fallback_velocity(unsuitable_v, tc_v, self.desired_v)
+        return np.zeros(2)
 
     def update(self) -> np.ndarray:
         """
