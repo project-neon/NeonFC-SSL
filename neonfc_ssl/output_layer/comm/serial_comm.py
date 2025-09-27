@@ -31,7 +31,7 @@ class SerialComm:
     def update(self, data: "ControlData"):
         message = "<"
         for cmd in data.commands:
-            kick = round(min(cmd.kick_x, 2)/9)
+            kick = (min(cmd.kick_x, 2)/2)*9
 
             message += (
                 f"{cmd.id},"
