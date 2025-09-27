@@ -10,6 +10,7 @@ class Obstacle:
     radius: float
     priority: int
 
+
 @dataclass
 class Cone:
     base: NDArray[np.float64]

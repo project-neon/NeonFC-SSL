@@ -1,10 +1,10 @@
-from ..base_planner import Planner
+from ..base_planner import BasePathPlanner
 from typing import List, Tuple
 from .vo import StarVO
 import numpy as np
 
 
-class VOPlanner(Planner):
+class VOPlanner(BasePathPlanner):
     def __init__(self):
         super().__init__()
         self.star_vo = StarVO(
