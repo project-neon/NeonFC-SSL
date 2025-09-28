@@ -25,6 +25,10 @@ class Passer(SpecialStrategy):
 
     def decide(self, data):
         target = data.opposites.active[0]
+        for r in data.robots.active:
+            if r.id != self._robot_id:
+                target = r
+                break
 
         next = self.active.update(robot=data.robots[self._robot_id], ball=data.ball)
         if next != self.active:

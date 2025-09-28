@@ -72,7 +72,7 @@ class TrackedBall:
     def distance_to_vector(self, d):
         """ Position of the ball after traveling distance d along its velocity vector """
         speed = self.speed if self.speed else 0.0001
-        return np.array(self) - d*np.array((self.vx, self.vy))/speed
+        return np.array(self) + d*np.array((self.vx, self.vy))/speed
 
     def __getitem__(self, item):
         if item == 0:
