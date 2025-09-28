@@ -5,7 +5,7 @@ from ..utils import find_first_interception
 
 
 class GoToBall(BaseSkill):
-    def _start(self, avoid_area=True, avoid_allies=False, avoid_opponents=False):
+    def _start(self, avoid_area=True, avoid_allies=False, avoid_opponents=False, **kwargs):
         self.avoid_area = avoid_area
         self.avoid_allies = avoid_allies
         self.avoid_opponents = avoid_opponents

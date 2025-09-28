@@ -1,79 +1,64 @@
-import math
-from neonfc_ssl.algorithms.fsm import State
-from neonfc_ssl.commons.math import reduce_ang
-from neonfc_ssl.decision_layer.decision import RobotRubric
+from itertools import chain, pairwise
+from neonfc_ssl.commons.math import point_in_triangle
 from .base_skill import BaseSkill
+from .passing import SimplePass
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
-    from neonfc_ssl.tracking_layer.tracking_data import MatchData
-
-
-def angle_between(p1, p2, p3):
-    return math.atan2(p3[1] - p1[1], p3[0] - p1[0]) - math.atan2(p2[1] - p1[1], p2[0] - p1[0])
-
-
-class TurnToShoot(State):
-    def start(self, robot_id, target):
-        self.robot_id = robot_id
-        self.target = target
-
-    def decide(self, data: "MatchData"):
-        robot = data.robots[self.robot_id]
-
-        desired = reduce_ang(self.target - robot.theta)
-        kp = -9
-        # return RobotRubric(spinner=True, move_speed=(0, 0, desired*kp), robot=self.robot)
-
-        return
-
-    def check_complete(self):
-        return abs(reduce_ang(self.target - self.robot.theta)) <= 0.05
-
-    def find_best_shoot(self):
-        robot_lock = (self.robot.x, 0)
-
-        goal_posts = ((9, 2.5), (9, 3.5))
-        goal_posts = (angle_between(self.robot, robot_lock, goal_posts[0]), angle_between(self.robot, robot_lock, goal_posts[1]))
-
-        robot_angles = [angle_between(self.robot, robot_lock, robot)
-                        for robot in self.match.opposites if robot.x > self.robot.x and not robot.missing]
-        robot_angles.append(goal_posts[0])
-        robot_angles.append(goal_posts[1])
-
-        robot_angles.sort()
-        robot_angles = list(filter(lambda x: goal_posts[0] <= x <= goal_posts[1], robot_angles))
-
-        diffs = []
-
-        for a, b in zip(robot_angles[:-1], robot_angles[1:]):
-            diffs.append((a, b - a))
-
-        initial, window = max(diffs, key=lambda x: x[1])
-
-        return initial + (window-math.pi) / 2
-
-
-class PerformShoot(State):
-    def __init__(self):
-        super().__init__()
-        self.name = 'PerformShoot'
-
-    def start(self, robot_id):
-        self.robot_id = robot_id
-
-    def decide(self, data):
-        return RobotRubric(
-            id=self.robot_id,
-            halt=False,
-            kick_speed=(6.5, 0)
-        )
+    from neonfc_ssl.tracking_layer.tracking_data import MatchData, TrackedRobot, TrackedBall
 
 
 class Shoot(BaseSkill):
+    def __init__(self, logger, strategy):
+        super().__init__(logger, strategy)
+        self.target = None
+
     def _start(self, **kwargs):
-        self.skill = PerformShoot()
-        self.skill.start(self._robot_id)
+        self.skill = SimplePass(self.logger, self.strategy_name, override_kick=6.5)
+        self.target = None
 
     def decide(self, data):
+        if self.target is None:
+            self.target = self.find_best_shoot(data)
+            self.skill.start(self._robot_id, target=self.target)
+
         return self.skill.decide(data)
+
+    @staticmethod
+    def find_best_shoot(data: "MatchData"):
+        ball = data.ball
+        field = data.field
+
+        goal_posts = (
+            (field.field_length, (field.field_width-field.goal_width)/2),
+            (field.field_length, (field.field_width+field.goal_width)/2)
+        )
+
+        obstacles = filter(
+            lambda r: point_in_triangle(r, ball, goal_posts[0], goal_posts[1]),
+            data.opposites.actives,
+        )
+
+        def project_on_goal(robot):
+            alpha = field.field_length - ball.x
+            beta = robot.x - ball.x
+            gamma = robot.y - ball.y
+
+            return alpha * gamma / beta + ball.y
+
+        obstacles_proj = sorted(
+            chain(map(project_on_goal, obstacles), map(lambda g: g[1], goal_posts))
+        )
+        max_gap = max(pairwise(obstacles_proj), key=lambda x: x[1] - x[0])
+        target = max_gap[0] + (max_gap[1] - max_gap[0]) / 2
+
+        return field.field_length, target
+
+    @staticmethod
+    def start_shoot(robot: "TrackedRobot", ball: "TrackedBall", **kwargs):
+        return SimplePass.start_pass(robot, ball, **kwargs)
+
+    @staticmethod
+    def stop_shoot(robot: "TrackedRobot", ball: "TrackedBall", **kwargs):
+        return SimplePass.stop_pass(robot, ball, **kwargs)

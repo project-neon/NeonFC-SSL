@@ -43,8 +43,8 @@ class GrComm:
             command.wheel2 = 0
             command.wheel3 = 0
             command.wheel4 = 0
-            command.kickspeedx = cmd.kick_x
-            command.kickspeedz = cmd.kick_z
+            command.kickspeedx = min(cmd.kick_x, 2)
+            command.kickspeedz = 0 # cmd.kick_z
             command.veltangent = cmd.vel_tangent
             command.velnormal = cmd.vel_normal
             command.velangular = cmd.vel_angular

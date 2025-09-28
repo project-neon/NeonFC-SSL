@@ -31,12 +31,14 @@ class SerialComm:
     def update(self, data: "ControlData"):
         message = "<"
         for cmd in data.commands:
+            kick = (min(cmd.kick_x, 2)/2)*9
+
             message += (
                 f"{cmd.id},"
                 f"{round(cmd.vel_tangent, 2)},"
                 f"{round(cmd.vel_normal, 2)},"
                 f"{round(cmd.vel_angular, 2)},"
-                f"{0 if abs(cmd.kick_x) < 0.05 else 9},"
+                f"{kick},"
             )
 
         message = message[:-1] + ">"

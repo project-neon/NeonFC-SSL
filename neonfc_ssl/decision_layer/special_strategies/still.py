@@ -8,7 +8,7 @@ if TYPE_CHECKING:
 
 class Still(SpecialStrategy):
     def _start(self):
-        self.wait = Wait()
+        self.wait = Wait(self.logger, Still.__name__)
         self.wait.start(self._robot_id)
 
     def decide(self, data):

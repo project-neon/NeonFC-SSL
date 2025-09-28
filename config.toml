@@ -10,13 +10,13 @@ vision_port = 10006
 autoref_port = 10010
 game_controller_port = 10003
 use_ref_vision = true
-side = "left"
+side = "right"
 
 [Tracking]
 color = "yellow"
 
 [Decision]
-coach = "SimpleCoach"
+coach = "TestCoach"
 
 [Control]
 

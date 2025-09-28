@@ -13,8 +13,8 @@ def angle_between(p1, p2, p3):
 
 
 class BallHolder(SpecialStrategy):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, logger):
+        super().__init__(logger)
         self.passable_robots = []
         self.intercepting_robots = []
 
@@ -27,11 +27,11 @@ class BallHolder(SpecialStrategy):
         self.vals = None
 
         self.states: dict[str, 'BaseSkill'] = {
-            'pass': SimplePass(),
-            'go_to_ball': GoToBall(),
-            'wait': Wait(),
-            'shoot': Shoot(),
-            'dribble': Dribble()
+            'pass': SimplePass(self.logger, BallHolder.__name__),
+            'go_to_ball': GoToBall(self.logger, BallHolder.__name__),
+            'wait': Wait(self.logger, BallHolder.__name__),
+            'shoot': Shoot(self.logger, BallHolder.__name__),
+            'dribble': Dribble(self.logger, BallHolder.__name__)
         }
 
         def close_to_ball(data: "MatchData"):

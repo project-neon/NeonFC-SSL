@@ -29,17 +29,17 @@ def dist_point_line(x1, y1, x2, y2, x3, y3):
     dx = x - x3
     dy = y - y3
 
-    dist = (dx * dx + dy * dy) ** .5
+    dist = (dx * dx + dy * dy) ** 0.5
 
     return dist
 
 
 def _fix_angle(theta_1, theta_2):
-    rate_theta = (theta_2 - theta_1)
+    rate_theta = theta_2 - theta_1
 
-    if (rate_theta > math.pi):
+    if rate_theta > math.pi:
         rate_theta -= 2 * math.pi
-    elif (rate_theta < -math.pi):
+    elif rate_theta < -math.pi:
         rate_theta += 2 * math.pi
 
     return rate_theta
@@ -49,13 +49,7 @@ def angular_speed(_list, _fps):
     if len(_list) <= 1:
         return 0
 
-    speed_fbf = [
-        _fix_angle(t0, t1) for t0, t1
-        in zip(
-            _list,
-            list(_list)[1:]
-        )
-    ]
+    speed_fbf = [_fix_angle(t0, t1) for t0, t1 in zip(_list, list(_list)[1:])]
     if not speed_fbf:
         return 0
     return _fps * (sum(speed_fbf) / len(speed_fbf))
@@ -66,11 +60,9 @@ def speed(_list, _fps):
         return 0
 
     speed_fbf = [
-        (t1 - t0) for t0, t1
-        in zip(
-            _list,
-            list(_list)[1:]
-        ) if abs((t1 - t0)) < 0.1
+        (t1 - t0)
+        for t0, t1 in zip(_list, list(_list)[1:])
+        if abs((t1 - t0)) < 0.1
         # considering the game runs at 60 fps
         # to limit 0.1 m/f here is to say that is impossible
         # for the robot to run at 6 m/s (0.1 [m][f⁻¹] * 60 [f][s⁻¹] = 6[m][s⁻¹])
@@ -81,7 +73,7 @@ def speed(_list, _fps):
 
 
 def unit_vector(vector):
-    """ Returns the unit vector of the vector."""
+    """Returns the unit vector of the vector."""
     if np.linalg.norm(vector) == 0:
         return np.array([0, 0])
     return vector / np.linalg.norm(vector)
@@ -122,9 +114,10 @@ def angle_to_first_quadrant(angle):
     angle = angle % (2 * math.pi)  # Ensure the angle is within 0 to 2*pi
     if angle > math.pi:
         angle = 2 * math.pi - angle
-    if angle > math.pi/2 and angle <= math.pi:
+    if angle > math.pi / 2 and angle <= math.pi:
         angle = math.pi - angle
     return angle
+
 
 def angle_between_3_points(a, b, c):
     ba = a - b
@@ -135,7 +128,7 @@ def angle_between_3_points(a, b, c):
 
 
 def distance(A, B, P):
-    """ segment line AB, point P, where each one is an array([x, y]) """
+    """Segment line AB, point P, where each one is an array([x, y])"""
     A = np.array(A)
     B = np.array(B)
     P = np.array(P)
@@ -152,7 +145,7 @@ def distance_to_line(x, y, l1x, l1y, l2x, l2y):
     x_diff = l2x - l1x
     y_diff = l2y - l1y
     num = y_diff * x - x_diff * y + l2x * l1y - l2y * l1x
-    den = math.sqrt(y_diff ** 2 + x_diff ** 2)
+    den = math.sqrt(y_diff**2 + x_diff**2)
     return num / den
 
 
@@ -160,25 +153,25 @@ def point_in_rect(point, rect):
     x1, y1, w, h = rect
     x2, y2 = x1 + w, y1 + h
     x, y = point
-    if (x1 < x and x < x2):
-        if (y1 < y and y < y2):
+    if x1 < x and x < x2:
+        if y1 < y and y < y2:
             return True
     return False
 
 
 def distance_between_points(p1, p2):
-    '''
+    """
     Calculates the distance between 2 points, p1 and p2.
     Arguments:
         p1: an array([x, y])
         p2: an array([x, y])
     Returns:
         Distance between p1 and p2
-    '''
+    """
     dx = p1[0] - p2[0]
     dy = p1[1] - p2[1]
 
-    return np.sqrt(dx ** 2 + dy ** 2)
+    return np.sqrt(dx**2 + dy**2)
 
 
 def speed_to_power(linear_speed, angular_speed, L, R):
@@ -190,3 +183,19 @@ def speed_to_power(linear_speed, angular_speed, L, R):
 
 def reduce_ang(ang):
     return (ang + pi) % (2 * pi) - pi
+
+
+def orientation(p1, p2, p3):
+    return (p1[0] - p3[0]) * (p2[1] - p3[1]) - (p2[0] - p3[0]) * (p1[1] - p3[1])
+
+
+def point_in_triangle(pt, v1, v2, v3):
+    # https://stackoverflow.com/questions/2049582/how-to-determine-if-a-point-is-in-a-2d-triangle
+    d1 = orientation(pt, v1, v2)
+    d2 = orientation(pt, v2, v3)
+    d3 = orientation(pt, v3, v1)
+
+    has_neg = (d1 < 0) or (d2 < 0) or (d3 < 0)
+    has_pos = (d1 > 0) or (d2 > 0) or (d3 > 0)
+
+    return not (has_neg and has_pos)
