@@ -1,16 +1,9 @@
 import numpy as np
 from math import cos, sin, atan2, asin, pi
 from typing import List, Tuple, Optional
-from enum import Enum, auto
-from .vo_data import Obstacle, Cone
+from .vo_data import VOType, Obstacle, Cone
 from neonfc_ssl.commons.math import is_angle_between, length
 from neonfc_ssl.commons.math import distance_between_points as distance
-
-
-class VOType(Enum):
-    VO = auto()
-    RVO = auto()
-    HRVO = auto()
 
 
 class StarVO:
