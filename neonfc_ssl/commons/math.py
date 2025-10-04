@@ -174,6 +174,26 @@ def distance_between_points(p1, p2):
     return np.sqrt(dx**2 + dy**2)
 
 
+def is_angle_between(theta, start_angle, end_angle):
+    """
+    Check if an angle theta lies between two other angles on a circle.
+    Arguments:
+        theta (float): The angle to be checked, in rads
+        start_angle (float): The starting angle of the sector, in rads
+        end_angle (float): The ending angle of the sector, in rads
+    Returns:
+        bool: True if theta is within the circular sector from start_angle to end_angle (inclusive), False otherwise
+    """
+    theta = theta % (2 * pi)
+    start_angle = start_angle % (2 * pi)
+    end_angle = end_angle % (2 * pi)
+
+    if start_angle <= end_angle:
+        return start_angle <= theta <= end_angle
+    else:
+        return theta >= start_angle or theta <= end_angle
+
+
 def speed_to_power(linear_speed, angular_speed, L, R):
     power_left = (2 * linear_speed - angular_speed * L) / 2 * R
     power_right = (2 * linear_speed + angular_speed * L) / 2 * R
