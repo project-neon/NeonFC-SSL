@@ -1,24 +1,23 @@
-from ..skills import *
-from neonfc_ssl.decision_layer.special_strategies import BaseStrategy
-from math import atan2
+from .positional_strategy import PositionalStrategy
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from neonfc_ssl.tracking_layer.tracking_data import MatchData
 
 
-class PrepBHPenalty(BaseStrategy):
-    def __init__(self, coach, match):
-        super().__init__('PrepBHPenalty', coach, match)
+BALL_SAFE_DISTANCE = 0.13
 
-        self.active = MoveToPose(coach, match)
 
-    def _start(self):
-        self.active.start(self._robot, target=self.position())
+class PrepBHPenalty(PositionalStrategy):
+    @staticmethod
+    def decide_position(data: "MatchData", ids: list[int]):
+        n = len(ids)
+        if n != 1:
+            raise ValueError("Can only decide PrepBHPlacement for 1 robot")
 
-    def decide(self):
-        self.active.start(self._robot, target=self.position())
-        return self.active.decide()
+        ball = data.ball
 
-    def position(self):
-        x = self._match.ball.x - 0.13
-        y = self._match.ball.y
-        theta = atan2(-self._robot.y + self._match.ball.y, -self._robot.x + self._match.ball.x)
+        x = ball.x - BALL_SAFE_DISTANCE
+        y = ball.y
 
-        return [x, y, theta]
+        return [(x, y, 0)]

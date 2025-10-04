@@ -191,7 +191,7 @@ class GoalKeeper(SpecialStrategy):
 
         is_in_rect = point_in_rect(
             [ball.x, ball.y],
-            [field.leftFirstPost[0], field.leftFirstPost[1],
+            [0, (field.field_width-field.goal_width)/2,
              field.goal_width,
              2 * field.field_length]
         )
