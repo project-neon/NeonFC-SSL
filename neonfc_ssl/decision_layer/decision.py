@@ -4,16 +4,19 @@ import numpy as np
 from neonfc_ssl.core import Layer
 from .decision_data import DecisionData, RobotRubric
 from .coaches import COACHES
+from neonfc_ssl.tracking_layer.tracking_data import States
 
 from typing import TYPE_CHECKING, Union, Optional
 if TYPE_CHECKING:
     from neonfc_ssl.tracking_layer.tracking_data import MatchData, TrackedRobot
     from .special_strategies.special_strategy import SpecialStrategy
+    from .positional_strategies.positional_strategy import PositionalStrategy
 
 
 Position = tuple[float, float]
 Pose = tuple[float, float, float]
-
+POSITION_INDEX = 0
+STRATEGY_INDEX = 1
 
 class Decision(Layer):
     def __init__(self, config, log_q, event_pipe):
@@ -35,9 +38,12 @@ class Decision(Layer):
     def decide(self, data: 'MatchData'):
         return self.__coach(data)
 
+    def get_strategy(self, robot_id):
+        return self.__strategies[robot_id]
+
     @staticmethod
     def _check_halt(data: 'MatchData'):
-        if data.game_state == "Halt":
+        if data.game_state.state in (States.HALT, States.TIMEOUT):
             return True
         return False
 
@@ -61,7 +67,7 @@ class Decision(Layer):
         self.decide(data)
 
         for robot in data.robots.active:
-            if robot in self.__hungarian_robots:
+            if robot.id in self.__hungarian_robots:
                 continue
 
             if strat := self.__strategies[robot.id]:
@@ -78,7 +84,8 @@ class Decision(Layer):
 
         return DecisionData(self.__commands, data)
 
-    def calculate_hungarian(self, targets: list[Union[Position, Pose]], robots: list['TrackedRobot']):
+    def calculate_hungarian(self, targets: list[tuple[Union[Position, Pose], "PositionalStrategy"]],
+                            robots: list['TrackedRobot']):
         try:
             rs, ps = self.__cost_matrix(targets, robots)
         except Exception as e:
@@ -86,21 +93,23 @@ class Decision(Layer):
             return
 
         for robot, pos in zip(rs, ps):
-            if len(targets[pos]) == 2:
-                target = (*targets[pos], robots[robot].theta)
+            if len(targets[pos][POSITION_INDEX]) == 2:
+                target_pose = (*targets[pos][POSITION_INDEX], robots[robot].theta)
             else:
-                target = targets[pos]
+                target_pose = targets[pos][POSITION_INDEX]
 
+            self.__strategies[robots[robot].id] = targets[pos][STRATEGY_INDEX]()
             self.__hungarian_robots.append(robots[robot].id)
 
             self.__commands.append(RobotRubric(
                 id=robots[robot].id,
                 halt=False,
-                target_pose=target
+                target_pose=target_pose
             ))
 
     @staticmethod
-    def __cost_matrix(desired_pos: list[Union[Position, Pose]], defensive_robots: list['TrackedRobot']):
+    def __cost_matrix(desired_pos: list[tuple[Union[Position, Pose], "PositionalStrategy"]],
+                      defensive_robots: list['TrackedRobot']):
         if len(defensive_robots) != len(desired_pos):
             raise Exception("Number of defensive robots must equal number of desired poses")
 
@@ -119,7 +128,10 @@ class Decision(Layer):
                     # TODO: this is using the a straight line distance to the target as the cost, but it's not always
                     #       the case (eg. A robot won't pass thru the area, so if the straight line goes thru it the
                     #       real cost is higher)
-                    cost_matrix[i][j] = (robot_pos[i][0]-desired_pos[j][0])**2 + (robot_pos[i][1]-desired_pos[j][1])**2
+                    cost_matrix[i][j] = (
+                        (robot_pos[i][0]-desired_pos[j][POSITION_INDEX][0])**2 +
+                        (robot_pos[i][1]-desired_pos[j][POSITION_INDEX][1])**2
+                    )
         except IndexError as e:
             raise Exception(e)
 

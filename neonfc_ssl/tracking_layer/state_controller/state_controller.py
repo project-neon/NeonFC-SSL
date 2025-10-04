@@ -27,7 +27,7 @@ class GameState(State):
 
 
 class StateController:
-    def __init__(self, match):
+    def __init__(self, match: 'Tracking'):
         self._match = match
         self.current_state = None
 
@@ -127,7 +127,8 @@ class StateController:
     def update(self, ref: 'GameController') -> StateData:
         next_state = self.current_state.update(origin=self.current_state, cmd=ref.state, ball=self._match.ball)
         if next_state != self.current_state:
-            self._match.log.info(logging.INFO, f"Changing state {self.current_state.name} -> {next_state.name}")
+            self._match.logger.info(f"Changing state {self.current_state.name} -> {next_state.name}")
+            print(f"Changing state {self.current_state.name} -> {next_state.name}")
             self.current_state = next_state
             self.current_state.start(self._match, ref.team, ref.designated_position)
 
@@ -142,4 +143,3 @@ class StateController:
 
     def __eq__(self, other):
         return self.current_state.name == other
-

@@ -36,6 +36,7 @@ class SSLGameControllerReferee(threading.Thread):
             data = self.referee_sock.recv(1024)
             c.ParseFromString(data)
             self._referee_message = json.loads(MessageToJson(c))
+            # print(self._referee_message)
         self.stop()
 
     def get_data(self) -> GameController:

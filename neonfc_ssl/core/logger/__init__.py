@@ -25,7 +25,7 @@ def setup_logging(nfc_config):
         "handlers": {
             "stdout": {
                 "class": "logging.StreamHandler",
-                "level": "DEBUG",
+                "level": "INFO",
                 "formatter": "simple",
                 "stream": "ext://sys.stdout"
             },
