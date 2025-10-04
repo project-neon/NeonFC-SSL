@@ -21,23 +21,23 @@ class VOPlanner(BasePathPlanner):
         self.goal = goal
         self.star_vo.goal = np.array(goal, dtype=np.float64)
 
-    def set_speed(self, speed: Tuple[float, float]):
-        self.speed = speed
-        self.star_vo.v = np.array(speed, dtype=np.float64)
+    def set_velocity(self, velocity: Tuple[float, float]):
+        self.velocity = velocity
+        self.star_vo.vel = np.array(velocity, dtype=np.float64)
 
     def set_obstacles(self, obstacles: List):
-        if not obstacles: pass
+        if not obstacles: return
         self.obstacles.extend(obstacles)
         dynamic_obstacles = [([o[0], o[1]], np.zeros(2), 0.09) for o in obstacles]
         self.star_vo.update_dynamic_obstacles(dynamic_obstacles)
 
     def set_walls(self, walls: List):
-        if not walls: pass
+        if not walls: return
         self.obstacles.extend(walls)
         self.star_vo.update_walls(walls)
 
     def set_map_area(self, map_area: Tuple[float, float]):
-        self.map_area = [6.0, 9.0]
+        pass
 
     def plan(self) -> List[float]:
         self.path = self.star_vo.pos + self.star_vo.update()

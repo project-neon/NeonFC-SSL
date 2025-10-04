@@ -175,6 +175,15 @@ def distance_between_points(p1, p2):
 
 
 def is_angle_between(theta, start_angle, end_angle):
+    """
+    Check if an angle theta lies between two other angles on a circle.
+    Arguments:
+        theta (float): The angle to be checked, in rads
+        start_angle (float): The starting angle of the sector, in rads
+        end_angle (float): The ending angle of the sector, in rads
+    Returns:
+        bool: True if theta is within the circular sector from start_angle to end_angle (inclusive), False otherwise
+    """
     theta = theta % (2 * pi)
     start_angle = start_angle % (2 * pi)
     end_angle = end_angle % (2 * pi)

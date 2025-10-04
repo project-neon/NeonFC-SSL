@@ -7,7 +7,7 @@ class BasePathPlanner(ABC):
     def __init__(self):
         self.start = None
         self.goal = None
-        self.speed = None
+        self.velocity = None
         self.obstacles = []
         self.map_area = None
         self.path = None
@@ -23,7 +23,7 @@ class BasePathPlanner(ABC):
         raise Exception("Method not implemented!")
 
     @abstractmethod
-    def set_speed(self, speed: Tuple[float, float]):
+    def set_velocity(self, velocity: Tuple[float, float]):
         """Set the robot speed"""
         raise Exception("Method not implemented")
 

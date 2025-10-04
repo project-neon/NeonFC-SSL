@@ -1,6 +1,7 @@
 import numpy as np
+from itertools import product
 from math import cos, sin, atan2, asin, pi
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Iterator, Any
 from .vo_data import VOType, Obstacle, Cone
 from neonfc_ssl.commons.math import is_angle_between, length
 from neonfc_ssl.commons.math import distance_between_points as distance
@@ -14,8 +15,8 @@ class StarVO:
 
         self.pos = np.array(pos, dtype=np.float64)
         self.goal = np.array(goal, dtype=np.float64)
-        self.v = np.array(vel, dtype=np.float64)
-        self.max_v = max_vel
+        self.vel = np.array(vel, dtype=np.float64)
+        self.max_vel = max_vel
         self.radius = radius
         self.priority = priority
         self.goal_tolerance = goal_tolerance
@@ -35,20 +36,17 @@ class StarVO:
         self.angular_samples = 21
         self.velocity_samples = 5
         self.max_neighbor_distance = 1.0
+        self.min_wall_dist = 0.1
 
-    def _filter_obstacles(self, obstacles: List[Tuple]):
+    def _filter_obstacles(self, obstacles: List[Tuple]|Iterator[Any]):
         """Obstacles spatial filtering"""
-        filtered_obs = []
 
-        for o in obstacles:
-            pos = np.array(o[0])
+        obstacles = map(lambda obs: Obstacle(*obs), obstacles)
 
-            if distance(pos, self.pos) < self.max_neighbor_distance:
-                filtered_obs.append(
-                    Obstacle(pos, np.array(o[1]), o[2], o[3] if len(o) > 3 else 0)
-                )
-
-        return filtered_obs
+        return list(filter(
+            lambda obs: distance(obs.pos, self.pos) < self.max_neighbor_distance,
+            obstacles
+        ))
 
     def update_static_obstacles(self, static_obstacles: List[Tuple]):
         """Update static obstacles"""
@@ -60,24 +58,27 @@ class StarVO:
 
         self.dynamic_obstacles = self._filter_obstacles(dynamic_obstacles)
 
+    def _process_wall(self, wall):
+        start, end = np.array(wall[0]), np.array(wall[1])
+        wall_vec = end - start
+        to_agent = self.pos - start
+
+        if length(wall_vec) < 1e-6:
+            return None
+
+        t = np.dot(to_agent, wall_vec) / np.dot(wall_vec, wall_vec)
+        t_clamped = max(0, min(1, t))
+        closest_point = start + t_clamped * wall_vec
+
+        wall_obstacle = [closest_point, np.zeros(2), self.min_wall_dist]
+        return wall_obstacle
+
     def update_walls(self, walls: List[Tuple]):
         """Update walls with spatial filtering and treat them as static obstacles"""
-        filtered_walls = []
+        walls = filter(None, map(self._process_wall, walls))
+        filtered_walls = self._filter_obstacles(walls)
 
-        for w in walls:
-            start, end = np.array(w[0]), np.array(w[1])
-
-            wall_vec = end - start
-            to_agent = self.pos - start
-
-            t = np.dot(to_agent, wall_vec) / np.dot(wall_vec, wall_vec)
-            t_clamped = max(0, min(1, t))
-            closest_point = start + t_clamped * wall_vec
-
-            if length(closest_point - self.pos) < self.max_neighbor_distance:
-                filtered_walls.append([closest_point, np.zeros(2), 0.1, 0])
-
-        self.update_static_obstacles(filtered_walls)
+        self.static_obstacles.extend(filtered_walls)
 
     def reached_goal(self) -> bool:
         """Check if agent reached goal"""
@@ -86,12 +87,12 @@ class StarVO:
     def _compute_desired_velocity(self) -> np.ndarray:
         """Compute desired velocity with speed limiting"""
         if self.reached_goal():
-            return np.array([1e-6, 1e-6])
+            return np.array([0, 0])
 
         goal_vec = self.goal - self.pos
         goal_dist = length(goal_vec)
 
-        return (goal_vec / goal_dist) * self.max_v
+        return (goal_vec / goal_dist) * self.max_vel
 
     @staticmethod
     def _handle_center_case(desired_v: np.ndarray) -> Tuple[float, float]:
@@ -129,18 +130,18 @@ class StarVO:
             if self.priority > obs_priority:
                 return self.pos + obs_vel
             else:
-                return self.pos + 0.5 * (self.v + obs_vel)
+                return self.pos + 0.5 * (self.vel + obs_vel)
         elif self.vo_type == VOType.RVO:
-            return self.pos + 0.5 * (self.v + obs_vel)
+            return self.pos + 0.5 * (self.vel + obs_vel)
         else:
             return self.pos + obs_vel
 
     def _compute_collision_cone(self, obs_pos: np.ndarray, obs_vel: np.ndarray,
                               obs_radius: float, obs_priority: int = 0,
-                              is_dynamic: bool = True) -> Optional[Cone]:
+                              is_dynamic: bool = True) -> Cone:
         """Cone computation with improved numerical stability"""
         rel_pos = obs_pos - self.pos
-        dist = length(rel_pos) + 1e-6
+        dist = length(rel_pos)
 
         combined_radius = self.effective_radius + obs_radius
 
@@ -166,7 +167,7 @@ class StarVO:
         """Check if given velocity might generate a collision"""
         vel_mag_sq = np.dot(velocity, velocity)
 
-        if vel_mag_sq > self.max_v * self.max_v + 1e-6:
+        if vel_mag_sq > self.max_vel * self.max_vel + 1e-6:
             return False
 
         # Check cones
@@ -182,31 +183,29 @@ class StarVO:
 
         return True
 
-    def _generate_candidate_velocities(self, base_angle: float) -> tuple:
-        suitable_v = []
-        unsuitable_v = []
-        for theta in np.linspace(-pi / 4, pi / 4 + 0.05, self.angular_samples):
-            angle = base_angle + theta
-            direction = np.array([cos(angle), sin(angle)])
-            for speed in np.linspace(1e-6, self.max_v, self.velocity_samples + 1):
-                candidate = direction * speed
-                if self._is_velocity_safe(candidate):
-                    suitable_v.append(candidate)
-                else:
-                    unsuitable_v.append(candidate)
-        return suitable_v, unsuitable_v
+    @staticmethod
+    def _create_candidate(base_angle: float, theta: float, velocity: float):
+        return velocity * np.array([cos(base_angle + theta), sin(base_angle + theta)])
+
+    def _generate_candidate_velocities(self, base_angle: float) -> List:
+        angles = np.linspace(-pi / 4, pi / 4 + 0.05, self.angular_samples)
+        velocities = np.linspace(1e-6, self.max_vel, self.velocity_samples + 1)
+
+        candidates = [
+            self._create_candidate(base_angle, theta, vel)
+            for theta, vel in product(angles, velocities)
+        ]
+
+        return list(filter(self._is_velocity_safe, candidates))
 
     def _find_best_velocity(self) -> np.ndarray:
         if self._is_velocity_safe(self.desired_v):
             return self.desired_v
 
         base_angle = atan2(self.desired_v[1], self.desired_v[0])
-        suitable_v, unsuitable_v = self._generate_candidate_velocities(base_angle)
+        suitable_v = self._generate_candidate_velocities(base_angle)
 
-        if suitable_v:
-            return min(suitable_v, key=lambda vel: distance(vel, self.desired_v))
-
-        return np.zeros(2)
+        return min(suitable_v, key=lambda vel: distance(vel, self.desired_v), default=np.zeros(2))
 
     def update(self) -> np.ndarray:
         """
