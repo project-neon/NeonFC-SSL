@@ -1,7 +1,7 @@
 from math import pi, tan
 from .positional_strategy import PositionalStrategy
 from neonfc_ssl.commons.math import angle_to_first_quadrant, angle_between
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from neonfc_ssl.tracking_layer.tracking_data import MatchData
@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
 class Libero(PositionalStrategy):
     @staticmethod
-    def decide(data: 'MatchData', ids: list[int]):
+    def decide_position(data: 'MatchData', ids: list[int]):
         # Parameters
         DISTANCE_FROM_AREA = 0.18/2 + 0.1 # robot radius + margin
         MAX_Y_DISTANCE = 0.18/2 # robot radius
