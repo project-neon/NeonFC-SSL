@@ -19,6 +19,7 @@ color = "yellow"
 coach = "TestCoach"
 
 [Control]
+planner = "VOPlanner"
 
 [OutputLayer]
 host_ip = "localhost"

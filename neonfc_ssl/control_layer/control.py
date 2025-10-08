@@ -22,6 +22,8 @@ class Control(Layer):
     def _start(self):
         self.logger.info("Starting control module starting ...")
 
+        self.__planner = self.config["planner"]
+
         self.logger.info("Control module started!")
 
     def _step(self, data: 'DecisionData'):
