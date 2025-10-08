@@ -49,15 +49,29 @@ class VOPlanner(Planner):
     def get_path(self):
         return self.path
 
-    def add_field_walls(self, origin, length, width, border=0.3):
+    def add_field_walls(self, origin, length, width, border=0.3, avoid_area: bool =False):
         x_min = origin - border
         y_min = origin - border
         x_max = origin + length + border
         y_max = origin + width + border
 
-        self.set_walls([
+        walls = [
             [(x_min, y_min), (x_min, y_max)],
             [(x_min, y_max), (x_max, y_max)],
             [(x_max, y_max), (x_max, y_min)],
             [(x_max, y_min), (x_min, y_min)]
-        ])
+        ]
+
+        area_walls = [
+            [(-0.3, width/2 - 1.0), (1.0, width/2 - 1.0)],
+            [(-0.3, width/2 + 1.0), (1.0, width/2 + 1.0)],
+            [(1.0, width/2 - 1.0), (1.0, width/2 + 1.0)],
+            [(length - 1.0, width / 2 - 1.0), (length + 0.3, width / 2 - 1.0)],
+            [(length - 1.0, width / 2 + 1.0), (length + 0.3, width / 2 + 1.0)],
+            [(length - 1.0, width / 2 - 1.0), (length - 1.0, width / 2 + 1.0)]
+        ]
+
+        if avoid_area:
+            walls += area_walls
+
+        self.set_walls(walls)
