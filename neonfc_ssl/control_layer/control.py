@@ -3,6 +3,7 @@ from math import sqrt, cos, sin
 from neonfc_ssl.core import Layer
 from neonfc_ssl.commons.math import reduce_ang
 from .control_data import ControlData, RobotCommand
+from .path_planning import PLANNERS
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -20,7 +21,7 @@ class Control(Layer):
     def _start(self):
         self.logger.info("Starting control module starting ...")
 
-        self.__planner = self.config["planner"]
+        self.__planner = PLANNERS[self.config["planner"]]
 
         self.logger.info("Control module started!")
 
