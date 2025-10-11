@@ -13,6 +13,9 @@ class VOPlanner(Planner):
             vel=(0,0)
         )
 
+        self.map_len = 0.0
+        self.map_wid = 0.0
+
     def set_start(self, start: Tuple[float, float]):
         self.start = start
         self.star_vo.pos = np.array(start, dtype=np.float64)
@@ -37,7 +40,7 @@ class VOPlanner(Planner):
         self.star_vo.update_walls(walls)
 
     def set_map_area(self, map_area: Tuple[float, float]):
-        pass
+        self.map_len, self.map_wid = map_area
 
     def plan(self) -> List[float]:
         self.path = self.star_vo.pos + self.star_vo.update()
@@ -49,7 +52,49 @@ class VOPlanner(Planner):
     def get_path(self):
         return self.path
 
-    def add_field_walls(self, origin, length, width, border=0.3, avoid_area: bool =False):
+    @property
+    def friendly_area(self):
+        width = self.map_wid
+
+        origin = (-0.3, width / 2 - 1.0)
+        area_wid = 2.0
+        area_len = 1.3
+
+        return origin[0], origin[1], area_len, area_wid
+
+    @property
+    def opponent_area(self):
+        length = self.map_len
+        width = self.map_wid
+
+        origin = (length - 1.0, width / 2 - 1.0)
+        area_wid = 2.0
+        area_len = 1.3
+
+        return origin[0], origin[1], area_len, area_wid
+
+    def add_friendly_area_walls(self):
+        o_x, o_y, length, width = self.friendly_area
+
+        self.set_walls([
+            [(o_x, o_y), (o_x + length, o_y)],
+            [(o_x, o_y + width), (o_x + length, o_y + width)],
+            [(o_x + length, o_y), (o_x + length, o_y + width)]
+        ])
+
+    def add_opp_area_walls(self):
+        o_x, o_y, length, width = self.opponent_area
+
+        self.set_walls([
+            [(o_x, o_y), (o_x + length, o_y)],
+            [(o_x, o_y + width), (o_x + length, o_y + width)],
+            [(o_x, o_y), (o_x, o_y + width)]
+        ])
+
+    def add_field_walls(self, origin, border=0.3):
+        length = self.map_len
+        width = self.map_wid
+
         x_min = origin - border
         y_min = origin - border
         x_max = origin + length + border
@@ -61,17 +106,5 @@ class VOPlanner(Planner):
             [(x_max, y_max), (x_max, y_min)],
             [(x_max, y_min), (x_min, y_min)]
         ]
-
-        area_walls = [
-            [(-0.3, width/2 - 1.0), (1.0, width/2 - 1.0)],
-            [(-0.3, width/2 + 1.0), (1.0, width/2 + 1.0)],
-            [(1.0, width/2 - 1.0), (1.0, width/2 + 1.0)],
-            [(length - 1.0, width / 2 - 1.0), (length + 0.3, width / 2 - 1.0)],
-            [(length - 1.0, width / 2 + 1.0), (length + 0.3, width / 2 + 1.0)],
-            [(length - 1.0, width / 2 - 1.0), (length - 1.0, width / 2 + 1.0)]
-        ]
-
-        if avoid_area:
-            walls += area_walls
 
         self.set_walls(walls)

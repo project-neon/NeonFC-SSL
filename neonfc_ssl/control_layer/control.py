@@ -1,7 +1,7 @@
 import logging
 from math import sqrt, cos, sin
 from neonfc_ssl.core import Layer
-from neonfc_ssl.commons.math import reduce_ang
+from neonfc_ssl.commons.math import reduce_ang, point_in_rect
 from .control_data import ControlData, RobotCommand
 from .path_planning import PLANNERS
 
@@ -44,6 +44,7 @@ class Control(Layer):
     def run_single_robot(self, data: 'MatchData', command: 'RobotRubric') -> RobotCommand:
         robot = data.robots[command.id]
         field = data.field
+        pos = (robot.x, robot.y)
 
         # Initialize Planner
         path_planner = self.__planner()
@@ -51,13 +52,18 @@ class Control(Layer):
         path_planner.set_goal(command.target_pose[:2])
         path_planner.set_velocity((robot.vx, robot.vy))
         path_planner.set_map_area((field.field_length, field.field_width))
-        path_planner.add_field_walls(
-            origin=0.0,
-            length=field.field_length,
-            width=field.field_width,
-            border=0.0,
-            avoid_area=command.avoid_area
-        )
+
+        if point_in_rect(pos, (0.0, 0.0, field.field_length, field.field_width)):
+            path_planner.add_field_walls(
+                origin=0.0,
+                border=0.0
+            )
+
+        if command.avoid_area and not point_in_rect(pos, path_planner.friendly_area):
+            path_planner.add_friendly_area_walls()
+
+        if not point_in_rect(pos, path_planner.opponent_area):
+            path_planner.add_opp_area_walls()
 
         obstacles = []
 
