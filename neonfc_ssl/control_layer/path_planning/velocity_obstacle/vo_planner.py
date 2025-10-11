@@ -1,10 +1,10 @@
-from ..base_planner import BasePathPlanner
+from ..base_planner import Planner
 from typing import List, Tuple
 from .vo import StarVO
 import numpy as np
 
 
-class VOPlanner(BasePathPlanner):
+class VOPlanner(Planner):
     def __init__(self):
         super().__init__()
         self.star_vo = StarVO(
@@ -12,6 +12,9 @@ class VOPlanner(BasePathPlanner):
             goal=(0,0),
             vel=(0,0)
         )
+
+        self.map_len = 0.0
+        self.map_wid = 0.0
 
     def set_start(self, start: Tuple[float, float]):
         self.start = start
@@ -37,7 +40,7 @@ class VOPlanner(BasePathPlanner):
         self.star_vo.update_walls(walls)
 
     def set_map_area(self, map_area: Tuple[float, float]):
-        pass
+        self.map_len, self.map_wid = map_area
 
     def plan(self) -> List[float]:
         self.path = self.star_vo.pos + self.star_vo.update()
@@ -49,15 +52,59 @@ class VOPlanner(BasePathPlanner):
     def get_path(self):
         return self.path
 
-    def add_field_walls(self, origin, length, width, border=0.3):
+    @property
+    def friendly_area(self):
+        width = self.map_wid
+
+        origin = (-0.3, width / 2 - 1.0)
+        area_wid = 2.0
+        area_len = 1.3
+
+        return origin[0], origin[1], area_len, area_wid
+
+    @property
+    def opponent_area(self):
+        length = self.map_len
+        width = self.map_wid
+
+        origin = (length - 1.0, width / 2 - 1.0)
+        area_wid = 2.0
+        area_len = 1.3
+
+        return origin[0], origin[1], area_len, area_wid
+
+    def add_friendly_area_walls(self):
+        o_x, o_y, length, width = self.friendly_area
+
+        self.set_walls([
+            [(o_x, o_y), (o_x + length, o_y)],
+            [(o_x, o_y + width), (o_x + length, o_y + width)],
+            [(o_x + length, o_y), (o_x + length, o_y + width)]
+        ])
+
+    def add_opp_area_walls(self):
+        o_x, o_y, length, width = self.opponent_area
+
+        self.set_walls([
+            [(o_x, o_y), (o_x + length, o_y)],
+            [(o_x, o_y + width), (o_x + length, o_y + width)],
+            [(o_x, o_y), (o_x, o_y + width)]
+        ])
+
+    def add_field_walls(self, origin, border=0.3):
+        length = self.map_len
+        width = self.map_wid
+
         x_min = origin - border
         y_min = origin - border
         x_max = origin + length + border
         y_max = origin + width + border
 
-        self.set_walls([
+        walls = [
             [(x_min, y_min), (x_min, y_max)],
             [(x_min, y_max), (x_max, y_max)],
             [(x_max, y_max), (x_max, y_min)],
             [(x_max, y_min), (x_min, y_min)]
-        ])
+        ]
+
+        self.set_walls(walls)
