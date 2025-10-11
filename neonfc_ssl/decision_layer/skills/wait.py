@@ -4,7 +4,6 @@ from .base_skill import BaseSkill
 
 class Wait(BaseSkill):
     def decide(self, data):
-        return RobotRubric(
-            id=self._robot_id,
-            halt=False
+        return RobotRubric.still(
+            id=self._robot_id
         )
