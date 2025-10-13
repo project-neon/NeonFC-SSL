@@ -18,6 +18,7 @@ Pose = tuple[float, float, float]
 POSITION_INDEX = 0
 STRATEGY_INDEX = 1
 
+
 class Decision(Layer):
     def __init__(self, config, log_q, event_pipe):
         super().__init__("DecisionLayer", config, log_q, event_pipe)
@@ -56,6 +57,9 @@ class Decision(Layer):
 
         self.__strategies[robot.id] = strategy
         self.__strategies[robot.id].start(robot.id)
+
+    def disable_robot(self, robot: "TrackedRobot"):
+        self.__strategies[robot.id] = None
 
     def _step(self, data: 'MatchData') -> 'DecisionData':
         if self._check_halt(data):

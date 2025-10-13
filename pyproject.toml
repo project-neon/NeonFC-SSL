@@ -26,6 +26,7 @@ matplotlib = "3.10"
 tqdm = "^4.66.5"
 pyserial = "^3.5"
 toml = "^0.10.2"
+pip = "^25.2"
 
 
 [tool.poetry.group.dev.dependencies]

@@ -1,6 +1,7 @@
 from .left_back import LeftBack
 from .right_back import RightBack
 from .libero import Libero
+from .individual_defender import IndividualDefender
 # from receiver import Receiver
 
 from .prepare_ballplacement import PrepBallPlacement

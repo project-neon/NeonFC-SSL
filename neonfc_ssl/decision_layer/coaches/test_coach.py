@@ -23,17 +23,21 @@ class TestCoach(Coach):
         self.decision.set_strategy(self.data.robots[holder], self.passer)
         self.last_holder = holder
 
-        # liberos = self.data.robots[0:3]
+        return
+
+        self.decision.set_strategy(self.data.robots.actives[3], self.keeper)
+
+        liberos = self.data.robots.active[0:3]
         # left_backs = self.data.robots[3:4]
         # right_backs = self.data.robots[4:5]
 
-        # targets = [
-        #     Libero.decide(self.data, [r.id for r in liberos]),
+        targets = [
+            Libero.decide(self.data, [r.id for r in liberos]),
         #     LeftBack.decide(self.data, [r.id for r in left_backs]),
         #     RightBack.decide(self.data, [r.id for r in right_backs])
-        # ]
+        ]
 
-        # self.decision.calculate_hungarian(
-        #     targets=[i for j in targets for i in j],
-        #     robots=[i for j in [liberos, left_backs, right_backs] for i in j]
-        # )
+        self.decision.calculate_hungarian(
+            targets=[i for j in targets for i in j],
+            robots=[i for j in [liberos] for i in j]  # , left_backs, right_backs] for i in j]
+        )

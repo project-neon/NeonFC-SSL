@@ -8,6 +8,10 @@ from neonfc_ssl.core.logger import LayerHandler
 
 
 LAYER_START_ERROR_LOG = "Exception during layer {} start"
+BEGIN_START_LOG = "Starting layer {}"
+END_START_LOG = "Layer {} started"
+LAYER_IDLE_LIMIT_LOG = "Layer {} idle time limit exceeded, forcing start on old data {}"
+LAYER_STEP_TIME_LIMIT_LOG = "Layer {} under-performing, {} Hz"
 
 
 class Layer(Process):
@@ -63,14 +67,14 @@ class Layer(Process):
         pass
 
     def run(self):
-        self.logger.info("Starting layer {}".format(self.name))
+        self.logger.info(BEGIN_START_LOG.format(self.name))
         try:
             self._start()
         except Exception as e:
-            self.logger.error(LAYER_START_ERROR_LOG.format(self.name))
+            self.logger.error(LAYER_START_ERROR_LOG.format(self.__class__.__name__))
             raise e
         self.__started = True
-        self.logger.info("{} layer started.".format(self.name))
+        self.logger.info(END_START_LOG.format(self.name))
         while True:
             self.__fetch_event()
 
@@ -81,17 +85,21 @@ class Layer(Process):
             self.__fetch_new_data()
 
             if self.__new_data:
-                self.__running = True
-                self.__send(self._step(self.__last_data))
-                self.__last_finished_process = time()
+                self.__do_execution()
 
-            elif time() - self.__last_finished_process >= self.IDLE_LIMIT and self.__last_data is not None:
-                self.__running = True
-                self.logger.warning("Exceeded idle limit, forcing start on old data")
-                self.__send(self._step(self.__last_data))
-                self.__last_finished_process = time()
+            elif (dt := time() - self.__last_finished_process) >= self.IDLE_LIMIT and self.__last_data is not None:
+                self.logger.info(LAYER_IDLE_LIMIT_LOG.format(self.__class__.__name__, 1/dt))
+                self.__do_execution()
 
-            self.__running = False
+    def __do_execution(self):
+        self.__running = True
+        step_execution_begin_time = time()
+        self.__send(self._step(self.__last_data))
+        step_execution_end_time = time()
+        self.__new_data = False
+        if (dt := step_execution_end_time - step_execution_begin_time) >= 1/self.IDLE_LIMIT:
+            self.logger.warning(LAYER_STEP_TIME_LIMIT_LOG.format(self.__class__.__name__, 1/dt))
+        self.__last_finished_process = step_execution_end_time
 
     def __send(self, data):
         if data is not None:
