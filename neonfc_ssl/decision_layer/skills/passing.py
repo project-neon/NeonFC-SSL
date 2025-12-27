@@ -12,11 +12,11 @@ if TYPE_CHECKING:
 STEP_BACK_DIST = 0.2
 MAX_ANGLE_STEP = math.pi / 3
 STEP_FORWARD_DIST = 0.03
-MIN_ANGLE_TOLERANCE = 0.2
+MIN_ANGLE_TOLERANCE = 0.25
 MAX_ANGLE_TOLERANCE = 0.3
 DIST_MAX_TOLERANCE = 0.15
 DIST_MIN_TOLERANCE = 0
-MIN_KICK_DIST = 0.05 # Change to 0.08 for simulator testing
+MIN_KICK_DIST = 0.065 # Change to 0.08 for simulator testing
 MAX_KICK_DIST = 0.1
 
 STATE_CHANGE_LOG_MSG = "[{} {}] {} -> {}"
@@ -242,7 +242,7 @@ class SimplePass(BaseSkill):
 
         self.active = self.wait
 
-    def _start(self, target):
+    def _start(self, target, **kwargs):
         self.active = self.wait
         self.target = target
         self.active.start(self._robot_id, self.target)

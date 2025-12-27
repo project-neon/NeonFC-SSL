@@ -4,9 +4,9 @@ from ..tracking_data import States, GameState as StateData
 from neonfc_ssl.algorithms.fsm import State
 from neonfc_ssl.commons.math import distance_between_points
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 if TYPE_CHECKING:
-    from ..tracking import Tracking
+    from ..tracking_data import TrackedBall
     from neonfc_ssl.input_layer.input_data import GameController
 
 
@@ -19,16 +19,15 @@ class GameState(State):
         self.color = None
         self.position = None
 
-    def start(self, match: 'Tracking', color, position):
+    def start(self, ball: Optional["TrackedBall"], color, position):
         self.start_time = time()
-        self.ball_initial_position = (match.ball.x, match.ball.y)
+        self.ball_initial_position = (ball.x, ball.y) if ball else (0, 0)
         self.color = color
         self.position = position
 
 
 class StateController:
-    def __init__(self, match: 'Tracking'):
-        self._match = match
+    def __init__(self):
         self.current_state = None
 
         # Following appendix B found in: https://robocup-ssl.github.io/ssl-rules/sslrules.pdf
@@ -58,7 +57,7 @@ class StateController:
         after_10 = after_secs(10)
 
         def ball_moved(origin, ball, **kwargs):
-            return distance_between_points(ball, origin.ball_initial_position) <= 0.05
+            return distance_between_points(ball, origin.ball_initial_position) >= 0.05
 
         # _ -> Halt
         halt = on_ref_message('HALT')
@@ -122,19 +121,19 @@ class StateController:
         self.states['FreeKick'].add_transition(self.states['Run'], after_10)
 
         self.current_state = self.states['Halt']
-        self.current_state.start(self._match, None, None)
+        self.current_state.start(None, None, None)
 
-    def update(self, ref: 'GameController') -> StateData:
-        next_state = self.current_state.update(origin=self.current_state, cmd=ref.state, ball=self._match.ball)
+    def update(self, ref: 'GameController', ball: "TrackedBall", team_color) -> StateData:
+        next_state = self.current_state.update(origin=self.current_state, cmd=ref.state, ball=ball)
         if next_state != self.current_state:
-            self._match.logger.info(f"Changing state {self.current_state.name} -> {next_state.name}")
+            # self._match.logger.info(f"Changing state {self.current_state.name} -> {next_state.name}")
             print(f"Changing state {self.current_state.name} -> {next_state.name}")
             self.current_state = next_state
-            self.current_state.start(self._match, ref.team, ref.designated_position)
+            self.current_state.start(ball, ref.team, ref.designated_position)
 
         return StateData(
             state=States(self.current_state.name),
-            friendly=self.current_state.color == self._match.team_color,
+            friendly=self.current_state.color == team_color,
             position=self.current_state.position
         )
 

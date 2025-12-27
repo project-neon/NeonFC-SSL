@@ -16,10 +16,12 @@ class GoalKeeper(SpecialStrategy):
         self.target = None
 
         self.states: dict[str, 'BaseSkill'] = {
-            'pass': SimplePass(self.logger, GoalKeeper.__name__),
-            'go_to_ball': GoToBall(self.logger, GoalKeeper.__name__),
-            'move_to_pose': MoveToPose(self.logger, GoalKeeper.__name__)
+            'pass': SimplePass(self.logger, GoalKeeper.__name__, override_kick=6.5),
+            'move_to_pose': MoveToPose(self.logger, GoalKeeper.__name__),
+            'wait': Wait(self.logger, GoalKeeper.__name__, duration=1)
         }
+
+        self.wait = Wait(self.logger, GoalKeeper.__name__)
 
         def not_func(f):
             def wrapped(*args, **kwargs):
@@ -27,32 +29,39 @@ class GoalKeeper(SpecialStrategy):
 
             return wrapped
 
-        self.states["move_to_pose"].add_transition(self.states["go_to_ball"], self.go_to_ball_transition)
-        self.states["go_to_ball"].add_transition(self.states["pass"], self.pass_transition)
-        self.states["go_to_ball"].add_transition(self.states["move_to_pose"], not_func(self.go_to_ball_transition))
-        self.states["pass"].add_transition(self.states["move_to_pose"], self.move_to_pose_transition)
+        self.states["move_to_pose"].add_transition(self.states["wait"], self.ball_in_area)
+        self.states["wait"].add_transition(self.states["pass"], self.states["wait"].stop_waiting)
+        self.states["wait"].add_transition(self.states["move_to_pose"], not_func(self.ball_in_area))
+        self.states["pass"].add_transition(self.states["move_to_pose"], not_func(self.ball_in_area))
 
     def _start(self):
         self.active = self.states['move_to_pose']
-        self.active.start(self._robot_id, target=self.defense)
+        self.active.start(self._robot_id, target=self.defense, avoid_area=False)
+        self.wait.start(self._robot_id)
 
     def decide(self, data: "MatchData"):
+        # return self.wait.decide(data)
         next = self.active.update(data)
 
         if not isinstance(next, MoveToPose):
-            self.active = next
+            if next != self.active:
+                # print(f"[{GoalKeeper.__name__}]:{self.active.__class__.__name__}->{next.__class__.__name__}")
+                self.active = next
 
-            if isinstance(self.active, SimplePass):
-                _passing_to = Point(5, 4)
-                self.active.start(self._robot_id, target=_passing_to)
+                if isinstance(self.active, SimplePass):
+                    if data.ball.y > data.field.field_width:
+                        _passing_to = Point(1, 5)
+                    else:
+                        _passing_to = Point(1, 1)
+                    self.active.start(self._robot_id, target=_passing_to, avoid_area=False)
 
-            else:
-                self.active.start(self._robot_id)
+                else:
+                    self.active.start(self._robot_id, avoid_area=False)
 
         else:
             target = self.defense(data)
             self.active = next
-            self.active.start(self._robot_id, target=target)
+            self.active.start(self._robot_id, target=target, avoid_area=False)
 
         out = self.active.decide(data)
         out.ignore_area = True
@@ -71,7 +80,7 @@ class GoalKeeper(SpecialStrategy):
 
         new_y = max(min(y, y_max, y_goal_max), y_min, y_goal_min)
         return new_y
-    
+
     def ball_proj(self, data: "MatchData", x=0.1):
         robot = data.robots[self._robot_id]
         ball = data.ball
@@ -115,7 +124,7 @@ class GoalKeeper(SpecialStrategy):
         y = self.limit_y(data, x, y)
 
         return y
-    
+
     def y(self, data: "MatchData", x, x0, y0):
         ball = data.ball
         y = ((x-ball.x)*((ball.y - y0)/(ball.x - x0))) + ball.y
@@ -140,17 +149,17 @@ class GoalKeeper(SpecialStrategy):
 
         if len(lib_y) == 1:
             dist_lib_desired = abs(lib_y[0] - self.ball_proj(data, field.penalty_depth + 0.2))
-            
+
             if dist_lib_desired > 0.1:
                 y = self.ball_proj(data)
-            
+
             else:
                 if 0 >= ang >= -1.57:
                     y = self.y(data, x, lib_x[0], lib_y[0]-0.1)
-        
+
                 elif -3.14 <= ang <= -1.57:
                     y = self.y(data, x, lib_x[0], lib_y[0]+0.1)
-                
+
                 else:
                     y = ball.y
 
@@ -158,23 +167,23 @@ class GoalKeeper(SpecialStrategy):
             lib_y.sort()
             dist_between_libs = abs(lib_y[1]-lib_y[0])
             dist_lib_desired = abs(lib_y[1] - self.ball_proj(data, field.penalty_depth + 0.2))
-            
+
             if dist_lib_desired > 0.1 or dist_between_libs > 0.23:
                 y = self.ball_proj(data)
 
             else:
                 if 0 >= ang >= -1.57:
                     y = self.y(data, x, lib_x[0], max(lib_y)+0.1)
-    
+
                 elif -3.14 <= ang <= -1.57:
                     y = self.y(data, x, lib_x[0], min(lib_y)-0.1)
 
                 else:
                     y = ball.y
-        
+
         else:
             y = self.ball_proj(data)
-        
+
         y = self.limit_y(data, x, y)
 
         return [x, y, theta]

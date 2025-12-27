@@ -33,9 +33,13 @@ class SSLGameControllerReferee(threading.Thread):
         self.running = True
         while self.running:
             c = Referee()
-            data = self.referee_sock.recv(1024)
-            c.ParseFromString(data)
-            self._referee_message = json.loads(MessageToJson(c))
+            data = self.referee_sock.recv(2048)
+            try:
+                c.ParseFromString(data)
+                self._referee_message = json.loads(MessageToJson(c))
+            except Exception as e:
+                print(e)
+                pass
             # print(self._referee_message)
         self.stop()
 

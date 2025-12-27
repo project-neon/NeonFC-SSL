@@ -27,6 +27,16 @@ class Control(Layer):
     def _step(self, data: 'DecisionData'):
         out = []
         for command in data.commands:
+            if command.halt:
+                out.append(RobotCommand(
+                    id=command.id,
+                    is_yellow=data.world_model.is_yellow,
+                    vel_normal=0,
+                    vel_tangent=0,
+                    vel_angular=0,
+                    kick_x=0,
+                ))
+                continue
             if command.target_pose is not None:
                 out.append(self.run_single_robot(data.world_model, command))
             elif command.kick_speed[0] > 0 or command.kick_speed[1] > 0:

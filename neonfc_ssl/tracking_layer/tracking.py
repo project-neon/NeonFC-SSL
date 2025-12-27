@@ -50,7 +50,7 @@ class Tracking(Layer):
 
         self.active_opposites = self.opposites
 
-        self.game_state = StateController(self)
+        self.game_state = StateController()
 
         self.possession = PossessionTracker(self, self.game_state)
 
@@ -72,7 +72,7 @@ class Tracking(Layer):
 
         self.active_opposites = [r for r in self.opposites if not r.data.missing]
 
-        state = self.game_state.update(data.game_controller)
+        state = self.game_state.update(data.game_controller, self.ball.data, self.team_color)
 
         poss = self.possession.update()
         out_data = MatchData(

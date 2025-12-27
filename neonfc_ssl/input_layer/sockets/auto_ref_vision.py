@@ -51,6 +51,10 @@ class AutoRefVision(threading.Thread):
         self.logger.info(f"AutoRef-Vision module stopped!")
 
     def update_detection(self, last_frame):
+        # print(last_frame)
+        # if last_frame.get("uuid") != "odvppkjjmzivzjfewcoeflgwbiuazobk":
+        #     return
+
         frame = last_frame.get('trackedFrame', None)
         if not frame:
             # pacote de deteccao sem frame

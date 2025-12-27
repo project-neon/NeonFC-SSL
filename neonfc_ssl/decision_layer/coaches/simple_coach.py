@@ -1,8 +1,9 @@
 import math
 from .base_coach import Coach
 from neonfc_ssl.commons.math import distance_between_points
-from ..special_strategies import BallHolder, GoalKeeper
-from ..positional_strategies import Libero, LeftBack, RightBack, PrepPenalty, PrepBallPlacement, PrepKickoff, PrepGKPenalty, PrepBHPenalty
+from ..special_strategies import BallHolder, GoalKeeper, Receiver
+from ..positional_strategies import Libero, LeftBack, RightBack, PrepPenalty, PrepBallPlacement, PrepKickoff, \
+    PrepGKPenalty, PrepBHPenalty, IndividualDefender
 from neonfc_ssl.tracking_layer.tracking_data import States
 from scipy.optimize import linear_sum_assignment
 import numpy as np
@@ -14,6 +15,7 @@ if TYPE_CHECKING:
 
 
 USE_FOULS = True
+MIN_LIBEROS = 1
 
 
 class SimpleCoach(Coach):
@@ -23,6 +25,7 @@ class SimpleCoach(Coach):
         # Especial cases
         self._strategy_gk = GoalKeeper(self.decision.logger)
         self._strategy_bh = BallHolder(self.decision.logger)
+        self._strategy_rv = Receiver(self.decision.logger)
         self._gk_id = 0
 
         # ------ n=6 ------ #
@@ -53,13 +56,25 @@ class SimpleCoach(Coach):
         # self._secondary_attack_strategies[self._gk_id] = self._strategy_gk
 
     def decide(self):
-        if self.has_possession():
-            self._defending()
-        else:
-            self._defending()
-
         if USE_FOULS and self.data.game_state.state != States.RUN:
+            self._defending(fouls=True)
             self._fouls()
+            return
+
+        if self._check_ball_inside_area():
+            self._ball_inside_area()
+            return
+
+        # if self.has_possession():
+        #     self._attacking()
+        #     return
+
+        self._defending()
+
+    def halt_out_of_field_robots(self):
+        for robot in self.data.robots:
+            if robot.missing:
+                self.decision.disable_robot(robot)
 
     def _fouls(self):
         if self.data.game_state.state == States.PREPARE_KICKOFF:
@@ -83,10 +98,9 @@ class SimpleCoach(Coach):
             self.replace_strategy(BallHolder, PrepBallPlacement)
             return
 
-
     def replace_strategy(self, old_strategies, new_strategy, avoid_list=False):
         robots = list(filter(
-            lambda r: avoid_list != isinstance(self.get_strategy(r.id), old_strategies), # XOR on avoid_list
+            lambda r: avoid_list != isinstance(self.get_strategy(r.id), old_strategies),  # XOR on avoid_list
             self.data.robots.actives
         ))
         self.decision.calculate_hungarian(
@@ -94,7 +108,7 @@ class SimpleCoach(Coach):
             robots=robots
         )
 
-    def _defending(self):
+    def _defending(self, fouls=False):
         # when in possession, check the ball carrier (smaller time to ball), then it becomes ball carrier
         new_carrier = self._closest_non_keeper()
 
@@ -110,13 +124,38 @@ class SimpleCoach(Coach):
         if not available_robots:
             return
 
-        targets = self._get_defending_positions(avoid=2)
+        targets = self._get_defending_positions(avoid=2, fouls=fouls)
 
         # TODO: there needs to be a logic for when we don't want to set all non-special robots as defender
 
         self.decision.calculate_hungarian(
-             targets=targets,
-             robots=available_robots
+            targets=targets,
+            robots=available_robots
+        )
+
+    def _check_ball_inside_area(self):
+        field = self.data.field
+        ball = self.data.ball
+
+        non_area_space = (field.field_width - field.penalty_width)/2
+
+        check_ball_x = ball.x <= field.penalty_depth
+        check_ball_y = non_area_space <= ball.y <= non_area_space+field.penalty_width
+
+        return check_ball_x and check_ball_y
+
+    def _ball_inside_area(self):
+        self.decision.set_strategy(self.data.robots[self._gk_id], self._strategy_gk)
+        available_robots = self._clear_robot_list(self.data.robots.actives, [self._gk_id])
+        if not available_robots:
+            return
+
+        # TODO: decide what non-keeper robots will do when ball is inside area
+        targets = self._get_defending_positions(avoid=1)
+
+        self.decision.calculate_hungarian(
+            targets=targets,
+            robots=available_robots
         )
 
     def _use_right_back(self):
@@ -132,14 +171,20 @@ class SimpleCoach(Coach):
         return self.data.ball.x < field.field_length / 2 and self.data.ball.y > limit
 
     def _closest_non_keeper(self) -> Optional['TrackedRobot']:
-        sq_dist_to_ball = lambda r: np.sum(np.square(np.array(r)-self.data.ball)) \
+        sq_dist_to_ball = lambda r: np.sum(np.square(np.array(r) - self.data.ball)) \
             if r.id != self._gk_id else np.inf
         my_closest = min(self.data.robots.actives, key=sq_dist_to_ball, default=None)
         return my_closest
 
-    def _get_defending_positions(self, avoid=2):
+    def _get_defending_positions(self, avoid=2, fouls=False):
         targets = []
         max_defenders = max(len(self.data.robots.actives) - avoid, 0)  # -1 for keeper and -1 for ball holder
+
+        if max_defenders > MIN_LIBEROS and not fouls:
+            targets.extend(self._get_marker())
+
+        if targets:
+            max_defenders -= 1
 
         # the actual ids of the robots don't matter, we just need to know how many robots we have
 
@@ -156,22 +201,61 @@ class SimpleCoach(Coach):
 
         return targets
 
-    def _attacking(self):
-        # when in possession, check the ball carrier (smaller time to ball), than it becomes ball carrier
-        new_carrier = self._closest_to_ball()
+    def _get_marker(self):
+        field = self.data.field
+        targets = list(filter(lambda r: r.x < field.field_length/2, self.data.opposites.active))
+        if len(targets) < 2:
+            return []
 
-        # the carrier receives its strategies and every other receives its secondary strategies
-        for robot in self._robots:
-            if robot.robot_id == new_carrier:
-                robot.set_strategy(self._strategy_bh)
-            else:
-                robot.set_strategy(self._secondary_attack_strategies[robot.robot_id])
+        target = IndividualDefender.decide(self.data, [0])
+        if target[0][0][0] is None:
+            return []
+
+        return target
+
+    def _attacking(self):
+        # when in possession, check the ball carrier (smaller time to ball), then it becomes ball carrier
+        new_carrier = self._closest_non_keeper()
+
+        self.decision.set_strategy(self.data.robots[self._gk_id], self._strategy_gk)
+        if new_carrier is not None:
+            self.decision.set_strategy(new_carrier, self._strategy_bh)
+
+        if new_carrier is None:
+            available_robots = self._clear_robot_list(self.data.robots.actives, [self._gk_id])
+        else:
+            available_robots = self._clear_robot_list(self.data.robots.actives, [self._gk_id, new_carrier.id])
+
+        receiver = self.get_receiver(available_robots)
+        if receiver is None:
+            return
+        self.decision.set_strategy(receiver, self._strategy_rv)
+
+        if new_carrier is None:
+            available_robots = self._clear_robot_list(self.data.robots.actives, [self._gk_id, receiver.id])
+        else:
+            available_robots = self._clear_robot_list(
+                self.data.robots.actives,
+                [self._gk_id, new_carrier.id, receiver.id]
+            )
+
+        targets = self._get_defending_positions(avoid=3)
+
+        # TODO: there needs to be a logic for when we don't want to set all non-special robots as defender
+
+        self.decision.calculate_hungarian(
+            targets=targets,
+            robots=available_robots
+        )
+
+    def get_receiver(self, available_robots):
+        return max(available_robots, key=lambda r: r.x, default=None)
 
     def _closest_to_ball(self) -> Optional[int]:
         return self.data.possession.my_closest
 
     @staticmethod
-    def _clear_robot_list(robot_list: list['TrackedRobot'], rm_id: int|list[Optional[int]]) -> list['TrackedRobot']:
+    def _clear_robot_list(robot_list: list['TrackedRobot'], rm_id: int | list[Optional[int]]) -> list['TrackedRobot']:
         if isinstance(rm_id, int):
             rm_id = [rm_id]
 

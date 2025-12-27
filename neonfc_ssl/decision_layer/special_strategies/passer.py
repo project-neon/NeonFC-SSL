@@ -24,7 +24,7 @@ class Passer(SpecialStrategy):
         self.active.start(self._robot_id)
 
     def decide(self, data):
-        target = data.opposites.active[0]
+        target = (0, 0) #data.opposites.active[0]
         for r in data.robots.active:
             if r.id != self._robot_id:
                 target = r

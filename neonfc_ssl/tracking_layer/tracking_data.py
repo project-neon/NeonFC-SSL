@@ -226,8 +226,8 @@ class Possession:
 
 class States(Enum):
     HALT = 'Halt'
-    STOP = 'TimeOut'
-    TIMEOUT = 'Stop'
+    STOP = 'Stop'
+    TIMEOUT = 'TimeOut'
     PREPARE_KICKOFF = 'PrepareKickOff'
     PREPARE_PENALTY = 'PreparePenalty'
     BALL_PLACEMENT = 'BallPlacement'
