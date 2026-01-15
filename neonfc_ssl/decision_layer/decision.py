@@ -2,6 +2,7 @@ import logging
 from scipy.optimize import linear_sum_assignment
 import numpy as np
 from neonfc_ssl.core import Layer
+from neonfc_ssl.core.event import EventType, Event, event_callback
 from .decision_data import DecisionData, RobotRubric
 from .coaches import COACHES
 from neonfc_ssl.tracking_layer.tracking_data import States
@@ -20,12 +21,22 @@ STRATEGY_INDEX = 1
 
 
 class Decision(Layer):
-    def __init__(self, config, log_q, event_pipe):
-        super().__init__("DecisionLayer", config, log_q, event_pipe)
+    def __init__(self, config, log_q):
+        super().__init__("DecisionLayer", config, log_q)
         self.events = {}
         self.__strategies: list[Optional['SpecialStrategy']] = []
+        self.__force_halt = False
 
         self.logger = logging.getLogger('DecisionLayer')
+
+    @event_callback(event_type=EventType.MASTER_STATE)
+    def master_state_event(self, event: Event):
+        state = event.event_data['state']
+        if state == "play":
+            self.__force_halt = False
+
+        if state == "halt":
+            self.__force_halt = True
 
     def _start(self):
         self.logger.info("Starting coach module starting ...")
@@ -42,8 +53,9 @@ class Decision(Layer):
     def get_strategy(self, robot_id):
         return self.__strategies[robot_id]
 
-    @staticmethod
-    def _check_halt(data: 'MatchData'):
+    def _check_halt(self, data: 'MatchData'):
+        if self.__force_halt:
+            return True
         if data.game_state.state in (States.HALT, States.TIMEOUT):
             return True
         return False

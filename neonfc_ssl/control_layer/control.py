@@ -13,8 +13,8 @@ if TYPE_CHECKING:
 
 
 class Control(Layer):
-    def __init__(self, config, log_q, event_pipe) -> None:
-        super().__init__("ControlLayer", config, log_q, event_pipe)
+    def __init__(self, config, log_q) -> None:
+        super().__init__("ControlLayer", config, log_q)
 
         self.KP = 1.5
         self.KP_ang = 2

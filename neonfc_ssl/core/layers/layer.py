@@ -4,7 +4,9 @@ from multiprocessing.connection import Connection
 from abc import ABC, abstractmethod
 from time import time
 import logging
+
 from neonfc_ssl.core.logger import LayerHandler
+from neonfc_ssl.core.event import EventHandler
 
 
 LAYER_START_ERROR_LOG = "Exception during layer {} start"
@@ -17,7 +19,7 @@ LAYER_STEP_TIME_LIMIT_LOG = "Layer {} under-performing, {} Hz"
 class Layer(Process):
     IDLE_LIMIT = 1 / 60  # s (60 Hz)
 
-    def __init__(self, name: str, config: dict, log_q: Queue, event_pipe: Pipe):
+    def __init__(self, name: str, config: dict, log_q: Queue):
         super().__init__(daemon=True)
         self.name = name
         self.config = config
@@ -26,11 +28,13 @@ class Layer(Process):
         self.logger = self.__setup_logger(
             log_q
         )  # send logs to the main process and eventually to the interface
-        self.__events_pipe = event_pipe  # receive events from the main process possibly originating from the interface
+        self.__events_q = Queue()  # receive events from the main process possibly originating from the interface
         self.__input: Connection = None  # last layer pipe tail in the pipeline
         self.__output_tail, self.__output_head = Pipe(
             duplex=False
         )  # output pipe in the pipeline (to the next layer)
+        self.__event_handler = EventHandler()
+        self.__event_handler.register_from_instance(self)
 
         # layer state variables
         self.__running = False
@@ -42,6 +46,14 @@ class Layer(Process):
         self._previous_layer = ""
 
         self.__last_data = None
+
+    @property
+    def subscriptions(self):
+        return self.__event_handler.subscriptions()
+
+    @property
+    def events_q(self):
+        return self.__events_q
 
     def __setup_logger(self, log_q: Queue) -> logging.Logger:
         lgg = logging.getLogger(self.name)
@@ -63,9 +75,6 @@ class Layer(Process):
             self.__new_data = True
             self.__last_data = self.__input.recv()
 
-    def __fetch_event(self):
-        pass
-
     def run(self):
         self.logger.info(BEGIN_START_LOG.format(self.name))
         try:
@@ -76,11 +85,7 @@ class Layer(Process):
         self.__started = True
         self.logger.info(END_START_LOG.format(self.name))
         while True:
-            self.__fetch_event()
-
-            # TODO: check if should kill
-            # if ...:
-            #   break
+            self.__process_events()
 
             self.__fetch_new_data()
 
@@ -90,6 +95,11 @@ class Layer(Process):
             elif (dt := time() - self.__last_finished_process) >= self.IDLE_LIMIT and self.__last_data is not None:
                 self.logger.info(LAYER_IDLE_LIMIT_LOG.format(self.__class__.__name__, 1/dt))
                 self.__do_execution()
+
+    def __process_events(self):
+        while not self.__events_q.empty():
+            event = self.__events_q.get(timeout=0.01)
+            self.__event_handler(event)
 
     def __do_execution(self):
         self.__running = True

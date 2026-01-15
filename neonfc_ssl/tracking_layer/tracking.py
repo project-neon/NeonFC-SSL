@@ -12,8 +12,8 @@ if TYPE_CHECKING:
 
 
 class Tracking(Layer):
-    def __init__(self, config, log_q, event_pipe):
-        super().__init__("TrackingLayer", config, log_q, event_pipe)
+    def __init__(self, config, log_q):
+        super().__init__("TrackingLayer", config, log_q)
 
         if self.config['color'] != 'blue' and self.config['color'] != 'yellow':
             raise ValueError("color must be either 'blue' or 'yellow'")
