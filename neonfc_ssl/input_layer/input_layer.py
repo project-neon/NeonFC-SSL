@@ -10,8 +10,8 @@ from .input_data import InputData
 
 
 class InputLayer(Layer):
-    def __init__(self, config, log_q, event_pipe):
-        super().__init__("InputLayer", config, log_q, event_pipe)
+    def __init__(self, config, log_q):
+        super().__init__("InputLayer", config, log_q)
 
         if self.config['side'] != 'left' and self.config['side'] != 'right':
             raise ValueError("side must be either 'left' or 'right'")
