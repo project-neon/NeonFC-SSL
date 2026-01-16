@@ -13,7 +13,7 @@ from neonfc_ssl.tracking_layer import Tracking
 from neonfc_ssl.decision_layer import Decision
 from neonfc_ssl.control_layer import Control
 from neonfc_ssl.output_layer import OutputLayer
-from neonfc_ssl.core import DebugLayer
+from neonfc_ssl.core import DebugLayer, event
 from neonfc_ssl.core.logger import setup_logging
 
 from typing import TYPE_CHECKING
@@ -42,6 +42,9 @@ class Game:
 
         self.logger = logging.getLogger("game")
 
+        self.event_engine = event.EventEngine()
+        self.event_engine.create_socket(self.config['Game']["host"], self.config['Game']["input_port"])
+
         self.new_layer(InputLayer)
         self.new_layer(Tracking)
         self.new_layer(Decision)
@@ -49,24 +52,8 @@ class Game:
         self.new_layer(OutputLayer)
 
         self.output_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.input_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-        self.__input_thread = Thread(target=self.listen_input, daemon=True)
-        self.__input_thread.start()
 
         self.__intervals = {}
-
-    def listen_input(self):
-        while True:
-            self.input_socket.bind((self.config['Game']['host'], self.config['Game']['input_port']))
-            self.input_socket.listen()
-            conn, addr = self.input_socket.accept()
-            with conn:
-                self.logger.info(f"Input socket connected by {addr}")
-                while True:
-                    data = conn.recv(1024)
-                    if not data:
-                        break
 
     def send_udp(self, msg):
         self.output_socket.sendto(msg, (self.config['Game']['host'], self.config['Game']['output_port']))
@@ -93,11 +80,11 @@ class Game:
             # self.logger.log(log["type"], f"{log['source']}: {log}")
 
     def new_layer(self, layer: type['Layer']):
-        pipe_in, pipe_out = Pipe(duplex=False)
-        # print(self.config)
-        layer_obj = layer(self.config[layer.__name__], self.layers_log_q, pipe_out)
+        layer_obj = layer(self.config[layer.__name__], self.layers_log_q)
         self.layers.append(layer_obj)
-        self.layers_event[layer_obj.name] = pipe_in
+
+        for event_type in layer_obj.subscriptions:
+            self.event_engine.subscribe(event_type, layer_obj.events_q)
 
 
 def main(args=None):

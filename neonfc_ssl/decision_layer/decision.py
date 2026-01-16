@@ -31,7 +31,7 @@ class Decision(Layer):
 
     @event_callback(event_type=EventType.MASTER_STATE)
     def master_state_event(self, event: Event):
-        state = event.event_data['state']
+        state = event.event_data['new_state']
         if state == "play":
             self.__force_halt = False
 

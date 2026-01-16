@@ -33,7 +33,7 @@ class Layer(Process):
         self.__output_tail, self.__output_head = Pipe(
             duplex=False
         )  # output pipe in the pipeline (to the next layer)
-        self.__event_handler = EventHandler()
+        self.__event_handler = EventHandler(self.logger)
         self.__event_handler.register_from_instance(self)
 
         # layer state variables
