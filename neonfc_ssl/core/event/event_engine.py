@@ -18,6 +18,12 @@ class EventEngine:
         self.subscriptions = defaultdict(list)
         self.logger = logger if logger is not None else getLogger(__name__)
 
+    def create_socket(self, host, port):
+        """Add a socket and set its callback to this engine's handler"""
+        event_socket = EventSocket(host=host, port=port)
+        event_socket.start()
+        self.add_socket(event_socket)
+
     def add_socket(self, event_socket):
         """Add a socket and set its callback to this engine's handler"""
         self.sockets.append(event_socket)

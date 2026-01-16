@@ -8,8 +8,9 @@ NO_CALLBACK_REGISTERED = "No callback registered for event type: {}"
 
 class EventHandler:
     """Handles event registration and dispatching"""
-    def __init__(self):
+    def __init__(self, logger):
         self._handlers: dict["EventType", Callable[["Event"], None]] = {}
+        self.logger = logger
 
     def register_from_instance(self, instance: Any):
         """Auto-discover and register methods decorated with @handles"""
@@ -35,7 +36,10 @@ class EventHandler:
         """Dispatch event to registered handler"""
         handler = self._handlers.get(event.type)
         if handler:
-            handler(event)
+            try:
+                handler(event)
+            except Exception as e:
+                self.logger.error(f"Error handling event {event.type}: {e}")
 
     def has_handler(self, event_type: "EventType") -> bool:
         """Check if a handler is registered for this event type"""

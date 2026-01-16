@@ -1,6 +1,6 @@
 [Game]
 host = "localhost"
-input_port = 0
+input_port = 43211
 output_port = 43210
 
 [InputLayer]
