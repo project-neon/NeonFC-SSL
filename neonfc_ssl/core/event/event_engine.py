@@ -15,11 +15,11 @@ QUEUE_PUT_ERROR_MSG = "Error putting event type {} into queue: {}"
 class EventEngine:
     def __init__(self, logger=None):
         self.sockets = []
-        self.subscriptions = defaultdict(list)
+        self.subscriptions = defaultdict(set)
         self.logger = logger if logger is not None else getLogger(__name__)
 
     def create_socket(self, host, port):
-        """Add a socket and set its callback to this engine's handler"""
+        """Create and add a socket from a host port pair"""
         event_socket = EventSocket(host=host, port=port)
         event_socket.start()
         self.add_socket(event_socket)
@@ -37,7 +37,7 @@ class EventEngine:
     def subscribe(self, event_type, queue):
         """Subscribe a multiprocessing queue to a specific event type"""
         if queue not in self.subscriptions[event_type]:
-            self.subscriptions[event_type].append(queue)
+            self.subscriptions[event_type].add(queue)
             self.logger.debug(SUBSCRIPTION_ADDED_MSG.format(event_type))
 
     def socket_callback(self, event):
