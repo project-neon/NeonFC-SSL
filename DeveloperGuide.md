@@ -94,7 +94,7 @@ After connecting to the container, you already face grSim, you will need to make
 
 After this changes you should be able to see the robots displayed in the auto-ref field.
 
-## Running the code
+### Running the code
 In the project's base path, run:
 
 ```bash
