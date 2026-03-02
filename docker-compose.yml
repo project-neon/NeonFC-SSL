@@ -14,9 +14,9 @@ services:
     container_name: auto-referee-vnc
     network_mode: host # Same as --net=host
     command:
-      - "-visionAddress"
+      - "--visionAddress"
       - "224.5.23.2:10006"
-      - "-trackerAddress"
+      - "--trackerAddress"
       - "224.5.23.2:10010"
     environment:
       - DISPLAY=unix$DISPLAY
