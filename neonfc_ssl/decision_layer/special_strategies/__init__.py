@@ -5,3 +5,4 @@ from .shooter import Shooter
 from .still import Still
 from .special_test import SpecialTest
 from .intercept_ball import InterceptBall
+from .receiver import Receiver

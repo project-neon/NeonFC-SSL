@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 class FloatPossessionTracker:
     def __init__(self, match: 'Tracking', state_controller):
         self.poss = 0
-        self.last_poss = deque([], maxlen=10)
+        self.last_poss = deque([], maxlen=500)
         self.match = match
         self.state_controller = state_controller
         self.current_closest = None

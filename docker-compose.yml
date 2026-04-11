@@ -9,17 +9,20 @@ services:
       - VNC_GEOMETRY=1920x1080
     command:
       - vnc
-
   auto-referee-vnc:
     image: tigersmannheim/auto-referee-vnc:latest
     container_name: auto-referee-vnc
     network_mode: host # Same as --net=host
     command:
-      - "-visionAddress"
+      - "--visionAddress"
       - "224.5.23.2:10006"
-      - "-trackerAddress"
+      - "--trackerAddress"
       - "224.5.23.2:10010"
     environment:
       - DISPLAY=unix$DISPLAY
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix
+  game-controller:
+    image: robocupssl/ssl-game-controller
+    container_name: game-controller
+    network_mode: host

@@ -33,3 +33,6 @@ class Coach(ABC):
     def has_possession(self):
         """Check if the team has possession of the ball."""
         return self.data.possession.possession_team == "yellow" != self.data.is_yellow
+
+    def get_strategy(self, robot_id):
+        return self.decision.get_strategy(robot_id)

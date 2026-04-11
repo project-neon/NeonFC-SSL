@@ -8,5 +8,5 @@ if TYPE_CHECKING:
 
 class RightBack(PositionalStrategy, FullBack):
     @staticmethod
-    def decide(data: 'MatchData', ids: list[int]):
+    def decide_position(data: 'MatchData', ids: list[int]):
         return RightBack._decide(data, ids, False)

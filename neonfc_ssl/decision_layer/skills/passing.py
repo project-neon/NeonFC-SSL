@@ -12,14 +12,14 @@ if TYPE_CHECKING:
 STEP_BACK_DIST = 0.2
 MAX_ANGLE_STEP = math.pi / 3
 STEP_FORWARD_DIST = 0.03
-MIN_ANGLE_TOLERANCE = 0.2
+MIN_ANGLE_TOLERANCE = 0.25
 MAX_ANGLE_TOLERANCE = 0.3
 DIST_MAX_TOLERANCE = 0.15
 DIST_MIN_TOLERANCE = 0
-MIN_KICK_DIST = 0.05 # Change to 0.08 for simulator testing
+MIN_KICK_DIST = 0.065 # Change to 0.08 for simulator testing
 MAX_KICK_DIST = 0.1
 
-STATE_CHANGE_LOG_MSG = "[{}] {} -> {}"
+STATE_CHANGE_LOG_MSG = "[{} {}] {} -> {}"
 
 
 def angle_between(p1, p2, p3):
@@ -235,14 +235,14 @@ class SimplePass(BaseSkill):
         self.step_back.add_transition(self.turn, self.step_back.check_complete)
 
         self.turn.add_transition(self.step_forward, self.turn.check_complete)
-        self.step_forward.add_transition(self.turn, self.step_forward.check_fallback)
+        self.step_forward.add_transition(self.turn, self.turn.check_fallback)
 
         self.step_forward.add_transition(self.passing, self.step_forward.check_complete)
         self.passing.add_transition(self.wait, self.step_forward.check_fallback)
 
         self.active = self.wait
 
-    def _start(self, target):
+    def _start(self, target, **kwargs):
         self.active = self.wait
         self.target = target
         self.active.start(self._robot_id, self.target)
@@ -253,6 +253,7 @@ class SimplePass(BaseSkill):
         if next != self.active:
             self.logger.debug(STATE_CHANGE_LOG_MSG.format(
                 self.strategy_name,
+                self._robot_id,
                 self.active.__class__.__name__,
                 next.__class__.__name__,
             ))

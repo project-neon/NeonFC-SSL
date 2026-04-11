@@ -12,8 +12,8 @@ if TYPE_CHECKING:
 
 
 class Tracking(Layer):
-    def __init__(self, config, log_q, event_pipe):
-        super().__init__("TrackingLayer", config, log_q, event_pipe)
+    def __init__(self, config, log_q):
+        super().__init__("TrackingLayer", config, log_q)
 
         if self.config['color'] != 'blue' and self.config['color'] != 'yellow':
             raise ValueError("color must be either 'blue' or 'yellow'")
@@ -50,7 +50,7 @@ class Tracking(Layer):
 
         self.active_opposites = self.opposites
 
-        self.game_state = StateController(self)
+        self.game_state = StateController()
 
         self.possession = PossessionTracker(self, self.game_state)
 
@@ -72,7 +72,7 @@ class Tracking(Layer):
 
         self.active_opposites = [r for r in self.opposites if not r.data.missing]
 
-        state = self.game_state.update(data.game_controller)
+        state = self.game_state.update(data.game_controller, self.ball.data, self.team_color)
 
         poss = self.possession.update()
         out_data = MatchData(
