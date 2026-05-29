@@ -63,6 +63,44 @@ class Control(Layer):
         path_planner.set_velocity((robot.vx, robot.vy))
         path_planner.set_map_area((field.field_length, field.field_width))
 
+        # Redirects target if it falls inside the friendly area (robot outside, target inside).
+        if command.avoid_area and not point_in_rect(pos, path_planner.friendly_area) \
+                and point_in_rect(command.target_pose[:2], path_planner.friendly_area):                
+            x_0, y_0, area_len, area_wid = path_planner.friendly_area   # (-0.3, 2.0, 1.3, 2.0)
+            
+            x_border = x_0 + area_len + 0.1
+            y_original = command.target_pose[1]
+            y_redirected = max(y_0, min(y_0 + area_wid, y_original))
+            path_planner.set_goal((x_border, y_redirected))
+
+        # Forces robot out if it's already inside the friendly area.
+        if command.avoid_area and point_in_rect(pos, path_planner.friendly_area):
+            x_0, y_0, area_len, area_wid = path_planner.friendly_area   # (-0.3, 2.0, 1.3, 2.0)
+
+            # Calculates the distance from each border and redirects the target out from the closest one.
+            x_border = x_0 + area_len
+            y_upper_border = y_0 + area_wid
+            y_lower_border = y_0
+
+            dist_right = abs(pos[0] - x_border)
+            dist_upper = abs(pos[1] - y_upper_border)
+            dist_lower = abs(pos[1] - y_lower_border)
+
+            min_dist = min(dist_right, dist_upper, dist_lower)
+
+            if min_dist == dist_upper:
+                path_planner.set_goal((robot.x, y_upper_border + 0.1))
+            elif min_dist == dist_lower:
+                path_planner.set_goal((robot.x, y_lower_border - 0.1))
+            else:
+                path_planner.set_goal((x_border + 0.1, robot.y))
+            
+            # TODO: Robots can get stuck on the friendly area sides (lower and upper borders) when
+            #       the area walls (obstacles) is between them and their target (HRVO is inefficient when
+            #       dealing with walls).
+            #       SOLUTION: Implementing a global pathplanner (RRT, already implemented on our repository) to
+            #                 route around the area correctly.
+
         if point_in_rect(pos, (0.0, 0.0, field.field_length, field.field_width)):
             path_planner.add_field_walls(
                 origin=0.0,
