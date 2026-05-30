@@ -5,6 +5,7 @@ from datetime import datetime
 
 class EventType(enum.Enum):
     MASTER_STATE = "MasterState"
+    MODEL_UPDATE = "ModelUpdate"
 
 
 @dataclass(frozen=True)

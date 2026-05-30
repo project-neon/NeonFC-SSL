@@ -27,6 +27,7 @@ tqdm = "^4.66.5"
 pyserial = "^3.5"
 toml = "^0.10.2"
 pip = "^25.2"
+torch = "2.7.*"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -34,6 +35,12 @@ pytest = "^8.4.1"
 mypy = "^1.17.1"
 flake8 = "^7.3.0"
 flake8-bugbear = "^24.12.12"
+
+
+[[tool.poetry.source]]
+name = "pytorch-cu12"
+url = "https://pytorch.org"
+priority = "explicit"
 
 [build-system]
 requires = ["poetry-core"]
