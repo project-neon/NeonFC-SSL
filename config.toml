@@ -16,7 +16,23 @@ side = "right"
 color = "yellow"
 
 [Decision]
-coach = "SimpleCoach"
+coach = "DRLCoach"
+persistence_transformation="one_v_one"
+output_transformation="one_v_one_output"
+
+[Decision.sender]
+host = "127.0.0.1"
+port = 5000
+
+[[Decision.models]]
+id="goalkeeper"
+file_path="models/goalkeeper.pt"
+transformation="one_v_one"
+
+[[Decision.models]]
+id="striker"
+file_path="models/striker.pt"
+transformation="one_v_one"
 
 [Control]
 

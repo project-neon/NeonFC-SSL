@@ -1,6 +1,7 @@
 from .circle_coach import CircleCoach
 from .test_coach import TestCoach
 from .simple_coach import SimpleCoach
+from .drl_trainer import DRLCoach
 
 from typing import TYPE_CHECKING, Type
 if TYPE_CHECKING:
@@ -10,7 +11,8 @@ _coach_list: list[Type['Coach']] = [
     # Tournament coaches
     TestCoach,
     SimpleCoach,
-    CircleCoach
+    CircleCoach,
+    DRLCoach
 ]
 
 COACHES: dict[str, Type['Coach']] = {c.__name__: c for c in _coach_list}
