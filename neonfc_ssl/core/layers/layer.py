@@ -93,7 +93,7 @@ class Layer(Process):
                 self.__do_execution()
 
             elif (dt := time() - self.__last_finished_process) >= self.IDLE_LIMIT and self.__last_data is not None:
-                self.logger.info(LAYER_IDLE_LIMIT_LOG.format(self.__class__.__name__, 1/dt))
+                # self.logger.info(LAYER_IDLE_LIMIT_LOG.format(self.__class__.__name__, 1/dt))
                 self.__do_execution()
 
     def __process_events(self):

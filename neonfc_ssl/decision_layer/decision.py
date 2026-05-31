@@ -74,8 +74,8 @@ class Decision(Layer):
         self.__strategies[robot.id] = None
 
     def _step(self, data: 'MatchData') -> 'DecisionData':
-        if self._check_halt(data):
-            return DecisionData([RobotRubric.still(r.id) for r in data.robots.active], data)
+        #if self._check_halt(data):
+        #    return DecisionData([RobotRubric.still(r.id) for r in data.robots.active], data)
 
         self.__commands = []
         self.__hungarian_robots = []
