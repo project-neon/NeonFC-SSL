@@ -36,12 +36,8 @@ class DRLCoach(Coach):
         }
 
         if config := self.decision.config.get(SENDER_CONFIG_INDEX):
-            #self.decision.logger.info("Using TCP sender")
             self.__tcp = TCPSender.from_config(config)
             self.__tcp.start()
-        else:
-            #self.decision.logger.info("Decision data is not being propagated")
-            pass
 
         for model_cfg in self.decision.config[MODEL_INDEX]:
             model_reference = ModelReference(**model_cfg)
