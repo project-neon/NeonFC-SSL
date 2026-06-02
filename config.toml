@@ -19,6 +19,7 @@ color = "yellow"
 coach = "DRLCoach"
 persistence_transformation="one_v_one"
 output_transformation="one_v_one_output"
+ignore_autoref = true
 
 [Decision.sender]
 host = "127.0.0.1"
