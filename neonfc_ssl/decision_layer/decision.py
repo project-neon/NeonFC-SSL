@@ -56,7 +56,7 @@ class Decision(Layer):
     def _check_halt(self, data: 'MatchData'):
         if self.__force_halt:
             return True
-        if data.game_state.state in (States.HALT, States.TIMEOUT):
+        if data.game_state.state in (States.HALT, States.TIMEOUT) and not self.config['ignore_autoref']:
             return True
         return False
 
@@ -74,8 +74,8 @@ class Decision(Layer):
         self.__strategies[robot.id] = None
 
     def _step(self, data: 'MatchData') -> 'DecisionData':
-        #if self._check_halt(data):
-        #    return DecisionData([RobotRubric.still(r.id) for r in data.robots.active], data)
+        if self._check_halt(data):
+            return DecisionData([RobotRubric.still(r.id) for r in data.robots.active], data)
 
         self.__commands = []
         self.__hungarian_robots = []
