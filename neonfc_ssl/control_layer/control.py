@@ -62,6 +62,7 @@ class Control(Layer):
         path_planner.set_goal(command.target_pose[:2])
         path_planner.set_velocity((robot.vx, robot.vy))
         path_planner.set_map_area((field.field_length, field.field_width))
+        path_planner.set_penalty_area((field.penalty_depth, field.penalty_width))
 
         # Redirects target if it falls inside the friendly area (robot outside, target inside).
         if command.avoid_area and not point_in_rect(pos, path_planner.friendly_area) \

@@ -15,6 +15,8 @@ class VOPlanner(Planner):
 
         self.map_len = 0.0
         self.map_wid = 0.0
+        self.penalty_len = 0.0
+        self.penalty_wid = 0.0
 
     def set_start(self, start: Tuple[float, float]):
         self.start = start
@@ -41,6 +43,9 @@ class VOPlanner(Planner):
 
     def set_map_area(self, map_area: Tuple[float, float]):
         self.map_len, self.map_wid = map_area
+    
+    def set_penalty_area(self, penalty_area: Tuple[float, float]):
+        self.penalty_len, self.penalty_wid = penalty_area   # len = depth
 
     def plan(self) -> List[float]:
         self.path = self.star_vo.pos + self.star_vo.update()
@@ -57,10 +62,10 @@ class VOPlanner(Planner):
         width = self.map_wid
 
         origin = (-0.3, width / 2 - 1.0)
-        area_wid = 2.0
-        area_len = 1.3
+        area_wid = self.penalty_wid
+        area_len = self.penalty_len
 
-        return origin[0], origin[1], area_len, area_wid
+        return origin[0], origin[1], area_len, area_wid    # (-0.3, 2.0, 1.3, 2.0)
 
     @property
     def opponent_area(self):
@@ -68,10 +73,10 @@ class VOPlanner(Planner):
         width = self.map_wid
 
         origin = (length - 1.0, width / 2 - 1.0)
-        area_wid = 2.0
-        area_len = 1.3
+        area_wid = self.penalty_wid
+        area_len = self.penalty_len
 
-        return origin[0], origin[1], area_len, area_wid
+        return origin[0], origin[1], area_len, area_wid    # (8.0, 2.0, 1.3, 2.0)
 
     def add_friendly_area_walls(self):
         o_x, o_y, length, width = self.friendly_area
