@@ -20,6 +20,7 @@ coach = "SimpleCoach"
 
 [Control]
 planner = "VOPlanner"
+deadband_threshold = 0.01
 
 [OutputLayer]
 host_ip = "localhost"

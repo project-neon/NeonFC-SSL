@@ -18,6 +18,8 @@ class Control(Layer):
         self.KP = 1.5
         self.KP_ang = 2
 
+        self.deadband_threshold = self.config.get("deadband_threshold", 0.01)
+
     def _start(self):
         self.logger.info("Starting control module starting ...")
 
@@ -135,7 +137,22 @@ class Control(Layer):
         dx = next_point[0] - robot.x
         dy = next_point[1] - robot.y
 
+        # The deadband (in meters) prevents motor heating caused by continuous low-voltage commands while
+        # the robot is effectively at rest.
+        if abs(dx) < self.deadband_threshold:
+            dx = 0
+        if abs(dy) < self.deadband_threshold:
+            dy = 0
+
         dt = reduce_ang(command.target_pose[2] - robot.theta)
+
+        # TODO: Implement angular deadband (threshold in rad for the dt error).
+        #       Residual angular error also keeps the rotation motor under continuous voltage at
+        #       rest, even if small. Not implemented now because the angular deviation amplifies with 
+        #       the distance to the target (kick/pass): at a distance of 9m, for example, a 0.02 rad of error already 
+        #       equates to ~18cm of deviation in the trajectory of the ball. Requires careful 
+        #       calibration, ideally when the pass/kick layer is more mature and can be tested in 
+        #       conjunction with finishing accuracy.
 
         vel_x, vel_y, vel_theta = dx * self.KP, dy * self.KP, dt * self.KP_ang
         vel_tangent, vel_normal, vel_angular = self.global_speed_to_local_speed(vel_x, vel_y, vel_theta, robot)
