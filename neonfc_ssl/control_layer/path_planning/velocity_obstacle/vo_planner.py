@@ -61,11 +61,11 @@ class VOPlanner(Planner):
     def friendly_area(self):
         width = self.map_wid
 
-        origin = (-0.3, width / 2 - 1.0)
         area_wid = self.penalty_wid
-        area_len = self.penalty_len
+        area_len = self.penalty_len + 0.3
+        origin = (-0.3, (width / 2) - (area_wid / 2))
 
-        return origin[0], origin[1], area_len, area_wid    # (-0.3, 2.0, 1.3, 2.0)
+        return origin[0], origin[1], area_len, area_wid    # (-0.3, 2.0, 1.3, 2.0) for Divison B
 
     @property
     def opponent_area(self):
