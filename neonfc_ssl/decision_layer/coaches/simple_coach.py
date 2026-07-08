@@ -134,25 +134,30 @@ class SimpleCoach(Coach):
         )
 
     def _check_ball_inside_area(self):
+        MARGIN = 0.05    # Uses a 5cm safe margin for the checking.
+        
         field = self.data.field
         ball = self.data.ball
 
         non_area_space = (field.field_width - field.penalty_width)/2
 
-        check_ball_x = ball.x <= field.penalty_depth
-        check_ball_y = non_area_space <= ball.y <= non_area_space+field.penalty_width
+        check_ball_x = ball.x <= field.penalty_depth + MARGIN
+        check_ball_y = (non_area_space - MARGIN) <= ball.y <= (non_area_space+field.penalty_width + MARGIN)
 
         return check_ball_x and check_ball_y
 
     def _ball_inside_area(self):
+        """Decides the behavior of the friendly robots when the ball is inside the area.
+        No field robot should enter the area: only the goalkeeper handles the ball."""
+
+        # Sets the GoalKeeper strategy and removes him from the available robots list.
         self.decision.set_strategy(self.data.robots[self._gk_id], self._strategy_gk)
         available_robots = self._clear_robot_list(self.data.robots.actives, [self._gk_id])
         if not available_robots:
             return
 
-        # TODO: decide what non-keeper robots will do when ball is inside area
-        targets = self._get_defending_positions(avoid=1)
-
+        # All non-keeper robots build the defensive line.
+        targets = self._get_defending_positions(avoid=0)
         self.decision.calculate_hungarian(
             targets=targets,
             robots=available_robots
