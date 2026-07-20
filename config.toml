@@ -1,6 +1,6 @@
 [Game]
 host = "localhost"
-input_port = 43211
+input_port = 10002
 output_port = 43210
 
 [InputLayer]
@@ -23,7 +23,7 @@ ignore_autoref = true
 
 [Decision.sender]
 host = "127.0.0.1"
-port = 5000
+port = 10001
 
 [[Decision.models]]
 id="goalkeeper"
