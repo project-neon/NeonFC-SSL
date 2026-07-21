@@ -43,9 +43,28 @@ class KalmanFilter:
         self.uncert = np.dot(np.dot(self._A, self.uncert), self._At) + self._R
 
     def correct(self, obs):
-        K = np.dot(np.dot(self.uncert, self._Ct), np.linalg.inv(np.dot(np.dot(self._C, self.uncert), self._Ct)+self._Q))
-        self.belief = self.belief + np.dot(K, obs - np.dot(self._C, self.belief))
-        self.uncert = np.dot(np.identity(self.n) - np.dot(K, self._C), self.uncert)
+        K = np.dot(
+            np.dot(
+                self.uncert,
+                self._Ct),
+            np.linalg.inv(
+                np.dot((
+                    np.dot(self._C, self.uncert), self._Ct) +
+                    self._Q
+                ))
+            )
+
+        self.belief = (
+            self.belief +
+            np.dot(K, obs - np.dot(self._C, self.belief))
+            )
+
+        self.uncert = (
+            np.dot(
+                np.identity(self.n) -
+                np.dot(K, self._C), self.uncert
+                )
+            )
 
     def __call__(self, ctrl, obs):
         self.predict(ctrl)
