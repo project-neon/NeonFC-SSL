@@ -1,7 +1,7 @@
 import math
 import numpy as np
-from numpy import arccos, array, dot, pi, cross
-from numpy.linalg import det, norm
+from numpy import arccos, dot, pi, cross  # removed `array`
+from numpy.linalg import norm  # removed `det`
 
 
 def dist_point_line(x1, y1, x2, y2, x3, y3):
@@ -65,7 +65,8 @@ def speed(_list, _fps):
         if abs((t1 - t0)) < 0.1
         # considering the game runs at 60 fps
         # to limit 0.1 m/f here is to say that is impossible
-        # for the robot to run at 6 m/s (0.1 [m][f⁻¹] * 60 [f][s⁻¹] = 6[m][s⁻¹])
+        # for the robot to run at 6 m/s:
+        # (0.1 [m][f⁻¹] * 60 [f][s⁻¹] = 6[m][s⁻¹])
     ]
     if not speed_fbf:
         return 0
@@ -103,7 +104,8 @@ def angle_between(v1, v2):
 
 def angle_to_first_quadrant(angle):
     """
-    Converts any angle in radians to its equivalent angle in the first quadrant (0 to pi/2).
+    Converts any angle in radians to its equivalent angle in the first
+    quadrant (0 to pi/2).
 
     Args:
         angle_rad: The angle in radians.
@@ -182,7 +184,8 @@ def is_angle_between(theta, start_angle, end_angle):
         start_angle (float): The starting angle of the sector, in rads
         end_angle (float): The ending angle of the sector, in rads
     Returns:
-        bool: True if theta is within the circular sector from start_angle to end_angle (inclusive), False otherwise
+        bool: True if theta is within the circular sector from start_angle to
+        end_angle (inclusive), False otherwise
     """
     theta = theta % (2 * pi)
     start_angle = start_angle % (2 * pi)
@@ -206,7 +209,12 @@ def reduce_ang(ang):
 
 
 def orientation(p1, p2, p3):
-    return (p1[0] - p3[0]) * (p2[1] - p3[1]) - (p2[0] - p3[0]) * (p1[1] - p3[1])
+    return (
+        (p1[0] - p3[0]) *
+        (p2[1] - p3[1]) -
+        (p2[0] - p3[0]) *
+        (p1[1] - p3[1])
+        )
 
 
 def point_in_triangle(pt, v1, v2, v3):
