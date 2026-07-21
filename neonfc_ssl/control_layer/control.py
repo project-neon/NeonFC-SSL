@@ -1,4 +1,4 @@
-import logging
+# removed `logging` (unused)
 from math import sqrt, cos, sin
 from neonfc_ssl.core import Layer
 from neonfc_ssl.commons.math import reduce_ang, point_in_rect
@@ -7,7 +7,10 @@ from .path_planning import PLANNERS
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from neonfc_ssl.decision_layer.decision_data import DecisionData, RobotRubric
+    from neonfc_ssl.decision_layer.decision_data import (
+        DecisionData,
+        RobotRubric
+        )
     from neonfc_ssl.tracking_layer.tracking_data import MatchData
 
 
@@ -53,7 +56,11 @@ class Control(Layer):
                 ))
         return ControlData(commands=out)
 
-    def run_single_robot(self, data: 'MatchData', command: 'RobotRubric') -> RobotCommand:
+    def run_single_robot(
+            self,
+            data: 'MatchData',
+            command: 'RobotRubric'
+    ) -> RobotCommand:
         robot = data.robots[command.id]
         field = data.field
         pos = (robot.x, robot.y)
@@ -64,23 +71,41 @@ class Control(Layer):
         path_planner.set_goal(command.target_pose[:2])
         path_planner.set_velocity((robot.vx, robot.vy))
         path_planner.set_map_area((field.field_length, field.field_width))
-        path_planner.set_penalty_area((field.penalty_depth, field.penalty_width))
+        path_planner.set_penalty_area(
+            (field.penalty_depth, field.penalty_width)
+            )
 
-        # Redirects target if it falls inside the friendly area (robot outside, target inside).
-        if command.avoid_area and not point_in_rect(pos, path_planner.friendly_area) \
-                and point_in_rect(command.target_pose[:2], path_planner.friendly_area):                
-            x_0, y_0, area_len, area_wid = path_planner.friendly_area   # (-0.3, 2.0, 1.3, 2.0)
-            
+        # Redirects target if it falls inside the friendly area
+        # (robot outside, target inside).
+        if (
+            command.avoid_area
+            and not point_in_rect(
+                pos,
+                path_planner.friendly_area
+                )
+            and point_in_rect(
+                command.target_pose[:2],
+                path_planner.friendly_area
+                )
+        ):
+            # (-0.3, 2.0, 1.3, 2.0)
+            x_0, y_0, area_len, area_wid = path_planner.friendly_area
+
             x_border = x_0 + area_len + 0.1
             y_original = command.target_pose[1]
             y_redirected = max(y_0, min(y_0 + area_wid, y_original))
             path_planner.set_goal((x_border, y_redirected))
 
         # Forces robot out if it's already inside the friendly area.
-        if command.avoid_area and point_in_rect(pos, path_planner.friendly_area):
-            x_0, y_0, area_len, area_wid = path_planner.friendly_area   # (-0.3, 2.0, 1.3, 2.0)
+        if (
+            command.avoid_area
+                and point_in_rect(pos, path_planner.friendly_area)
+        ):
+            # (-0.3, 2.0, 1.3, 2.0)
+            x_0, y_0, area_len, area_wid = path_planner.friendly_area
 
-            # Calculates the distance from each border and redirects the target out from the closest one.
+            # Calculates the distance from each border and redirects
+            # the target out from the closest one.
             x_border = x_0 + area_len
             y_upper_border = y_0 + area_wid
             y_lower_border = y_0
@@ -97,20 +122,31 @@ class Control(Layer):
                 path_planner.set_goal((robot.x, y_lower_border - 0.1))
             else:
                 path_planner.set_goal((x_border + 0.1, robot.y))
-            
-            # TODO: Robots can get stuck on the friendly area sides (lower and upper borders) when
-            #       the area walls (obstacles) is between them and their target (HRVO is inefficient when
-            #       dealing with walls).
-            #       SOLUTION: Implementing a global pathplanner (RRT, already implemented on our repository) to
+
+            # TODO: Robots can get stuck on the friendly area sides
+            # (lower and upper borders) when
+            #
+            #       the area walls (obstacles) is between them and
+            #       their target (HRVO is inefficient when dealing with
+            #       walls).
+            #
+            #       SOLUTION: Implementing a global pathplanner (RRT,
+            #       already implemented on our repository) to
             #                 route around the area correctly.
 
-        if point_in_rect(pos, (0.0, 0.0, field.field_length, field.field_width)):
+        if point_in_rect(
+            pos,
+            (0.0, 0.0, field.field_length, field.field_width)
+        ):
             path_planner.add_field_walls(
                 origin=0.0,
                 border=0.0
             )
 
-        if command.avoid_area and not point_in_rect(pos, path_planner.friendly_area):
+        if (
+            command.avoid_area
+            and not point_in_rect(pos, path_planner.friendly_area)
+        ):
             path_planner.add_friendly_area_walls()
 
         if not point_in_rect(pos, path_planner.opponent_area):
@@ -137,8 +173,9 @@ class Control(Layer):
         dx = next_point[0] - robot.x
         dy = next_point[1] - robot.y
 
-        # The deadband (in meters) prevents motor heating caused by continuous low-voltage commands while
-        # the robot is effectively at rest.
+        # The deadband (in meters) prevents motor heating caused by
+        # continuous low-voltage commands while the robot is effectively
+        # at rest.
         if abs(dx) < self.deadband_threshold:
             dx = 0
         if abs(dy) < self.deadband_threshold:
@@ -146,16 +183,32 @@ class Control(Layer):
 
         dt = reduce_ang(command.target_pose[2] - robot.theta)
 
-        # TODO: Implement angular deadband (threshold in rad for the dt error).
-        #       Residual angular error also keeps the rotation motor under continuous voltage at
-        #       rest, even if small. Not implemented now because the angular deviation amplifies with 
-        #       the distance to the target (kick/pass): at a distance of 9m, for example, a 0.02 rad of error already 
-        #       equates to ~18cm of deviation in the trajectory of the ball. Requires careful 
-        #       calibration, ideally when the pass/kick layer is more mature and can be tested in 
+        # TODO: Implement angular deadband (threshold in rad for the dt
+        #       error).
+        #
+        #       Residual angular error also keeps the rotation motor
+        #       under continuous voltage at rest, even if small. Not
+        #       implemented now because the angular deviation amplifies
+        #       with the distance to the target (kick/pass): at a
+        #       distance of 9m, for example, a 0.02 rad of error already
+        #       equates to ~18cm of deviation in the trajectory of the
+        #       ball. Requires careful calibration, ideally when the
+        #       pass/kick layer is more mature and can be tested in
         #       conjunction with finishing accuracy.
 
-        vel_x, vel_y, vel_theta = dx * self.KP, dy * self.KP, dt * self.KP_ang
-        vel_tangent, vel_normal, vel_angular = self.global_speed_to_local_speed(vel_x, vel_y, vel_theta, robot)
+        vel_x, vel_y, vel_theta = (
+            dx * self.KP,
+            dy * self.KP,
+            dt * self.KP_ang
+            )
+        vel_tangent, vel_normal, vel_angular = (
+            self.global_speed_to_local_speed(
+                vel_x,
+                vel_y,
+                vel_theta,
+                robot
+                )
+            )
 
         return RobotCommand(
             id=command.id,
@@ -179,9 +232,20 @@ class Control(Layer):
         L = 0.0785
         r = 0.03
 
-        wheel = ((2 * L * abs(w)) + (sqrt(3) * abs(r_x)) + (sqrt(3) * abs(r_y))) / (2 * r)
+        wheel = (
+            (
+                (2 * L * abs(w))
+                + (sqrt(3) * abs(r_x))
+                + (sqrt(3) * abs(r_y))
+                )
+            / (2 * r)
+            )
         wheel_max = 40
 
         reducing_factor = min(wheel_max / wheel, 1) if wheel != 0 else 1
 
-        return r_x * reducing_factor, r_y * reducing_factor, w * reducing_factor
+        return (
+            r_x * reducing_factor,
+            r_y * reducing_factor,
+            w * reducing_factor
+            )
