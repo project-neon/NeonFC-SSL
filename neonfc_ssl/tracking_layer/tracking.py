@@ -1,7 +1,7 @@
-import logging
+# import logging  # removed because was unused
 from neonfc_ssl.core import Layer
 from neonfc_ssl.core.logger import TRACKING
-from .entities import OmniRobot, Ball, ball
+from .entities import OmniRobot, Ball  # removed `ball` because was unused
 from .possession_tracker import FloatPossessionTracker as PossessionTracker
 from .state_controller import StateController
 from .tracking_data import MatchData
@@ -29,7 +29,9 @@ class Tracking(Layer):
 
         # Other Tracking Parameters
         self.team_color = self.config['color']
-        self.opponent_color = 'yellow' if self.config['color'] == 'blue' else 'blue'
+        self.opponent_color = (
+            'yellow' if self.config['color'] == 'blue' else 'blue'
+            )
 
     def _start(self):
         self.logger.info("Starting match module starting ...")
@@ -61,7 +63,12 @@ class Tracking(Layer):
 
         self.ball.update(data.entities.ball, data.geometry)
 
-        rob, opp = (data.entities.robots_blue, data.entities.robots_yellow) if self.team_color == 'blue' else (data.entities.robots_yellow, data.entities.robots_blue)
+        rob, opp = (
+            (data.entities.robots_blue, data.entities.robots_yellow)
+            if self.team_color == 'blue'
+            else (data.entities.robots_yellow, data.entities.robots_blue)
+            )
+
         for robot in self.robots:
             robot.update(rob, data.geometry)
 
@@ -70,9 +77,15 @@ class Tracking(Layer):
         for opposite in self.opposites:
             opposite.update(opp, data.geometry)
 
-        self.active_opposites = [r for r in self.opposites if not r.data.missing]
+        self.active_opposites = [
+            r for r in self.opposites if not r.data.missing
+            ]
 
-        state = self.game_state.update(data.game_controller, self.ball.data, self.team_color)
+        state = self.game_state.update(
+            data.game_controller,
+            self.ball.data,
+            self.team_color
+            )
 
         poss = self.possession.update()
         out_data = MatchData(
@@ -82,7 +95,8 @@ class Tracking(Layer):
             possession=poss,
             game_state=state,
             field=geometry,
-            is_yellow=self.team_color=='yellow'
+            is_yellow=self.team_color == 'yellow'
         )
         self.logger.log(TRACKING, out_data)
+
         return out_data
