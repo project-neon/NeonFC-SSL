@@ -43,8 +43,10 @@ class RRTPlanner(Planner):
 
         path = rrt.plan()
 
-        self.path = path if path else [[self.start[0] + self.step_size * self.velocity[0],
-                                       self.start[1] + self.step_size * self.velocity[1]]]
+        self.path = path if path else [[
+            self.start[0] + self.step_size * self.velocity[0],
+            self.start[1] + self.step_size * self.velocity[1]
+            ]]
 
         return self.path
 
@@ -91,7 +93,9 @@ class RRTStarPlanner(RRTPlanner):
         )
         path = rrt_star.plan()
 
-        self.path = path if len(path) > 0 else [[self.start[0] + self.step_size * self.velocity[0],
-                                                 self.start[1] + self.step_size * self.velocity[1]]]
+        self.path = path if len(path) > 0 else [[
+            self.start[0] + self.step_size * self.velocity[0],
+            self.start[1] + self.step_size * self.velocity[1]
+            ]]
 
         return self.path
