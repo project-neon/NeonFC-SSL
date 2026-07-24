@@ -10,8 +10,8 @@ if TYPE_CHECKING:
 def one_v_one_factory(goalkeeper_id: int, striker_id: int, device: str = "cpu"):
     def _get_robot_features(robot: "TrackedRobot") -> list[float]:
         if robot is None or robot.missing:
-            return [0.0, 0.0, 0.0, 0.0]
-        return [robot.x, robot.y, robot.vx, robot.vy]
+            return [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        return [robot.x, robot.y, robot.theta, robot.vx, robot.vy, robot.vtheta]
 
     def input_transformation(data: "MatchData") -> torch.Tensor:
         features = []

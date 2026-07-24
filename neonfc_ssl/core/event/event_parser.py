@@ -5,7 +5,7 @@ from typing import Dict, Any
 from .event_definitions import EventType, EventError, Event
 
 PARSE_ERROR_MSG = "Failed to parse event data: {}"
-MISSING_FIELD_MSG = "Event data missing '{}' field"
+MISSING_FIELD_MSG = "Event data missing '{}' field: {}"
 UNKNOWN_EVENT_TYPE_MSG = "Unknown event type: {}"
 INVALID_TIMESTAMP_MSG = "Invalid timestamp format: {}"
 
@@ -46,7 +46,7 @@ class EventParser:
         """Validate that all required fields are present"""
         for field in cls.REQUIRED_FIELDS:
             if field not in event_dict:
-                raise EventError(MISSING_FIELD_MSG.format(field))
+                raise EventError(MISSING_FIELD_MSG.format(field, event_dict))
 
     @classmethod
     def _build_event(cls, event_dict: Dict[str, Any]) -> Event:
