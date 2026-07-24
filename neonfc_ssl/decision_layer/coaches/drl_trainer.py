@@ -76,11 +76,11 @@ class DRLCoach(Coach):
         current_persistence = data
 
         payload = {
-            "actions": {k: v.tolist() for k, v in actions.items()},
-            "persistence_output": (
+            "next_state": (
                 current_persistence.tolist() if current_persistence is not None else None
             ),
-            "last_state": self.__last_persistence_state,
+            "cur_state": self.__last_persistence_state,
+            "actions": {k: v.tolist() for k, v in actions.items()},
         }
 
         self.__last_persistence_state = (
