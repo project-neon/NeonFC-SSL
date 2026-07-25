@@ -39,7 +39,7 @@ transformation="one_v_one"
 
 [OutputLayer]
 host_ip = "localhost"
-command_port = 20011
+command_port = 10301
 serial_port = "/dev/ttyUSB0"
 baud_rate =  115200
 use_gr_sim = true
