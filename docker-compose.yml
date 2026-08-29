@@ -10,7 +10,7 @@ services:
     command:
       - vnc
   auto-referee-vnc:
-    image: tigersmannheim/auto-referee-vnc:latest
+    image: tigersmannheim/auto-referee-vnc:1.6.0
     container_name: auto-referee-vnc
     network_mode: host # Same as --net=host
     command:
