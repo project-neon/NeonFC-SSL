@@ -120,7 +120,8 @@ class Decision(Layer):
             self.__commands.append(RobotRubric(
                 id=robots[robot].id,
                 halt=False,
-                target_pose=target_pose
+                target_pose=target_pose,
+                avoid_area = True
             ))
 
     @staticmethod

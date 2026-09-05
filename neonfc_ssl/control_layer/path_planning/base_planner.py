@@ -3,7 +3,7 @@ from typing import List, Tuple, Optional, Union
 import numpy as np
 
 
-class BasePathPlanner(ABC):
+class Planner(ABC):
     def __init__(self):
         self.start = None
         self.goal = None
