@@ -84,6 +84,7 @@ class Game:
         self.layers.append(layer_obj)
 
         for event_type in layer_obj.subscriptions:
+            self.logger.info(f"Subscribed {layer.__name__} to {event_type}")
             self.event_engine.subscribe(event_type, layer_obj.events_q)
 
 

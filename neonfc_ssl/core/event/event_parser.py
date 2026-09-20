@@ -16,30 +16,62 @@ class EventParser:
     REQUIRED_FIELDS = ['type', 'source', 'sent_time_stamp']
 
     @classmethod
-    def parse(cls, event_data: bytes) -> Event:
+    def parse(cls, event_data: bytes) -> list[Event]:
         """
-        Parse raw event data into an Event object.
+        Parse raw event data into a list of Event objects.
+        event_data may contain one or more concatenated JSON objects.
 
         Args:
-            event_data: Raw bytes containing JSON event data
+            event_data: Raw bytes containing one or more JSON events
 
         Returns:
-            Event: Parsed and validated Event object
+            List[Event]: Parsed and validated Event objects
 
         Raises:
             EventError: If parsing or validation fails
         """
-        raw_dict = cls._parse_json(event_data)
-        cls._validate_required_fields(raw_dict)
-        return cls._build_event(raw_dict)
+        json_strings, remainder = cls._extract_json_objects(event_data.decode('utf-8'))
+
+        if remainder.strip():
+            # leftover bytes that don't form a complete JSON object
+            raise EventError(PARSE_ERROR_MSG.format(f"Incomplete JSON data: {remainder!r}"))
+
+        events = []
+        for json_str in json_strings:
+            raw_dict = cls._parse_json(json_str)
+            cls._validate_required_fields(raw_dict)
+            events.append(cls._build_event(raw_dict))
+
+        return events
 
     @staticmethod
-    def _parse_json(event_data: bytes) -> Dict[str, Any]:
-        """Parse JSON bytes into a dictionary"""
+    def _parse_json(event_data: str) -> Dict[str, Any]:
+        """Parse JSON string into a dictionary"""
         try:
             return json.loads(event_data)
         except json.JSONDecodeError as e:
             raise EventError(PARSE_ERROR_MSG.format(e)) from e
+
+    @staticmethod
+    def _extract_json_objects(buffer: str):
+        """
+        Pull as many complete JSON objects as possible out of buffer.
+        Returns (list_of_json_strings, remaining_buffer).
+        """
+        decoder = json.JSONDecoder()
+        objects = []
+        buffer = buffer.lstrip()
+
+        while buffer:
+            try:
+                obj, idx = decoder.raw_decode(buffer)
+            except json.JSONDecodeError:
+                break  # incomplete object at the end, wait for more bytes
+
+            objects.append(buffer[:idx])
+            buffer = buffer[idx:].lstrip()
+
+        return objects, buffer
 
     @classmethod
     def _validate_required_fields(cls, event_dict: Dict[str, Any]) -> None:

@@ -6,4 +6,4 @@ from typing import Optional
 class ModelReference:
     id: str
     file_path: str
-    transformation: Optional[str]
+    transformation: Optional[str] = None

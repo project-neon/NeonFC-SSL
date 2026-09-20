@@ -38,6 +38,13 @@ class Decision(Layer):
         if state == "halt":
             self.__force_halt = True
 
+    @event_callback(EventType.MODEL_UPDATE)
+    def model_update(self, event: Event):
+        try:
+            self.__coach.model_update(event)
+        except AttributeError:
+            pass
+
     def _start(self):
         self.logger.info("Starting coach module starting ...")
 

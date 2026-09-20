@@ -43,14 +43,18 @@ class EventEngine:
     def socket_callback(self, event):
         """Handle events received from socket (callback mode)"""
         try:
-            parsed_event = EventParser.parse(event)
-            self.handle_event(parsed_event)
+            parsed_events = EventParser.parse(event)
+            self.handle_events(parsed_events)
         except EventError as e:
             self.logger.error(EVENT_PARSE_ERROR_MSG.format(e))
         except Exception as e:
             error_msg = EVENT_PARSE_ERROR_MSG.format(e)
             self.logger.error(error_msg)
             raise EventError(error_msg) from e
+
+    def handle_events(self, parsed_events: list):
+        for event in parsed_events:
+            self.handle_event(event)
 
     def handle_event(self, parsed_event):
         """Put events into all queues subscribed to the event's type"""
