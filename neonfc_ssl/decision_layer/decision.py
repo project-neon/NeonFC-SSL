@@ -45,6 +45,13 @@ class Decision(Layer):
         except AttributeError:
             pass
 
+    @event_callback(EventType.EPSILON_GREEDY)
+    def epsilon_greedy(self, event: Event):
+        try:
+            self.__coach.epsilon_greedy(event)
+        except AttributeError:
+            pass
+
     def _start(self):
         self.logger.info("Starting coach module starting ...")
 

@@ -61,7 +61,7 @@ class DRLCoach(Coach):
             self.decision.set_strategy(self.data.robots[robot_id], strat)
 
     def __create_model(self, model_reference: ModelReference) -> Model:
-        model = Model.load(model_reference.file_path, model_reference.id)
+        model = Model.load(model_reference.file_path, model_reference.id, model_reference.epsilon)
         self.__models[model_reference.id] = model
         return model
 
@@ -95,3 +95,10 @@ class DRLCoach(Coach):
             model_reference = ModelReference(**model_cfg)
             if model := self.__models.get(model_reference.id):
                 model.update(model_reference.file_path)
+
+    @event_callback(EventType.EPSILON_GREEDY)
+    def epsilon_greedy(self, event: Event):
+        for model_cfg in event.event_data[MODEL_INDEX]:
+            model_reference = ModelReference(**model_cfg)
+            if model := self.__models.get(model_reference.id):
+                model.epsilon = model_reference.epsilon
