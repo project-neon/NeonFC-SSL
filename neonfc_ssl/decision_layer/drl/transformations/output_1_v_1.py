@@ -17,6 +17,7 @@ def one_v_one_output_factory(goalkeeper_id: int, striker_id: int):
     }
 
     def output_transformation(actions: dict[str, torch.Tensor], match_data: "MatchData") -> dict[RobotRubric]:
+        field = match_data.field
         commands = {}
         for model_name, tensor in actions.items():
             robot_id = model_to_robot_id[model_name]
@@ -25,7 +26,11 @@ def one_v_one_output_factory(goalkeeper_id: int, striker_id: int):
             commands[robot_id] = RobotRubric(
                 id=robot_id,
                 halt=False,
-                target_pose=(x, y, theta),
+                target_pose=(
+                    _tanh_rescale(x, field.field_length),
+                    _tanh_rescale(y, field.field_width),
+                    theta
+                ),
                 kick_speed=kick_speed,
             )
 
@@ -37,3 +42,7 @@ def one_v_one_output_factory(goalkeeper_id: int, striker_id: int):
 @transformation_registry.register("one_v_one_output")
 def one_v_one_output_transformation(actions: dict[str, torch.Tensor], match_data: "MatchData") -> dict[RobotRubric]:
     return one_v_one_output_factory(GOALKEEPER_ID, STRIKER_ID)(actions, match_data)
+
+
+def _tanh_rescale(value, max, min=0):
+    return min + 0.5 * (max - min) * (value + 1)

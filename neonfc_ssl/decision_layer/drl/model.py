@@ -20,7 +20,7 @@ class Model(nn.Module):
 
     def inference(self, state: torch.Tensor) -> torch.Tensor:
         with torch.no_grad():
-            return self.network(state.float())
+            return torch.tanh(self.network(state.float()))
 
     def update(self, path: str) -> None:
         checkpoint = torch.load(path, weights_only=True)
