@@ -25,7 +25,10 @@ class Decision(Layer):
         super().__init__("DecisionLayer", config, log_q)
         self.events = {}
         self.__strategies: list[Optional['SpecialStrategy']] = []
-        self.__force_halt = False
+        # `start_halted` exists for training: the harness drives the
+        # episode boundaries, so the agent shouldn't move until it says
+        # "play". Real matches leave this at its default.
+        self.__force_halt = bool(config.get("start_halted", False))
 
         self.logger = logging.getLogger('DecisionLayer')
 

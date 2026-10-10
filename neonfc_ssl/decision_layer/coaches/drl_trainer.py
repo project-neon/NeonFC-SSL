@@ -24,12 +24,15 @@ class DRLCoach(Coach):
     def __init__(self, decision):
         self.__models: dict[str, Model] = {}
         self.__preprocess: PreProcess = None
-        self.__last_persistence_state = None
+        self.__last_state = None
+        self.__last_actions = None
         self.__tcp: TCPSender = None
+        self.__logger = None
 
         super().__init__(decision)
 
     def _start(self):
+        self.__logger = self.decision.logger
         self.__preprocess = PreProcess(
             persistence_transformation=self.decision.config.get(PERSISTENCE_KEY),
             output_transformation=self.decision.config.get(OUTPUT_KEY),
@@ -112,21 +115,37 @@ class DRLCoach(Coach):
         }
 
     def __propagate(self, actions, data):
-        current_persistence = data
+        state_list = data.tolist() if data is not None else None
+        actions_list = {k: v.tolist() for k, v in actions.items()}
 
-        payload = {
-            "next_state": (
-                current_persistence.tolist() if current_persistence is not None else None
-            ),
-            "cur_state": self.__last_persistence_state,
-            "actions": {k: v.tolist() for k, v in actions.items()},
-        }
+        if state_list is not None and state_list == self.__last_state:
+            # The layer re-runs its step on stale data when no new frame
+            # has arrived. Nothing moved, so emitting (s, a, s) again
+            # would teach the critic that an action had no effect.
+            return
 
-        self.__last_persistence_state = (
-            current_persistence.tolist() if current_persistence is not None else None
-        )
+        # The action that *caused* this transition is the one computed on
+        # the previous tick, not this one: a_t was sampled from s_{t-1}.
+        if self.__tcp is not None and self.__last_state is not None and state_list is not None:
+            self.__tcp.send({
+                "cur_state": self.__last_state,
+                "actions": self.__last_actions,
+                "next_state": state_list,
+            })
 
-        self.__tcp.send(payload)
+        self.__last_state = state_list
+        self.__last_actions = actions_list
+
+    def reset_episode(self):
+        """Called when the harness starts a new episode.
+
+        Without this the first transition of an episode would be glued
+        to the last state of the previous one.
+        """
+        self.__last_state = None
+        self.__last_actions = None
+        for model in self.__models.values():
+            model.reset()
 
     @event_callback(EventType.MODEL_UPDATE)
     def model_update(self, event: Event):
