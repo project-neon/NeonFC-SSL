@@ -80,29 +80,26 @@ class TestEventEngine:
         # Should not raise exception
         engine.handle_event(parsed_event)
 
-    @patch.object(EventParser, 'parse')
-    def test_socket_callback_parses_and_handles(self, mock_parse, engine):
-        """Test socket_callback parses event and calls handle_event"""
+    def test_socket_callback_handles_parsed_events(self, engine):
+        """The socket parses (it has to buffer across recv boundaries),
+        so the callback just forwards the Event list."""
         test_queue = Queue()
-        raw_event = b'raw event data'
         parsed_event = Event(
             type=EventType.MASTER_STATE,
             source='sensor1',
             sent_time_stamp=datetime.fromisoformat('2024-01-15T10:30:45.123'),
             event_data=None
         )
-        mock_parse.return_value = parsed_event
 
         engine.subscribe(EventType.MASTER_STATE, test_queue)
-        engine.socket_callback(raw_event)
+        engine.socket_callback([parsed_event])
 
-        mock_parse.assert_called_once_with(raw_event)
         assert test_queue.get(timeout=1.0)
 
-    @patch.object(EventParser, 'parse')
-    def test_socket_callback_handles_parse_error(self, mock_parse, engine):
-        """Test socket_callback handles EventError from parser"""
-        mock_parse.side_effect = EventError("Parse failed")
+    @patch.object(EventEngine, 'handle_events')
+    def test_socket_callback_handles_error(self, mock_handle, engine):
+        """Test socket_callback handles EventError from handle_events"""
+        mock_handle.side_effect = EventError("dispatch failed")
 
         # Should not raise exception, just log it
-        engine.socket_callback(b'bad data')
+        engine.socket_callback([])

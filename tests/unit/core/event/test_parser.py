@@ -18,12 +18,13 @@ class TestEventParser:
             'sent_time_stamp': '2024-01-15T10:30:45.123Z'
         }).encode('utf-8')
 
-        result = EventParser.parse(event_data)
+        events = EventParser.parse(event_data)
 
-        assert result.type == EventType.MASTER_STATE
-        assert result.source == 'sensor1'
-        assert result.sent_time_stamp == datetime.fromisoformat('2024-01-15T10:30:45.123')
-        assert result.event_data is None
+        assert len(events) == 1
+        assert events[0].type == EventType.MASTER_STATE
+        assert events[0].source == 'sensor1'
+        assert events[0].sent_time_stamp == datetime.fromisoformat('2024-01-15T10:30:45.123')
+        assert events[0].event_data is None
 
     def test_parse_with_event_data(self):
         """Test parsing event with event_data field"""
@@ -34,9 +35,9 @@ class TestEventParser:
             'event_data': {'value': 100.5}
         }).encode('utf-8')
 
-        result = EventParser.parse(event_data)
+        events = EventParser.parse(event_data)
 
-        assert result.event_data == {'value': 100.5}
+        assert events[0].event_data == {'value': 100.5}
 
     def test_parse_invalid_json(self):
         """Test parsing invalid JSON raises EventError"""

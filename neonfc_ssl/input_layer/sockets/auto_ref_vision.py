@@ -86,7 +86,10 @@ class AutoRefVision(threading.Thread):
 
         ball = balls[0]
         pos = ball['pos']
-        speed = ball['vel']
+        # The tracker drops 'vel' while it has seen the ball too briefly
+        # to estimate a velocity (e.g. right after a teleport). Reading it
+        # unguarded killed the vision thread mid-run once already.
+        speed = ball.get('vel', {'x': 0.0, 'y': 0.0, 'z': 0.0})
         self.raw_detection.ball = Ball(
             x=self.side_factor*pos['x'],
             y=self.side_factor*pos['y'],

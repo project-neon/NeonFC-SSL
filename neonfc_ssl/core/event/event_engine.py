@@ -3,7 +3,6 @@ from logging import getLogger
 from multiprocessing import Queue
 
 from .event_socket import EventSocket
-from .event_parser import EventParser
 from .event_definitions import EventError, EventType
 
 SUBSCRIPTION_ADDED_MSG = "Subscription added for event type: {}"
@@ -40,11 +39,14 @@ class EventEngine:
             self.subscriptions[event_type].add(queue)
             self.logger.debug(SUBSCRIPTION_ADDED_MSG.format(event_type))
 
-    def socket_callback(self, event):
-        """Handle events received from socket (callback mode)"""
+    def socket_callback(self, events):
+        """Handle already-parsed events received from a socket.
+
+        The socket does the parsing (it has to buffer across recv()
+        boundaries), so this receives a list of Event objects.
+        """
         try:
-            parsed_events = EventParser.parse(event)
-            self.handle_events(parsed_events)
+            self.handle_events(events)
         except EventError as e:
             self.logger.error(EVENT_PARSE_ERROR_MSG.format(e))
         except Exception as e:

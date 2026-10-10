@@ -17,6 +17,9 @@ color = "yellow"
 
 [Decision]
 coach = "SimpleCoach"
+# Required by Decision._check_halt; without it the child process dies on
+# a KeyError and the test blocks forever waiting on the pipe.
+ignore_autoref = false
 
 [Control]
 
