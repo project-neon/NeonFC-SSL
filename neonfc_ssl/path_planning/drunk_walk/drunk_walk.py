@@ -98,7 +98,7 @@ class DrunkWalk:
 
         new_thetas = [theta + a for a in angles]
 
-        result = [np.array( r*np.cos(a), r*np.sin(a) ) for a in new_thetas]
+        result = [np.array([r * np.cos(a), r * np.sin(a)]) for a in new_thetas]
 
         return result
 
@@ -112,7 +112,7 @@ class DrunkWalk:
 
         new_thetas = [theta + a for a in angles]
 
-        result = [np.array(r * np.cos(a), r * np.sin(a)) for a in new_thetas]
+        result = [np.array([r * np.cos(a), r * np.sin(a)]) for a in new_thetas]
 
         return result
 
@@ -126,7 +126,7 @@ class DrunkWalk:
 
         new_thetas = [theta + a for a in angles]
 
-        result = [np.array(r * np.cos(a), r * np.sin(a)) for a in new_thetas]
+        result = [np.array([r * np.cos(a), r * np.sin(a)]) for a in new_thetas]
 
         return result
 
