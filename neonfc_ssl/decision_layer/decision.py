@@ -37,23 +37,25 @@ class Decision(Layer):
         state = event.event_data['new_state']
         if state == "play":
             self.__force_halt = False
+            # A new episode starts here: anything the coach cached
+            # across the previous one has to go.
+            if reset_episode := getattr(self.__coach, "reset_episode", None):
+                reset_episode()
 
-        if state == "halt":
+        # "stop" is the harness' word between episodes, "halt" is the
+        # referee/match-control word. Both mean "stand still".
+        if state in ("halt", "stop"):
             self.__force_halt = True
 
     @event_callback(EventType.MODEL_UPDATE)
     def model_update(self, event: Event):
-        try:
-            self.__coach.model_update(event)
-        except AttributeError:
-            pass
+        if hook := getattr(self.__coach, "model_update", None):
+            hook(event)
 
     @event_callback(EventType.EPSILON_GREEDY)
     def epsilon_greedy(self, event: Event):
-        try:
-            self.__coach.epsilon_greedy(event)
-        except AttributeError:
-            pass
+        if hook := getattr(self.__coach, "epsilon_greedy", None):
+            hook(event)
 
     def _start(self):
         self.logger.info("Starting coach module starting ...")
