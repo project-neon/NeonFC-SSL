@@ -1,3 +1,5 @@
+import math
+
 import torch
 from typing import TYPE_CHECKING
 from ..drl_commons import STRIKER_ID, GOALKEEPER_ID
@@ -29,7 +31,9 @@ def one_v_one_output_factory(goalkeeper_id: int, striker_id: int):
                 target_pose=(
                     _tanh_rescale(x, field.field_length),
                     _tanh_rescale(y, field.field_width),
-                    theta
+                    # The action is a tanh output in [-1, 1]; a robot
+                    # facing "up" is at pi, not 1 radian.
+                    math.pi * theta
                 ),
                 kick_speed=kick_speed,
             )
