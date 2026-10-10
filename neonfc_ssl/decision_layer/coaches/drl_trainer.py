@@ -61,7 +61,13 @@ class DRLCoach(Coach):
             self.decision.set_strategy(self.data.robots[robot_id], strat)
 
     def __create_model(self, model_reference: ModelReference) -> Model:
-        model = Model.load(model_reference.file_path, model_reference.id, model_reference.epsilon)
+        model = Model.load(
+            model_reference.file_path,
+            model_reference.id,
+            model_reference.epsilon,
+            model_reference.stochastic,
+            model_reference.hold_frames,
+        )
         self.__models[model_reference.id] = model
         return model
 
@@ -95,6 +101,13 @@ class DRLCoach(Coach):
             model_reference = ModelReference(**model_cfg)
             if model := self.__models.get(model_reference.id):
                 model.update(model_reference.file_path)
+                # Only override what the event actually carried: the
+                # trainer omits these keys unless it wants them changed,
+                # and the dataclass defaults would otherwise reset the
+                # current settings on every weight update.
+                for key in ("epsilon", "stochastic", "hold_frames"):
+                    if key in model_cfg:
+                        setattr(model, key, model_cfg[key])
 
     @event_callback(EventType.EPSILON_GREEDY)
     def epsilon_greedy(self, event: Event):
