@@ -22,16 +22,26 @@ if TYPE_CHECKING:
     from multiprocessing.connection import Connection
 
 
+def apply_cli_overrides(config: dict, args) -> dict:
+    """Applies -c/--color and -s/--side on top of the loaded profile.
+
+    The keys have to match what each layer actually reads: Tracking reads
+    `color` (lowercase) and InputLayer reads `side`.
+    """
+    if args.color:
+        config["Tracking"]["color"] = args.color
+    if args.side:
+        config["InputLayer"]["side"] = args.side
+    return config
+
+
 class Game:
     def __init__(self, args) -> None:
         # Load Config
         with args.profile as f:
             self.config = tomli.load(f)
 
-        if args.color:
-            self.config["Tracking"]["Color"] = args.color
-        if args.side:
-            self.config["InputLayer"]["side"] = args.side
+        apply_cli_overrides(self.config, args)
 
         self.layers: list[Layer] = []
         self.layers_event: dict[str, 'Connection'] = {}
