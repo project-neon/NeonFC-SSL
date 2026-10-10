@@ -44,6 +44,37 @@ class EventParser:
 
         return events
 
+    @classmethod
+    def parse_stream(cls, text: str) -> tuple[list[Event], str]:
+        """
+        Parse as many complete events as `text` holds, returning them
+        along with the unconsumed remainder.
+
+        This is the streaming counterpart to parse(): over a TCP stream a
+        single JSON object routinely arrives split across two reads, and
+        parse() treats the partial tail as a hard error -- taking the
+        complete events down with it. Callers keep the remainder and
+        prepend it to the next chunk.
+
+        Args:
+            text: Decoded bytes so far on this connection
+
+        Returns:
+            (events, remainder) where remainder is what still needs more bytes
+
+        Raises:
+            EventError: if an event is complete but malformed
+        """
+        json_strings, remainder = cls._extract_json_objects(text)
+
+        events = []
+        for json_str in json_strings:
+            raw_dict = cls._parse_json(json_str)
+            cls._validate_required_fields(raw_dict)
+            events.append(cls._build_event(raw_dict))
+
+        return events, remainder
+
     @staticmethod
     def _parse_json(event_data: str) -> Dict[str, Any]:
         """Parse JSON string into a dictionary"""
