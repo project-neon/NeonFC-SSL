@@ -10,10 +10,11 @@ if TYPE_CHECKING:
 class PreProcess:
     PERSISTENCE_KEY = "PERSISTENCE"
 
-    def __init__(self, output_transformation: str, persistence_transformation: Optional[str] = None):
+    def __init__(self, config, output_transformation: str, persistence_transformation: Optional[str] = None):
         self.__active_scripts = set()
         self.__script_model_index: dict[str, str] = {}
         self.__persistence_transformation = None
+        self.__config = config
 
         self.__output_fn = get(output_transformation)
         if persistence_transformation:
@@ -33,7 +34,7 @@ class PreProcess:
 
         processed_raw = {}
         for script in self.__active_scripts:
-            processed_raw[script] = script(data)
+            processed_raw[script] = script([0], data)
 
         for model, script in self.__script_model_index.items():
             processed[model] = processed_raw[script]

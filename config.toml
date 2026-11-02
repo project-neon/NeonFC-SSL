@@ -27,11 +27,13 @@ port = 10001
 
 [[Decision.models]]
 id="goalkeeper"
+robot_id=0
 file_path="models/goalkeeper.pt"
 transformation="one_v_one"
 
 [[Decision.models]]
 id="striker"
+robot_id=1
 file_path="models/striker.pt"
 transformation="one_v_one"
 

@@ -26,14 +26,12 @@ class DRLCoach(Coach):
 
     def _start(self):
         self.__preprocess = PreProcess(
+            config=self.decision.config,
             persistence_transformation=self.decision.config.get(PERSISTENCE_KEY),
             output_transformation=self.decision.config.get(OUTPUT_KEY),
         )
 
-        self.strats = {
-            commons.GOALKEEPER_ID: DRLStrategy(),
-            commons.STRIKER_ID: DRLStrategy(),
-        }
+        self.strats = dict()
 
         if config := self.decision.config.get(SENDER_CONFIG_INDEX):
             self.__tcp = TCPSender.from_config(config)
@@ -43,6 +41,7 @@ class DRLCoach(Coach):
             model_reference = ModelReference(**model_cfg)
             self.__create_model(model_reference)
             self.__preprocess.bind_model(model_reference.id, model_reference.transformation)
+            self.strats[model_reference.robot_id] = DRLStrategy()
 
     def _stop(self):
         if self.__tcp:

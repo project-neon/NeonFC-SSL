@@ -6,5 +6,6 @@ from typing import Optional
 class ModelReference:
     id: str
     file_path: str
+    robot_id: Optional[int] = None
     epsilon: float = 0
     transformation: Optional[str] = None
